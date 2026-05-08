@@ -49,9 +49,9 @@ function AddNewProduct({ setCurrentPage }) {
         const initialAttributes = {};
         subCatItem.allowedAttributes?.forEach(attr => {
             if (attr.hasVariants && attr.type === 'color') {
-                initialAttributes[attr.name] = { values: [], images: {} };
+                initialAttributes[attr.name] = { values: [], images: {}, stock: {} };
             } else if (attr.hasVariants && attr.type === 'size') {
-                initialAttributes[attr.name] = { values: [] };
+                initialAttributes[attr.name] = { values: [], stock: {} };
             } else {
                 initialAttributes[attr.name] = "";
             }
@@ -65,8 +65,36 @@ function AddNewProduct({ setCurrentPage }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const hasColorVariant = selectedSubCat?.allowedAttributes?.some(
+        attr => attr.hasVariants && attr.type === 'color'
+    );
+
+    const hasSizeVariant = selectedSubCat?.allowedAttributes?.some(
+        attr => attr.hasVariants && attr.type === 'size'
+    );
+
+    const sizeAttrName = selectedSubCat?.allowedAttributes?.find(
+        attr => attr.hasVariants && attr.type === 'size'
+    )?.name;
+
+    const vendorAddedSizes = hasSizeVariant &&
+        (formData.attributes[sizeAttrName]?.values?.length > 0);
+
+    const colorAttrName = selectedSubCat?.allowedAttributes?.find(
+        attr => attr.hasVariants && attr.type === 'color'
+    )?.name;
+
+    const vendorAddedColors = hasColorVariant &&
+        (formData.attributes[colorAttrName]?.values?.length > 0);
+
+    const autoCalculatedStock = vendorAddedSizes || (!hasSizeVariant && vendorAddedColors);
+
+
+    // ------- ADD PRODUCT ----------- 
     const handleAdd = () => {
-        if (!formData.prodName || !formData.stock || !formData.description || !formData.price || !formData.originalPrice) {
+
+        // 1. Basic validation — skip stock check if vendorAddedSizes
+        if (!formData.prodName || (!vendorAddedSizes && !formData.stock) || !formData.description || !formData.price || !formData.originalPrice) {
             return toast.error("All fields are required");
         }
 
@@ -74,9 +102,8 @@ function AddNewProduct({ setCurrentPage }) {
             return toast.error("Sale price cannot be more than MRP");
         }
 
-        // replace existing image validation
+        // 2. Image validation
         if (hasColorVariant) {
-            // validate color images
             const colorAttr = selectedSubCat.allowedAttributes.find(
                 attr => attr.hasVariants && attr.type === 'color'
             );
@@ -93,17 +120,12 @@ function AddNewProduct({ setCurrentPage }) {
                 }
             }
         } else {
-            // existing validation
-            if (!mainImage) {
-                return toast.error("Main Image is required");
-            }
-            if (galleryImages.length === 0) {
-                return toast.error("At least one Gallery Image is required");
-            }
+            if (!mainImage) return toast.error("Main Image is required");
+            if (galleryImages.length === 0) return toast.error("At least one Gallery Image is required");
         }
 
+        // 3. Attribute validation
         const attributesToValidate = selectedSubCat?.allowedAttributes || [];
-
         for (const attr of attributesToValidate) {
             const value = formData.attributes[attr.name];
 
@@ -112,8 +134,13 @@ function AddNewProduct({ setCurrentPage }) {
                     return toast.error(`Please add at least one ${attr.name}`);
                 }
             } else if (attr.hasVariants && attr.type === 'size') {
-                if (!value?.values?.length) {
-                    return toast.error(`Please add at least one ${attr.name}`);
+                if (value?.values?.length) {
+                    // only validate stock if vendor added sizes
+                    for (const size of value.values) {
+                        if (value.stock?.[size] === undefined || value.stock?.[size] === null) {
+                            return toast.error(`Please enter stock for size ${size}`);
+                        }
+                    }
                 }
             } else {
                 if (!value || value.trim() === "") {
@@ -122,14 +149,29 @@ function AddNewProduct({ setCurrentPage }) {
             }
         }
 
-        // ADD THIS:
+        // 4. Build FormData
         const data = new FormData();
         data.append("prodName", formData.prodName);
-        data.append("stock", formData.stock);
         data.append("description", formData.description);
         data.append("price", formData.price);
         data.append("originalPrice", formData.originalPrice);
 
+        // 5. Stock — auto calculate from size, color, or manual
+        if (vendorAddedSizes) {
+            const sizeStocks = formData.attributes[sizeAttrName]?.stock || {};
+            const totalStock = Object.values(sizeStocks)
+                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+            data.append("stock", totalStock);
+        } else if (vendorAddedColors && !vendorAddedSizes) {
+            const colorStocks = formData.attributes[colorAttrName]?.stock || {};
+            const totalStock = Object.values(colorStocks)
+                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+            data.append("stock", totalStock);
+        } else {
+            data.append("stock", formData.stock);
+        }
+
+        // 6. Images + attributes
         if (hasColorVariant) {
             const colorAttr = selectedSubCat.allowedAttributes.find(
                 attr => attr.hasVariants && attr.type === 'color'
@@ -138,11 +180,19 @@ function AddNewProduct({ setCurrentPage }) {
             const colorData = formData.attributes[colorAttrName];
 
             const attributesForJSON = {};
+            
             Object.entries(formData.attributes).forEach(([key, val]) => {
                 if (key === colorAttrName) {
-                    attributesForJSON[key] = { values: val.values, images: {} };
+                    attributesForJSON[key] = {
+                        values: val.values,
+                        images: {},
+                        stock: val.stock || {}
+                    };
                 } else if (val?.values) {
-                    attributesForJSON[key] = { values: val.values };
+                    attributesForJSON[key] = {
+                        values: val.values,
+                        stock: val.stock || {}
+                    };
                 } else {
                     attributesForJSON[key] = val;
                 }
@@ -165,6 +215,7 @@ function AddNewProduct({ setCurrentPage }) {
             galleryImages.forEach((item) => data.append("prodImages", item.file));
         }
 
+        // 7. Submit
         addProduct({ subCat_id: selectedSubCat?._id, formData: data }, {
             onSuccess: (res) => {
                 toast.success(res.message || "Product Successfully Added");
@@ -174,7 +225,7 @@ function AddNewProduct({ setCurrentPage }) {
                     description: "",
                     price: "",
                     originalPrice: "",
-                    allowedAttributes: {}
+                    attributes: {}  // fix: was allowedAttributes
                 });
                 removeMainImage();
                 setGalleryImages([]);
@@ -186,7 +237,7 @@ function AddNewProduct({ setCurrentPage }) {
         });
     };
 
-    // -------HANDLE ATTR----------- 
+    // ------- HANDLE ATTR ----------- 
     const handleAttributeChange = (name, value) => {
         setFormData(prev => ({
             ...prev,
@@ -194,7 +245,7 @@ function AddNewProduct({ setCurrentPage }) {
         }));
     };
 
-    // -------Main Image Handler--------
+    // ------- Main Image Handler --------
     const handleMainImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -207,7 +258,7 @@ function AddNewProduct({ setCurrentPage }) {
         }
     };
 
-    // ---------Gallery Images Handler---------
+    // --------- Gallery Images Handler ---------
     const handleGalleryImageChange = (e) => {
         const files = Array.from(e.target.files);
 
@@ -226,20 +277,16 @@ function AddNewProduct({ setCurrentPage }) {
         });
     };
 
-    // --------Remove Images--------
+    // -------- Remove Images --------
     const removeMainImage = () => {
         setMainImage(null);
         setMainImagePreview("");
     };
 
+    // -------- Remove Gallery Images --------
     const removeGalleryImage = (index) => {
         setGalleryImages(prev => prev.filter((_, i) => i !== index));
     };
-
-    const hasColorVariant = selectedSubCat?.allowedAttributes?.some(
-        attr => attr.hasVariants && attr.type === 'color'
-    );
-
 
     return (
         <div className='min-h-screen bg-slate-50/50 p-4 md:p-8'>
@@ -353,7 +400,7 @@ function AddNewProduct({ setCurrentPage }) {
                                 />
                             </div>
 
-                            {/* stock */}
+                            {/* stock - always visible */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-slate-600 ml-1">
                                     Stock Quantity
@@ -361,11 +408,29 @@ function AddNewProduct({ setCurrentPage }) {
                                 <input
                                     type="number"
                                     name="stock"
-                                    value={formData.stock}
-                                    onChange={handleInputChange}
+                                    value={autoCalculatedStock
+                                        ? (() => {
+                                            if (vendorAddedSizes) {
+                                                return Object.values(formData.attributes[sizeAttrName]?.stock || {})
+                                                    .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+                                            } else {
+                                                return Object.values(formData.attributes[colorAttrName]?.stock || {})
+                                                    .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+                                            }
+                                        })()
+                                        : formData.stock
+                                    }
+                                    onChange={!autoCalculatedStock ? handleInputChange : undefined}
+                                    readOnly={autoCalculatedStock}
                                     placeholder="0"
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 outline-none text-sm placeholder:text-[11px] md:placeholder:text-[14px]"
+                                    className={`w-full px-4 py-3 rounded-xl border border-slate-200 text-sm
+                                    ${autoCalculatedStock ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'focus:border-pink-400 outline-none'}`}
                                 />
+                                {autoCalculatedStock && (
+                                    <p className="text-[11px] text-slate-400 ml-1">
+                                        Auto calculated from {vendorAddedSizes ? 'size' : 'color'} stocks
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -442,33 +507,70 @@ function AddNewProduct({ setCurrentPage }) {
                                                 </div>
                                             )}
 
-                                            {/* SIZE — tag input */}
+                                            {/* SIZE — tag input with stock */}
                                             {attr.hasVariants && attr.type === 'size' && (
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-[12px] font-medium text-slate-500 ml-1">
                                                         {attr.name} <span className="text-pink-400">(press Enter to add)</span>
                                                     </label>
 
-                                                    {/* Size tags */}
-                                                    <div className="flex flex-wrap gap-2 mb-2">
+                                                    {/* Size tags with stock input */}
+                                                    <div className="space-y-2 mb-2">
                                                         {(formData.attributes[attr.name]?.values || []).map((size, i) => (
-                                                            <span
+                                                            <div
                                                                 key={i}
-                                                                className="flex items-center gap-1 px-3 py-1 bg-pink-50 border border-pink-200 text-pink-600 text-xs font-bold rounded-full"
-                                                            >
-                                                                {size}
+                                                                className="flex items-center gap-3 p-2.5 bg-pink-50 border border-pink-100 rounded-xl">
+
+                                                                {/* Size name */}
+                                                                <span className="text-xs font-black text-pink-600 w-10 shrink-0">
+                                                                    {size}
+                                                                </span>
+
+                                                                {/* Stock input */}
+                                                                <div className="flex items-center gap-2 flex-1">
+                                                                    <label className="text-[11px] text-slate-400 font-medium shrink-0">
+                                                                        Stock:
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        placeholder="0"
+                                                                        value={formData.attributes[attr.name]?.stock?.[size] || ""}
+                                                                        onChange={(e) => {
+                                                                            const current = formData.attributes[attr.name];
+                                                                            handleAttributeChange(attr.name, {
+                                                                                ...current,
+                                                                                stock: {
+                                                                                    ...current.stock,
+                                                                                    [size]: parseInt(e.target.value) || 0
+                                                                                }
+                                                                            });
+                                                                        }}
+                                                                        className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
+                                                                    />
+                                                                </div>
+
+                                                                {/* Remove size */}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
-                                                                        const updated = formData.attributes[attr.name].values.filter((_, idx) => idx !== i);
-                                                                        handleAttributeChange(attr.name, { values: updated });
+                                                                        const current = formData.attributes[attr.name];
+                                                                        const updatedValues = current.values.filter((_, idx) => idx !== i);
+                                                                        const updatedStock = { ...current.stock };
+                                                                        delete updatedStock[size];
+                                                                        handleAttributeChange(attr.name, {
+                                                                            ...current,
+                                                                            values: updatedValues,
+                                                                            stock: updatedStock
+                                                                        });
                                                                     }}
-                                                                    className="text-pink-400 hover:text-pink-600 ml-1"
+                                                                    className="text-red-400 hover:text-red-600 text-xs font-bold shrink-0"
                                                                 >✕</button>
-                                                            </span>
+                                                            </div>
                                                         ))}
                                                     </div>
 
+                                                    {/* Add new size input */}
                                                     <input
                                                         type="text"
                                                         placeholder="e.g. S, M, L, XL — press Enter"
@@ -476,10 +578,13 @@ function AddNewProduct({ setCurrentPage }) {
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter' && e.target.value.trim()) {
                                                                 e.preventDefault();
-                                                                const current = formData.attributes[attr.name]?.values || [];
-                                                                if (!current.includes(e.target.value.trim())) {
+                                                                const current = formData.attributes[attr.name] || { values: [], stock: {} };
+                                                                const newSize = e.target.value.trim();
+                                                                if (!current.values.includes(newSize)) {
                                                                     handleAttributeChange(attr.name, {
-                                                                        values: [...current, e.target.value.trim()]
+                                                                        ...current,
+                                                                        values: [...current.values, newSize],
+                                                                        stock: { ...current.stock, [newSize]: 0 }
                                                                     });
                                                                 }
                                                                 e.target.value = '';
@@ -489,7 +594,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                 </div>
                                             )}
 
-                                            {/* COLOR — add color + upload images per color */}
+                                            {/* COLOR — add color + upload images + stock */}
                                             {attr.hasVariants && attr.type === 'color' && (
                                                 <div className="flex flex-col gap-3">
                                                     <label className="text-[12px] font-medium text-slate-500 ml-1">
@@ -507,14 +612,41 @@ function AddNewProduct({ setCurrentPage }) {
                                                                         const current = formData.attributes[attr.name];
                                                                         const updatedValues = current.values.filter((_, idx) => idx !== i);
                                                                         const updatedImages = { ...current.images };
+                                                                        const updatedStock = { ...current.stock };
                                                                         delete updatedImages[color];
+                                                                        delete updatedStock[color];
                                                                         handleAttributeChange(attr.name, {
                                                                             values: updatedValues,
-                                                                            images: updatedImages
+                                                                            images: updatedImages,
+                                                                            stock: updatedStock
                                                                         });
                                                                     }}
                                                                     className="text-red-400 text-xs font-bold hover:text-red-600"
                                                                 >Remove</button>
+                                                            </div>
+
+                                                            {/* Stock input for this color */}
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <label className="text-[11px] text-slate-400 font-medium shrink-0">
+                                                                    Stock:
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    placeholder="0"
+                                                                    value={formData.attributes[attr.name]?.stock?.[color] || ""}
+                                                                    onChange={(e) => {
+                                                                        const current = formData.attributes[attr.name];
+                                                                        handleAttributeChange(attr.name, {
+                                                                            ...current,
+                                                                            stock: {
+                                                                                ...current.stock,
+                                                                                [color]: parseInt(e.target.value) || 0
+                                                                            }
+                                                                        });
+                                                                    }}
+                                                                    className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
+                                                                />
                                                             </div>
 
                                                             {/* Image upload for this color */}
@@ -539,8 +671,6 @@ function AddNewProduct({ setCurrentPage }) {
                                                                     }}
                                                                     className="text-xs text-slate-500"
                                                                 />
-
-                                                                {/* Preview uploaded images */}
                                                                 <div className="flex gap-2 flex-wrap mt-1">
                                                                     {formData.attributes[attr.name]?.images?.[color]?.map((file, idx) => (
                                                                         <img
@@ -563,11 +693,12 @@ function AddNewProduct({ setCurrentPage }) {
                                                             onKeyDown={(e) => {
                                                                 if (e.key === 'Enter' && e.target.value.trim()) {
                                                                     e.preventDefault();
-                                                                    const current = formData.attributes[attr.name] || { values: [], images: {} };
+                                                                    const current = formData.attributes[attr.name] || { values: [], images: {}, stock: {} };
                                                                     if (!current.values.includes(e.target.value.trim())) {
                                                                         handleAttributeChange(attr.name, {
                                                                             ...current,
-                                                                            values: [...current.values, e.target.value.trim()]
+                                                                            values: [...current.values, e.target.value.trim()],
+                                                                            stock: { ...current.stock, [e.target.value.trim()]: 0 }
                                                                         });
                                                                     }
                                                                     e.target.value = '';
@@ -579,11 +710,12 @@ function AddNewProduct({ setCurrentPage }) {
                                                             onClick={(e) => {
                                                                 const input = e.target.previousSibling;
                                                                 if (input.value.trim()) {
-                                                                    const current = formData.attributes[attr.name] || { values: [], images: {} };
+                                                                    const current = formData.attributes[attr.name] || { values: [], images: {}, stock: {} };
                                                                     if (!current.values.includes(input.value.trim())) {
                                                                         handleAttributeChange(attr.name, {
                                                                             ...current,
-                                                                            values: [...current.values, input.value.trim()]
+                                                                            values: [...current.values, input.value.trim()],
+                                                                            stock: { ...current.stock, [input.value.trim()]: 0 }
                                                                         });
                                                                     }
                                                                     input.value = '';

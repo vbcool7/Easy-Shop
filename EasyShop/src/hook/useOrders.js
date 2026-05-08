@@ -49,28 +49,6 @@ export const useSingleOrderDetail = (order_id) => {
     });
 };
 
-// get invoice
-// export const useOrderInvoiceDownload = () => {
-//     return useMutation({
-//         mutationFn: async (order_id) => {
-//             if (!order_id) throw new Error("Order ID is required");
-
-//             const response = await API.get(`/order/download-invoice/${order_id}`, {
-//                 responseType: 'blob',
-//             });
-
-//             const url = window.URL.createObjectURL(new Blob([response.data]));
-//             const link = document.createElement('a');
-//             link.href = url;
-//             link.setAttribute('download', `invoice_${order_id}.pdf`);
-//             document.body.appendChild(link);
-//             link.click();
-//             link.remove();
-//             return true;
-//         }
-//     });
-// };
-
 // download invoice
 export const useOrderInvoiceDownload = () => {
     return useMutation({
@@ -133,15 +111,36 @@ export const usePlaceCartOrder = () => {
 };
 
 // place direct order 
+// export const usePlaceDirectOrder = () => {
+//     const queryClient = useQueryClient();
+
+//     return useMutation({
+//         mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod }) => {
+//             const { data } = await API.post(`/order/place-direct-order/${prod_id}`, {
+//                 quantity,
+//                 shippingAddress,
+//                 paymentMethod
+//             });
+//             return data;
+//         },
+//         onError: (error) => {
+//             const message = error.response?.data?.message || "Failed to place order";
+//             toast.error(message);
+//         }
+//     });
+// };
+
 export const usePlaceDirectOrder = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod }) => {
+        mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod, selectedColor, selectedSize }) => {
             const { data } = await API.post(`/order/place-direct-order/${prod_id}`, {
                 quantity,
                 shippingAddress,
-                paymentMethod
+                paymentMethod,
+                selectedColor,   
+                selectedSize     
             });
             return data;
         },

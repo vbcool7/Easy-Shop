@@ -33,6 +33,16 @@ const orderSchema = new mongoose.Schema(
                     type: Number,
                     required: true,
                 },
+
+                selectedColor: {
+                    type: String,
+                    default: null
+                },
+
+                selectedSize: {
+                    type: String,
+                    default: null
+                },
             }
         ],
 

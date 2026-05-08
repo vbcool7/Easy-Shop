@@ -140,6 +140,18 @@ export const addProduct = async (req, res) => {
                 .map(f => f.path);
         }
 
+        let finalStock = parseInt(stock); // frontend already sends correct stock
+
+        // this block is now redundant since frontend calculates stock correctly
+        // but keep as safety net
+        if (incomingAttrs['Size']?.stock && Object.keys(incomingAttrs['Size'].stock).length > 0) {
+            finalStock = Object.values(incomingAttrs['Size'].stock)
+                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+        } else if (incomingAttrs[colorAttrName]?.stock && Object.keys(incomingAttrs[colorAttrName]?.stock || {}).length > 0) {
+            finalStock = Object.values(incomingAttrs[colorAttrName].stock)
+                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
+        }
+
         const newProduct = new Product({
             vendorId,
             catId: subCategory.catId,
@@ -151,7 +163,7 @@ export const addProduct = async (req, res) => {
             prodImages,
             price,
             originalPrice,
-            stock,
+            stock: finalStock,
             attributes: incomingAttrs,
             addedBy,
             role,

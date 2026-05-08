@@ -65,17 +65,32 @@ function ProductDetail() {
         if (product) {
             setMainImage(product.prodImage);
             if (hasColorVariant) {
-                setSelectedColor(colorAttr.values[0]); 
+                setSelectedColor(colorAttr.values[0]);
             }
         }
     }, [prodId, product]);
 
+    const colorStock = colorAttr?.stock || {};
+    const sizeStock = sizeAttr?.stock || {};
+
+    const hasColorStock = hasColorVariant && Object.keys(colorStock).length > 0;
+    const hasSizeStock = hasSize && Object.keys(sizeStock).length > 0;
+
+    const currentStock = hasColorStock && selectedColor
+        ? colorStock[selectedColor] ?? 0
+        : hasSizeStock && selectedSize
+            ? sizeStock[selectedSize] ?? 0
+            : product?.stock ?? 0;
+
+
     // when color changes → update images
     const handleColorSelect = (color) => {
         setSelectedColor(color);
+        setQty(1);
+
         const colorImages = colorAttr?.images?.[color] || [];
         if (colorImages.length > 0) {
-            setMainImage(colorImages[0]); // set main image
+            setMainImage(colorImages[0]);
         }
     };
 
@@ -130,6 +145,14 @@ function ProductDetail() {
             toast.error("Please select a size");
             return;
         }
+        // check size stock
+        if (hasSize && selectedSize) {
+            const sizeStock = sizeAttr?.stock?.[selectedSize] ?? 0;
+            if (sizeStock === 0) {
+                toast.error(`${selectedSize} is out of stock`);
+                return;
+            }
+        }
         addToCart({
             ...product,
             id: product._id || product.id,
@@ -145,6 +168,11 @@ function ProductDetail() {
         if (!user) {
             toast.error("Please login to place order");
             navigate('/login');
+            return;
+        }
+
+        if (hasSize && !selectedSize) {
+            toast.error("Please select a size");
             return;
         }
 
@@ -186,8 +214,23 @@ function ProductDetail() {
         }
     };
 
-    const handleInc = () => { if (qty >= 1) setQty(qty + 1); };
-    const handleDec = () => { if (qty > 1) setQty(qty - 1); };
+    const handleInc = () => {
+        if (qty < currentStock) {
+            setQty(qty + 1);
+        } else {
+            toast.error(`Only ${currentStock} items available`);
+        }
+    };
+
+    const handleDec = () => {
+        if (qty > 1)
+            setQty(qty - 1);
+    };
+
+    const handleSizeSelect = (size) => {
+        setSelectedSize(size);
+        setQty(1);
+    }
 
     // chat btn
     const handleChatWithSeller = () => {
@@ -350,23 +393,44 @@ function ProductDetail() {
                     {/* Size Selector */}
                     {hasSize && (
                         <div className="mb-3">
+
                             <p className="text-sm font-semibold text-gray-800 mb-2">
                                 Size: <span className="text-pink-500 font-bold">{selectedSize || 'Select Size'}</span>
+
+                                {/* Low stock warning */}
+                                {selectedSize && sizeAttr?.stock?.[selectedSize] > 0 && sizeAttr?.stock?.[selectedSize] <= 5 && (
+                                    <span className="ml-2 text-orange-500 text-xs font-bold">
+                                        Only {sizeAttr.stock[selectedSize]} left!
+                                    </span>
+                                )}
                             </p>
                             <div className="flex flex-wrap gap-2">
-                                {sizeAttr.values.map((size) => (
-                                    <button
-                                        key={size}
-                                        onClick={() => setSelectedSize(size)}
-                                        className={`w-12 h-10 rounded-lg text-xs font-bold border-2 transition-all cursor-pointer
-                                            ${selectedSize === size
-                                                ? 'border-pink-500 bg-pink-500 text-white'
-                                                : 'border-gray-200 text-gray-600 hover:border-pink-300'
-                                            }`}
-                                    >
-                                        {size}
-                                    </button>
-                                ))}
+                                {sizeAttr.values.map((size) => {
+                                    const sizeStock = sizeAttr?.stock?.[size] ?? 0;
+                                    const isOutOfStock = sizeStock === 0;
+
+                                    return (
+                                        <button
+                                            key={size}
+                                            onClick={() => !isOutOfStock && handleSizeSelect(size)}
+                                            disabled={isOutOfStock}
+                                            className={`px-3 h-10 rounded-lg text-xs font-bold border-2 transition-all relative
+                                                ${isOutOfStock
+                                                    ? 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50'
+                                                    : selectedSize === size
+                                                        ? 'border-pink-500 bg-pink-500 text-white cursor-pointer'
+                                                        : 'border-gray-200 text-gray-600 hover:border-pink-300 cursor-pointer'
+                                                }`}
+                                        >
+                                            {isOutOfStock ? (
+                                                <span className="flex flex-col items-center leading-tight">
+                                                    <span className="line-through">{size}</span>
+                                                    <span className="text-[8px] text-red-400 font-black">Out</span>
+                                                </span>
+                                            ) : size}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -395,6 +459,14 @@ function ProductDetail() {
                                 <FaPlus className="text-xs md:text-sm" />
                             </button>
                         </div>
+
+                        {/* max stock hint */}
+                        <p className="text-[11px] text-gray-400 font-medium">
+                            {currentStock} in stock
+                            {hasSize && selectedSize ? ` for size ${selectedSize}` : ""}
+                            {hasColorStock && selectedColor && !hasSizeStock ? ` for ${selectedColor}` : ""}
+                        </p>
+
                     </div>
 
                     <hr className='my-1 md:my-2 border-gray-300' />
@@ -423,7 +495,7 @@ function ProductDetail() {
                         {/* Mobile View (Stacked for better reach) */}
                         <div className="flex sm:hidden flex-col gap-3">
                             <button
-                                onClick={() => addToCart({ ...product, id: product._id || product.id })}
+                                onClick={handleAddToCart}
                                 className='w-full py-3.5 flex items-center justify-center gap-2 bg-pink-500 text-white rounded-md active:scale-95 transition-all font-bold uppercase text-sm shadow-sm'
                             >
                                 <IoBagHandleOutline className='text-lg' />

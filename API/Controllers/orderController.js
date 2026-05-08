@@ -47,6 +47,7 @@ export const placeCartOrder = async (req, res) => {
                 });
             }
 
+            // check total stock
             if (product.stock < item.quantity) {
                 return res.status(400).json({
                     success: false,
@@ -54,12 +55,25 @@ export const placeCartOrder = async (req, res) => {
                 });
             }
 
+            // check size stock if selectedSize exists
+            if (item.selectedSize) {
+                const sizeStock = product.attributes?.get('Size')?.stock?.[item.selectedSize] ?? 0;
+                if (sizeStock < item.quantity) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `${product.prodName} in size ${item.selectedSize} out of stock. Only ${sizeStock} remaining.`
+                    });
+                }
+            }
+
             // Order items array taiyaar karo
             orderItems.push({
                 productId: product._id,
                 vendorId: product.vendorId,
                 quantity: item.quantity,
-                price: product.price
+                price: product.price,
+                selectedColor: item.selectedColor || null,
+                selectedSize: item.selectedSize || null,
             });
 
             totalAmount += product.price * item.quantity;
@@ -77,14 +91,23 @@ export const placeCartOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // 4. Sabse Important: Product ka Stock Update karo
+        // 4. Sabse Important: Product ka Stock Update karo (main top)
         for (const item of orderItems) {
             await Product.findByIdAndUpdate(item.productId, {
                 $inc: {
                     stock: -item.quantity,
-                    totalSold: item.quantity  // ✅ add this
+                    totalSold: item.quantity
                 }
             });
+
+            // decrease size stock if selectedSize exists
+            if (item.selectedSize) {
+                await Product.findByIdAndUpdate(item.productId, {
+                    $inc: {
+                        [`attributes.Size.stock.${item.selectedSize}`]: -item.quantity
+                    }
+                });
+            }
         }
 
         // 5. Cart Empty kar do
@@ -112,7 +135,7 @@ export const placeDirectOrder = async (req, res) => {
         const userId = req.user.id;
         const { prod_id } = req.params;
 
-        const { quantity, shippingAddress, paymentMethod } = req.body;
+        const { quantity, shippingAddress, paymentMethod, selectedColor, selectedSize } = req.body;
 
         // Check if shippingAddress exists before checking its properties
         if (!shippingAddress || !shippingAddress.name || !shippingAddress.contact || !shippingAddress.pincode || !shippingAddress.address || !shippingAddress.city || !shippingAddress.state) {
@@ -131,13 +154,26 @@ export const placeDirectOrder = async (req, res) => {
             });
         }
 
+        // check size stock
+        if (selectedSize) {
+            const sizeStock = product.attributes?.get('Size')?.stock?.[selectedSize] ?? 0;
+            if (sizeStock < quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Size ${selectedSize} out of stock. Only ${sizeStock} remaining.`
+                });
+            }
+        }
+
         const newOrder = new Order({
             userId,
             items: [{
                 productId: product._id,
                 vendorId: product.vendorId,
                 quantity,
-                price: product.price
+                price: product.price,
+                selectedColor: selectedColor || null,
+                selectedSize: selectedSize || null,
             }],
 
             totalAmount: product.price * quantity,
@@ -156,7 +192,16 @@ export const placeDirectOrder = async (req, res) => {
             }
         });
 
-        // 4. (Optional) Agar ye product cart mein tha, toh wahan se hata do
+        // decrease size stock
+        if (selectedSize) {
+            await Product.findByIdAndUpdate(prod_id, {
+                $inc: {
+                    [`attributes.Size.stock.${selectedSize}`]: -quantity
+                }
+            });
+        }
+
+        //  (Optional) Agar ye product cart mein tha, toh wahan se hata do
         await Cart.findOneAndUpdate({ userId }, { $pull: { items: { productId: prod_id } } });
 
         res.status(201).json({

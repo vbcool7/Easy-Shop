@@ -25,6 +25,8 @@ function PlaceOrderForm() {
     const isDirectBuy = location.state?.isDirectBuy;
     const directProdId = location.state?.items?.[0]?.id;
     const directQty = location.state?.items?.[0]?.quantity;
+    const directSelectedColor = location.state?.items?.[0]?.selectedColor || null;
+    const directSelectedSize = location.state?.items?.[0]?.selectedSize || null;
 
     const [shippingAddress, setShippingAddress] = useState({
         name: "",
@@ -77,7 +79,9 @@ function PlaceOrderForm() {
                 prod_id: directProdId,
                 quantity: directQty,
                 shippingAddress,
-                paymentMethod: paymentMethod === "COD" ? "COD" : "Online"
+                paymentMethod: paymentMethod === "COD" ? "COD" : "Online",
+                selectedColor: directSelectedColor,
+                selectedSize: directSelectedSize
             }, {
                 onSuccess: () => {
                     setShippingAddress({
