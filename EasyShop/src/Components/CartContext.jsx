@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import API from '../api/axiosConfig.js';
 import { createContext, useState, useContext, useEffect } from "react";
-import { useAddToCart, useGetCart, useRemoveFromCart, useUpdateCartQuantity } from '../hook/useCart';
+import { useAddToCart, useGetCart, useRemoveFromCart, useClearCart, useUpdateCartQuantity } from '../hook/useCart';
 
 const CartContext = createContext();
 
@@ -15,6 +15,7 @@ export const CartProvider = ({ children }) => {
     const { data: serverCart = [] } = useGetCart();
     const { mutate: addToCartDB } = useAddToCart();
     const { mutate: removeFromCartDB } = useRemoveFromCart();
+    const { mutate: clearCartDB } = useClearCart();
     const { mutate: updateQuantityDB } = useUpdateCartQuantity()
 
     // local state - for guest + login user 
@@ -33,8 +34,9 @@ export const CartProvider = ({ children }) => {
             price: item.productId?.price,
             slug: item.productId?.slug,
             quantity: item.quantity,
-            selectedColor: item.selectedColor || null, 
-            selectedSize: item.selectedSize || null,   
+            selectedColor: item.selectedColor || null,
+            selectedSize: item.selectedSize || null,
+            variantId: item.variantId || null
         }));
 
         setCartItems(prev => {
@@ -59,116 +61,165 @@ export const CartProvider = ({ children }) => {
         }
     }, [user]);
 
-    // add
+    // ===== Add =====
     const addToCart = (product) => {
         const prodId = product._id || product.id;
+        const requestedQty = product.quantity || 1;
+        const variantId = product.variantId || null;
+
+        const isSameCartItem = (item) =>
+            (item._id || item.id) === prodId &&
+            item.variantId?.toString() === variantId?.toString();
 
         if (user) {
             addToCartDB({
                 productId: prodId,
-                quantity: 1,
+                quantity: requestedQty,
                 selectedColor: product.selectedColor || null,
                 selectedSize: product.selectedSize || null,
-                prodImage: product.prodImage || null
+                variantId,
+                prodImage: product.prodImage || product.img || null
+            }, {
+                onSuccess: () => {
+                    setCartItems(prev => {
+                        const isExist = prev.find(isSameCartItem);
+
+                        if (isExist) {
+                            toast.success("Item quantity updated!");
+
+                            return prev.map(item =>
+                                isSameCartItem(item)
+                                    ? { ...item, quantity: (item.quantity || 1) + requestedQty }
+                                    : item
+                            );
+                        }
+
+                        toast.success(`Product added to cart!`, {
+                            style: { border: '1px solid #fbcfe8', padding: '16px', color: '#be185d' },
+                            iconTheme: { primary: '#ec4899', secondary: '#FFFAEE' },
+                        });
+
+                        return [...prev, {
+                            _id: prodId,
+                            prodName: product.prodName || product.name,
+                            prodImage: product.prodImage || product.img,
+                            price: product.price,
+                            slug: product.slug,
+                            quantity: requestedQty,
+                            selectedColor: product.selectedColor || null,
+                            selectedSize: product.selectedSize || null,
+                            variantId
+                        }];
+                    });
+                }
             });
 
-            setCartItems(prev => {
-                // match by prodId AND color+size combination
-                const isExist = prev.find(item =>
-                    (item._id || item.id) === prodId &&
-                    item.selectedColor === (product.selectedColor || null) &&
-                    item.selectedSize === (product.selectedSize || null)
-                );
-                if (isExist) {
-                    toast.success("Item quantity updated!");
-                    return prev.map(item =>
-                        (item._id || item.id) === prodId &&
-                            item.selectedColor === (product.selectedColor || null) &&
-                            item.selectedSize === (product.selectedSize || null)
-                            ? { ...item, quantity: (item.quantity || 1) + 1 }
-                            : item
-                    );
-                }
-                toast.success(`Product added to cart!`, {
-                    style: { border: '1px solid #fbcfe8', padding: '16px', color: '#be185d' },
-                    iconTheme: { primary: '#ec4899', secondary: '#FFFAEE' },
-                });
-
-                return [...prev, {
-                    _id: prodId,
-                    prodName: product.prodName || product.name,
-                    prodImage: product.prodImage || product.img,
-                    price: product.price,
-                    slug: product.slug,
-                    quantity: 1,
-                    selectedColor: product.selectedColor || null,
-                    selectedSize: product.selectedSize || null,
-                }];
-            });
-        } else {
-            // guest user — same logic
-            setCartItems(prev => {
-                const isExist = prev.find(item =>
-                    (item._id || item.id) === prodId &&
-                    item.selectedColor === (product.selectedColor || null) &&
-                    item.selectedSize === (product.selectedSize || null)
-                );
-                if (isExist) {
-                    toast.success("Item quantity updated!");
-                    return prev.map(item =>
-                        (item._id || item.id) === prodId &&
-                            item.selectedColor === (product.selectedColor || null) &&
-                            item.selectedSize === (product.selectedSize || null)
-                            ? { ...item, quantity: (item.quantity || 1) + 1 }
-                            : item
-                    );
-                }
-                toast.success(`Product added to cart!`);
-                return [...prev, {
-                    ...product,
-                    _id: prodId,
-                    quantity: 1,
-                    selectedColor: product.selectedColor || null,
-                    selectedSize: product.selectedSize || null,
-                }];
-            });
+            return;
         }
+
+        setCartItems(prev => {
+            const isExist = prev.find(isSameCartItem);
+
+            if (isExist) {
+                toast.success("Item quantity updated!");
+
+                return prev.map(item =>
+                    isSameCartItem(item)
+                        ? { ...item, quantity: (item.quantity || 1) + requestedQty }
+                        : item
+                );
+            }
+
+            toast.success(`Product added to cart!`);
+
+            return [...prev, {
+                ...product,
+                _id: prodId,
+                quantity: requestedQty,
+                selectedColor: product.selectedColor || null,
+                selectedSize: product.selectedSize || null,
+                variantId,
+                prodImage: product.prodImage || product.img
+            }];
+        });
     };
 
-    // remove 
-    const removeFromCart = (id) => {
+    // ===== Remove =====
+    const removeFromCart = (id, variantId) => {
         if (user) {
-            removeFromCartDB(id);
+            removeFromCartDB({ prodId: id, variantId });
         }
-        setCartItems(prev => prev.filter(item => (item._id || item.id) !== id));
+
+        setCartItems(prev => prev.filter(item =>
+            !(
+                (item._id || item.id) === id &&
+                item.variantId?.toString() === variantId?.toString()
+            )
+        ));
     };
 
-    //update quantity
-    const updateQuantity = (id, action) => {
+    // ===== Update Qty =====
+    const updateQuantity = (id, variantId, action) => {
+
+        const currentItem = cartItems.find(item =>
+            (item._id || item.id) === id &&
+            item.variantId?.toString() === variantId?.toString()
+        );
+
+        if (action === "dec" && currentItem?.quantity <= 1) return;
+
         if (user) {
-            const currentItem = cartItems.find(item => (item._id || item.id) === id);
-
-            if (action === 'dec' && currentItem?.quantity <= 1) return;
-
             updateQuantityDB({
                 productId: id,
-                action: action === 'inc' ? 'increase' : 'decrease'
+                variantId,
+                action: action === "inc" ? "increase" : "decrease"
+            }, {
+                onSuccess: () => {
+                    setCartItems(prev =>
+                        prev.map(item => {
+                            const isSameItem =
+                                (item._id || item.id) === id &&
+                                item.variantId?.toString() === variantId?.toString();
+
+                            if (!isSameItem) return item;
+
+                            if (action === "inc") {
+                                return { ...item, quantity: (item.quantity || 1) + 1 };
+                            }
+
+                            if (action === "dec" && item.quantity > 1) {
+                                return { ...item, quantity: item.quantity - 1 };
+                            }
+
+                            return item;
+                        })
+                    );
+                }
             });
+
+            return;
         }
 
+        // guest cart local update
         setCartItems(prev =>
             prev.map(item => {
-                if ((item._id || item.id) === id) {
-                    if (action === "inc") return { ...item, quantity: (item.quantity || 1) + 1 };
-                    if (action === "dec" && item.quantity > 1) return { ...item, quantity: item.quantity - 1 };
-                }
+                const isSameItem =
+                    (item._id || item.id) === id &&
+                    item.variantId?.toString() === variantId?.toString();
+
+                if (!isSameItem) return item;
+
+                if (action === "inc") return { ...item, quantity: (item.quantity || 1) + 1 };
+                if (action === "dec" && item.quantity > 1) return { ...item, quantity: item.quantity - 1 };
+
                 return item;
             })
         );
     };
 
-    // merge cart
+    // ===== Merge Cart =====
     const mergeGuestCartToDB = async () => {
+
         const savedCart = localStorage.getItem("myCart");
         if (!savedCart) return;
 
@@ -178,10 +229,15 @@ export const CartProvider = ({ children }) => {
         // add each guest item to DB cart
         for (const item of guestItems) {
             const prodId = item._id || item.id;
+
             if (prodId) {
                 await API.post('/cart/cart-add', {
                     productId: prodId,
-                    quantity: item.quantity || 1
+                    quantity: item.quantity || 1,
+                    selectedColor: item.selectedColor || null,
+                    selectedSize: item.selectedSize || null,
+                    variantId: item.variantId || null,
+                    prodImage: item.prodImage || item.img || null
                 });
             }
         }
@@ -190,9 +246,20 @@ export const CartProvider = ({ children }) => {
         localStorage.removeItem("myCart");
     };
 
+    // ===== Clear Cart =====
     const clearCart = () => {
-        setCartItems([]);
-        localStorage.removeItem("myCart");
+        if (user) {
+            clearCartDB(undefined, {
+                onSuccess: () => {
+                    setCartItems([]);
+                    toast.success("Cart cleared");
+                }
+            });
+        } else {
+            setCartItems([]);
+            localStorage.removeItem("myCart");
+            toast.success("Cart cleared");
+        }
     };
 
     // Cart items se total quantity nikalne ke liye

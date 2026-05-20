@@ -13,7 +13,7 @@ function CartItem() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
 
-    const { cartItems, removeFromCart, updateQuantity } = useCart();
+    const { cartItems, removeFromCart, clearCart, updateQuantity } = useCart();
 
     const subtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
     const quantity = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
@@ -56,9 +56,19 @@ function CartItem() {
 
                         {/* LEFT: Product List (2 Columns on Large screens) */}
                         <div className="lg:col-span-2 space-y-4">
+
+                            {/* clear cart btn */}
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={clearCart}
+                                    className="text-[11px] font-black text-red-400 hover:text-red-500 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all cursor-pointer uppercase tracking-wider">
+                                    Clear Cart
+                                </button>
+                            </div>
+
                             {cartItems.map((item, index) => (
                                 <div
-                                    key={index}
+                                    key={`${item._id}-${item.variantId || index}`}
                                     onClick={() => navigate(`/product_detail/${item._id}/${item.prodName}`)}
                                     className="bg-white p-3 md:p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start md:items-center gap-3 md:gap-4 transition-all hover:border-pink-100 cursor-pointer">
 
@@ -102,7 +112,7 @@ function CartItem() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        updateQuantity(item._id, "dec");
+                                                        updateQuantity(item._id, item.variantId, "dec");
                                                     }}
                                                     className="p-1.5 text-pink-500 hover:bg-white rounded-lg transition-all cursor-pointer">
                                                     <FaMinus size={10} />
@@ -115,7 +125,7 @@ function CartItem() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        updateQuantity(item._id, "inc");
+                                                        updateQuantity(item._id, item.variantId, "inc");
                                                     }}
                                                     className="p-1.5 text-pink-500 hover:bg-white rounded-lg transition-all cursor-pointer">
                                                     <FaPlus size={10} />
@@ -126,7 +136,7 @@ function CartItem() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    removeFromCart(item._id);
+                                                    removeFromCart(item._id, item.variantId);
                                                 }}
                                                 className="text-[11px] font-black text-gray-300 hover:text-red-400 uppercase tracking-wider transition-colors cursor-pointer">
                                                 Remove

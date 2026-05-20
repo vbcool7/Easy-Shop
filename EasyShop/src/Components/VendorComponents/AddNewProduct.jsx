@@ -14,9 +14,9 @@ import toast from 'react-hot-toast';
 function AddNewProduct({ setCurrentPage }) {
 
     const { user } = useAuthStore();
-    const vendorCategoryType = user?.category;
+    // const vendorCategoryType = user?.category;
 
-    const { data: categories, isLoading: catLoading } = useVendorCategories();
+    // const { data: categories, isLoading: catLoading } = useVendorCategories();
     const { data: subCategories = [], isLoading } = useVendorSubCategories(user?.category);
     const { mutate: addProduct, isPending: isAdding } = useAddProduct();
 
@@ -26,75 +26,225 @@ function AddNewProduct({ setCurrentPage }) {
     const [mainImage, setMainImage] = useState(null);
     const [mainImagePreview, setMainImagePreview] = useState("");
     const [galleryImages, setGalleryImages] = useState([]);
-    const [colorImagePreviews, setColorImagePreviews] = useState({});
     const MAX_GALLERY_IMAGES = 5;
 
     const [formData, setFormData] = useState({
-        prodName: '',
-        description: '',
-        price: '',
-        originalPrice: '',
-        stock: '',
-        prodImage: null,
-        prodImages: [],
-        attributes: {}
+        prodName: "",
+        description: "",
+        price: "",
+        originalPrice: "",
+        stock: "",
+        attributes: {},
+        variantStock: {}
     });
 
-    // -------SUB CATEGORY-----------
     const handleSubCategory = (subCatItem) => {
         setSelectedSubCat(subCatItem);
         setIsSubOpen(false);
 
-        // Initializing dynamic attributes based on selected sub-category
         const initialAttributes = {};
+
         subCatItem.allowedAttributes?.forEach(attr => {
-            if (attr.hasVariants && attr.type === 'color') {
+            if (attr.hasVariants && attr.type === "color") {
                 initialAttributes[attr.name] = { values: [], images: {}, stock: {} };
-            } else if (attr.hasVariants && attr.type === 'size') {
+            } else if (attr.hasVariants && attr.type === "size") {
                 initialAttributes[attr.name] = { values: [], stock: {} };
             } else {
                 initialAttributes[attr.name] = "";
             }
         });
-        setFormData(prev => ({ ...prev, attributes: initialAttributes }));
+
+        setFormData(prev => ({
+            ...prev,
+            stock: "",
+            attributes: initialAttributes,
+            variantStock: {}
+        }));
+
+        removeMainImage();
+        setGalleryImages([]);
     };
 
-    // Add product
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const hasColorVariant = selectedSubCat?.allowedAttributes?.some(
-        attr => attr.hasVariants && attr.type === 'color'
+        attr => attr.hasVariants && attr.type === "color"
     );
 
     const hasSizeVariant = selectedSubCat?.allowedAttributes?.some(
-        attr => attr.hasVariants && attr.type === 'size'
+        attr => attr.hasVariants && attr.type === "size"
     );
 
-    const sizeAttrName = selectedSubCat?.allowedAttributes?.find(
-        attr => attr.hasVariants && attr.type === 'size'
-    )?.name;
-
-    const vendorAddedSizes = hasSizeVariant &&
-        (formData.attributes[sizeAttrName]?.values?.length > 0);
-
     const colorAttrName = selectedSubCat?.allowedAttributes?.find(
-        attr => attr.hasVariants && attr.type === 'color'
+        attr => attr.hasVariants && attr.type === "color"
     )?.name;
 
-    const vendorAddedColors = hasColorVariant &&
-        (formData.attributes[colorAttrName]?.values?.length > 0);
+    const sizeAttrName = selectedSubCat?.allowedAttributes?.find(
+        attr => attr.hasVariants && attr.type === "size"
+    )?.name;
 
-    const autoCalculatedStock = vendorAddedSizes || (!hasSizeVariant && vendorAddedColors);
+    const colors = formData.attributes[colorAttrName]?.values || [];
+    const sizes = formData.attributes[sizeAttrName]?.values || [];
 
+    const vendorAddedColors = hasColorVariant && colors.length > 0;
+    const vendorAddedSizes = hasSizeVariant && sizes.length > 0;
 
-    // ------- ADD PRODUCT ----------- 
+    const autoCalculatedStock = vendorAddedColors || vendorAddedSizes;
+
+    const getVariantStockValue = (color, size) => {
+        if (color && size) {
+            return formData.variantStock?.[color]?.[size] ?? "";
+        }
+
+        if (color) {
+            return formData.attributes[colorAttrName]?.stock?.[color] ?? "";
+        }
+
+        if (size) {
+            return formData.attributes[sizeAttrName]?.stock?.[size] ?? "";
+        }
+
+        return formData.stock ?? "";
+    };
+
+    const updateVariantStock = (color, size, value) => {
+        const stockValue = value === "" ? "" : Number(value);
+
+        if (color && size) {
+            setFormData(prev => ({
+                ...prev,
+                variantStock: {
+                    ...prev.variantStock,
+                    [color]: {
+                        ...(prev.variantStock?.[color] || {}),
+                        [size]: stockValue
+                    }
+                }
+            }));
+            return;
+        }
+
+        if (color) {
+            const current = formData.attributes[colorAttrName];
+            handleAttributeChange(colorAttrName, {
+                ...current,
+                stock: {
+                    ...current.stock,
+                    [color]: stockValue
+                }
+            });
+            return;
+        }
+
+        if (size) {
+            const current = formData.attributes[sizeAttrName];
+            handleAttributeChange(sizeAttrName, {
+                ...current,
+                stock: {
+                    ...current.stock,
+                    [size]: stockValue
+                }
+            });
+        }
+    };
+
+    const buildVariants = () => {
+        if (colors.length && sizes.length) {
+            return colors.flatMap(color =>
+                sizes.map(size => ({
+                    color,
+                    size,
+                    stock: Number(formData.variantStock?.[color]?.[size] || 0)
+                }))
+            );
+        }
+
+        if (colors.length) {
+            return colors.map(color => ({
+                color,
+                size: null,
+                stock: Number(formData.attributes[colorAttrName]?.stock?.[color] || 0)
+            }));
+        }
+
+        if (sizes.length) {
+            return sizes.map(size => ({
+                color: null,
+                size,
+                stock: Number(formData.attributes[sizeAttrName]?.stock?.[size] || 0)
+            }));
+        }
+
+        return [{
+            color: null,
+            size: null,
+            stock: Number(formData.stock || 0)
+        }];
+    };
+
+    const getTotalStock = () => {
+        return buildVariants().reduce(
+            (sum, item) => sum + Number(item.stock || 0),
+            0
+        );
+    };
+
+    const validateVariantStock = () => {
+        if (colors.length && sizes.length) {
+            for (const color of colors) {
+                for (const size of sizes) {
+                    const value = formData.variantStock?.[color]?.[size];
+
+                    if (value === undefined || value === null || value === "") {
+                        toast.error(`Please enter stock for ${color} / ${size}`);
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        if (colors.length) {
+            for (const color of colors) {
+                const value = formData.attributes[colorAttrName]?.stock?.[color];
+
+                if (value === undefined || value === null || value === "") {
+                    toast.error(`Please enter stock for ${color}`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if (sizes.length) {
+            for (const size of sizes) {
+                const value = formData.attributes[sizeAttrName]?.stock?.[size];
+
+                if (value === undefined || value === null || value === "") {
+                    toast.error(`Please enter stock for size ${size}`);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return true;
+    };
+
     const handleAdd = () => {
-
-        // 1. Basic validation — skip stock check if vendorAddedSizes
-        if (!formData.prodName || (!vendorAddedSizes && !formData.stock) || !formData.description || !formData.price || !formData.originalPrice) {
+        if (
+            !formData.prodName ||
+            (!autoCalculatedStock && formData.stock === "") ||
+            !formData.description ||
+            !formData.price ||
+            !formData.originalPrice
+        ) {
             return toast.error("All fields are required");
         }
 
@@ -102,19 +252,12 @@ function AddNewProduct({ setCurrentPage }) {
             return toast.error("Sale price cannot be more than MRP");
         }
 
-        // 2. Image validation
-        if (hasColorVariant) {
-            const colorAttr = selectedSubCat.allowedAttributes.find(
-                attr => attr.hasVariants && attr.type === 'color'
-            );
-            const colorData = formData.attributes[colorAttr?.name];
-
-            if (!colorData?.values?.length) {
-                return toast.error("Please add at least one color");
-            }
+        if (vendorAddedColors) {
+            const colorData = formData.attributes[colorAttrName];
 
             for (const color of colorData.values) {
                 const imgs = colorData.images?.[color];
+
                 if (!imgs || imgs.length === 0) {
                     return toast.error(`Please upload at least one image for ${color}`);
                 }
@@ -124,74 +267,50 @@ function AddNewProduct({ setCurrentPage }) {
             if (galleryImages.length === 0) return toast.error("At least one Gallery Image is required");
         }
 
-        // 3. Attribute validation
         const attributesToValidate = selectedSubCat?.allowedAttributes || [];
+
         for (const attr of attributesToValidate) {
             const value = formData.attributes[attr.name];
 
-            if (attr.hasVariants && attr.type === 'color') {
-                if (!value?.values?.length) {
-                    return toast.error(`Please add at least one ${attr.name}`);
-                }
-            } else if (attr.hasVariants && attr.type === 'size') {
-                if (value?.values?.length) {
-                    // only validate stock if vendor added sizes
-                    for (const size of value.values) {
-                        if (value.stock?.[size] === undefined || value.stock?.[size] === null) {
-                            return toast.error(`Please enter stock for size ${size}`);
-                        }
-                    }
-                }
-            } else {
-                if (!value || value.trim() === "") {
-                    return toast.error(`Please enter ${attr.name} attribute`);
-                }
+            if (attr.hasVariants && (attr.type === "color" || attr.type === "size")) {
+                continue;
+            }
+
+            if (!value || value.trim() === "") {
+                return toast.error(`Please enter ${attr.name} attribute`);
             }
         }
 
-        // 4. Build FormData
+        if (!validateVariantStock()) return;
+
+        const variants = buildVariants();
+        const totalStock = variants.reduce(
+            (sum, item) => sum + Number(item.stock || 0),
+            0
+        );
+
         const data = new FormData();
         data.append("prodName", formData.prodName);
         data.append("description", formData.description);
         data.append("price", formData.price);
         data.append("originalPrice", formData.originalPrice);
+        data.append("stock", totalStock);
+        data.append("variants", JSON.stringify(variants));
 
-        // 5. Stock — auto calculate from size, color, or manual
-        if (vendorAddedSizes) {
-            const sizeStocks = formData.attributes[sizeAttrName]?.stock || {};
-            const totalStock = Object.values(sizeStocks)
-                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-            data.append("stock", totalStock);
-        } else if (vendorAddedColors && !vendorAddedSizes) {
-            const colorStocks = formData.attributes[colorAttrName]?.stock || {};
-            const totalStock = Object.values(colorStocks)
-                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-            data.append("stock", totalStock);
-        } else {
-            data.append("stock", formData.stock);
-        }
-
-        // 6. Images + attributes
-        if (hasColorVariant) {
-            const colorAttr = selectedSubCat.allowedAttributes.find(
-                attr => attr.hasVariants && attr.type === 'color'
-            );
-            const colorAttrName = colorAttr?.name;
+        if (vendorAddedColors) {
             const colorData = formData.attributes[colorAttrName];
 
             const attributesForJSON = {};
-            
+
             Object.entries(formData.attributes).forEach(([key, val]) => {
                 if (key === colorAttrName) {
                     attributesForJSON[key] = {
                         values: val.values,
-                        images: {},
-                        stock: val.stock || {}
+                        images: {}
                     };
                 } else if (val?.values) {
                     attributesForJSON[key] = {
-                        values: val.values,
-                        stock: val.stock || {}
+                        values: val.values
                     };
                 } else {
                     attributesForJSON[key] = val;
@@ -208,25 +327,26 @@ function AddNewProduct({ setCurrentPage }) {
                     data.append(`colorImg_${color}_${idx}`, file);
                 });
             });
-
         } else {
             data.append("attributes", JSON.stringify(formData.attributes));
             if (mainImage) data.append("prodImage", mainImage);
             galleryImages.forEach((item) => data.append("prodImages", item.file));
         }
 
-        // 7. Submit
         addProduct({ subCat_id: selectedSubCat?._id, formData: data }, {
             onSuccess: (res) => {
                 toast.success(res.message || "Product Successfully Added");
+
                 setFormData({
                     prodName: "",
                     stock: "",
                     description: "",
                     price: "",
                     originalPrice: "",
-                    attributes: {}  // fix: was allowedAttributes
+                    attributes: {},
+                    variantStock: {}
                 });
+
                 removeMainImage();
                 setGalleryImages([]);
                 setCurrentPage("All Products");
@@ -237,7 +357,6 @@ function AddNewProduct({ setCurrentPage }) {
         });
     };
 
-    // ------- HANDLE ATTR ----------- 
     const handleAttributeChange = (name, value) => {
         setFormData(prev => ({
             ...prev,
@@ -245,11 +364,12 @@ function AddNewProduct({ setCurrentPage }) {
         }));
     };
 
-    // ------- Main Image Handler --------
     const handleMainImageChange = (e) => {
         const file = e.target.files[0];
+
         if (file) {
             setMainImage(file);
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setMainImagePreview(reader.result);
@@ -258,11 +378,9 @@ function AddNewProduct({ setCurrentPage }) {
         }
     };
 
-    // --------- Gallery Images Handler ---------
     const handleGalleryImageChange = (e) => {
         const files = Array.from(e.target.files);
 
-        // Check max images limit
         if (galleryImages.length + files.length > MAX_GALLERY_IMAGES) {
             alert(`You can only upload up to ${MAX_GALLERY_IMAGES} gallery images.`);
             return;
@@ -277,13 +395,11 @@ function AddNewProduct({ setCurrentPage }) {
         });
     };
 
-    // -------- Remove Images --------
     const removeMainImage = () => {
         setMainImage(null);
         setMainImagePreview("");
     };
 
-    // -------- Remove Gallery Images --------
     const removeGalleryImage = (index) => {
         setGalleryImages(prev => prev.filter((_, i) => i !== index));
     };
@@ -408,19 +524,9 @@ function AddNewProduct({ setCurrentPage }) {
                                 <input
                                     type="number"
                                     name="stock"
-                                    value={autoCalculatedStock
-                                        ? (() => {
-                                            if (vendorAddedSizes) {
-                                                return Object.values(formData.attributes[sizeAttrName]?.stock || {})
-                                                    .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-                                            } else {
-                                                return Object.values(formData.attributes[colorAttrName]?.stock || {})
-                                                    .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-                                            }
-                                        })()
-                                        : formData.stock
-                                    }
+                                    value={autoCalculatedStock ? getTotalStock() : formData.stock}
                                     onChange={!autoCalculatedStock ? handleInputChange : undefined}
+
                                     readOnly={autoCalculatedStock}
                                     placeholder="0"
                                     className={`w-full px-4 py-3 rounded-xl border border-slate-200 text-sm
@@ -428,7 +534,7 @@ function AddNewProduct({ setCurrentPage }) {
                                 />
                                 {autoCalculatedStock && (
                                     <p className="text-[11px] text-slate-400 ml-1">
-                                        Auto calculated from {vendorAddedSizes ? 'size' : 'color'} stocks
+                                        Auto calculated from variant stocks
                                     </p>
                                 )}
                             </div>
@@ -527,28 +633,22 @@ function AddNewProduct({ setCurrentPage }) {
                                                                 </span>
 
                                                                 {/* Stock input */}
-                                                                <div className="flex items-center gap-2 flex-1">
-                                                                    <label className="text-[11px] text-slate-400 font-medium shrink-0">
-                                                                        Stock:
-                                                                    </label>
-                                                                    <input
-                                                                        type="number"
-                                                                        min="0"
-                                                                        placeholder="0"
-                                                                        value={formData.attributes[attr.name]?.stock?.[size] || ""}
-                                                                        onChange={(e) => {
-                                                                            const current = formData.attributes[attr.name];
-                                                                            handleAttributeChange(attr.name, {
-                                                                                ...current,
-                                                                                stock: {
-                                                                                    ...current.stock,
-                                                                                    [size]: parseInt(e.target.value) || 0
-                                                                                }
-                                                                            });
-                                                                        }}
-                                                                        className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
-                                                                    />
-                                                                </div>
+                                                                {!vendorAddedColors && (
+                                                                    <div className="flex items-center gap-2 flex-1">
+                                                                        <label className="text-[11px] text-slate-400 font-medium shrink-0">
+                                                                            Stock:
+                                                                        </label>
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            placeholder="0"
+                                                                            value={getVariantStockValue(null, size)}
+                                                                            onChange={(e) => updateVariantStock(null, size, e.target.value)}
+                                                                            className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
+                                                                        />
+                                                                    </div>
+                                                                )}
+
 
                                                                 {/* Remove size */}
                                                                 <button
@@ -573,7 +673,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                     {/* Add new size input */}
                                                     <input
                                                         type="text"
-                                                        placeholder="e.g. S, M, L, XL — press Enter"
+                                                        placeholder="Size — press Enter"
                                                         className="w-full px-4 py-2.5 bg-slate-50 rounded-lg border border-slate-200 focus:border-pink-400 outline-none text-sm"
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter' && e.target.value.trim()) {
@@ -626,28 +726,21 @@ function AddNewProduct({ setCurrentPage }) {
                                                             </div>
 
                                                             {/* Stock input for this color */}
-                                                            <div className="flex items-center gap-2 mb-3">
-                                                                <label className="text-[11px] text-slate-400 font-medium shrink-0">
-                                                                    Stock:
-                                                                </label>
-                                                                <input
-                                                                    type="number"
-                                                                    min="0"
-                                                                    placeholder="0"
-                                                                    value={formData.attributes[attr.name]?.stock?.[color] || ""}
-                                                                    onChange={(e) => {
-                                                                        const current = formData.attributes[attr.name];
-                                                                        handleAttributeChange(attr.name, {
-                                                                            ...current,
-                                                                            stock: {
-                                                                                ...current.stock,
-                                                                                [color]: parseInt(e.target.value) || 0
-                                                                            }
-                                                                        });
-                                                                    }}
-                                                                    className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
-                                                                />
-                                                            </div>
+                                                            {!vendorAddedSizes && (
+                                                                <div className="flex items-center gap-2 mb-3">
+                                                                    <label className="text-[11px] text-slate-400 font-medium shrink-0">
+                                                                        Stock:
+                                                                    </label>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        placeholder="0"
+                                                                        value={getVariantStockValue(color, null)}
+                                                                        onChange={(e) => updateVariantStock(color, null, e.target.value)}
+                                                                        className="w-20 px-3 py-1 bg-white rounded-lg border border-pink-100 text-xs font-bold outline-none focus:border-pink-400"
+                                                                    />
+                                                                </div>
+                                                            )}
 
                                                             {/* Image upload for this color */}
                                                             <div className="flex flex-col gap-2">
@@ -731,11 +824,60 @@ function AddNewProduct({ setCurrentPage }) {
                                         </div>
                                     ))}
                                 </div>
+
+                                {vendorAddedColors && vendorAddedSizes && (
+                                    <div className="mt-8">
+                                        <h4 className="text-sm font-bold text-slate-800 mb-3">
+                                            Variant Stock Matrix
+                                        </h4>
+
+                                        <div className="overflow-x-auto border border-pink-100 rounded-xl">
+                                            <table className="w-full min-w-130 text-xs">
+                                                <thead className="bg-pink-50">
+                                                    <tr>
+                                                        <th className="text-left p-3 font-bold text-slate-600">
+                                                            Color / Size
+                                                        </th>
+                                                        {sizes.map((size) => (
+                                                            <th key={size} className="p-3 font-bold text-slate-600 text-center">
+                                                                {size}
+                                                            </th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    {colors.map((color) => (
+                                                        <tr key={color} className="border-t border-pink-50">
+                                                            <td className="p-3 font-bold text-pink-600">
+                                                                {color}
+                                                            </td>
+
+                                                            {sizes.map((size) => (
+                                                                <td key={`${color}-${size}`} className="p-2">
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        placeholder="0"
+                                                                        value={getVariantStockValue(color, size)}
+                                                                        onChange={(e) => updateVariantStock(color, size, e.target.value)}
+                                                                        className="w-20 mx-auto block px-3 py-2 bg-white rounded-lg border border-pink-100 text-xs font-bold text-center outline-none focus:border-pink-400"
+                                                                    />
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
                         )}
 
                         {/* 5. upload image section - if color/size not select */}
-                        {!hasColorVariant && (
+                        {!vendorAddedColors && (
                             <div className="bg-white dark:bg-slate-900">
 
                                 <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white mb-4 md:mb-6">
@@ -860,7 +1002,11 @@ function AddNewProduct({ setCurrentPage }) {
                                 type="button"
                                 onClick={handleAdd}
                                 disabled={isAdding}
-                                className='w-full sm:w-auto md:px-10 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 hover:shadow-pink-200 transition-all active:scale-95 cursor-pointer'
+                                className={`w-full sm:w-auto md:px-10 py-2.5 rounded-xl text-sm font-bold text-white transition-all
+                                    ${isAdding
+                                        ? 'bg-slate-300 shadow-none cursor-not-allowed opacity-70'
+                                        : 'bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 hover:shadow-pink-200 active:scale-95 cursor-pointer'
+                                    }`}
                             >
                                 {isAdding ? "Publishing..." : "Publish Product"}
                             </button>

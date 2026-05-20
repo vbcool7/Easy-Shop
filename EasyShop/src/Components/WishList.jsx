@@ -36,7 +36,7 @@ function WishList() {
                             return (
                                 <div
                                     key={index}
-                                    onClick={() => navigate(`/product_detail/${product?._id}/${product?.slug}/${product?.prodName}`)}
+                                    onClick={() => navigate(`/product_detail/${product?._id}/${product?.prodName}`)}
                                     className="group relative bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-pink-100/50 transition-all duration-300 cursor-pointer">
 
                                     {/* Remove Icon */}

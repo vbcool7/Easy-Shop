@@ -3,6 +3,7 @@ import API from '../api/axiosConfig.js';
 import toast from 'react-hot-toast';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useAuthStore from '../store/useAuthStore.js';
+import { useEffect, useRef, useState } from 'react';
 
 // prod list
 export const useProductList = () => {
@@ -249,4 +250,97 @@ export const useVendorShopProducts = (vendor_id) => {
         enabled: !!vendor_id,
         staleTime: 1000 * 60 * 5
     });
+};
+
+// search prods - search bar
+export const useSearchSuggestions = (delay = 300) => {
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // 1. Outside Click handler: jab user bahar click kare toh dropdown band ho jaye
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // 2. Debounce Logic: Typing rukne ke baad hi API hit hogi
+    useEffect(() => {
+        if (searchQuery.trim().length < 2) {
+            setSuggestions([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                // Aapka API endpoint
+                const response = await API.get(`/product/get-search-suggestions?query=${searchQuery}`);
+                setSuggestions(response.data);
+                setShowDropdown(true);
+            } catch (error) {
+                console.error("Search API Error:", error);
+            }
+        }, delay);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery, delay]);
+
+    // Kuch utilities jo component me use hongi
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSuggestions([]);
+        setShowDropdown(false);
+    };
+
+    return {
+        searchQuery,
+        setSearchQuery,
+        suggestions,
+        showDropdown,
+        setShowDropdown,
+        dropdownRef,
+        clearSearch
+    };
+};
+
+// search prods - search results
+export const useSearchResults = (query) => {
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchResults = async () => {
+            if (!query || !query.trim()) {
+                setData([]);
+                return;
+            }
+
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                // Aapka product search suggestions wala backend endpoint
+                const response = await API.get(`/product/get-search-suggestions?query=${query}`);
+                setData(response.data);
+            } catch (err) {
+                console.error("Error fetching search results:", err);
+                setError(err);
+                setData([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchResults();
+    }, [query]);
+
+    return { data, isLoading, error };
 };

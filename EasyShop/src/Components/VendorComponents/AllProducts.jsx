@@ -16,9 +16,6 @@ function AllProducts({ setCurrentPage }) {
 
     const [isEditOpen, setIsEditOpen] = useState(false);
 
-    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
-
     // stock status
     const stockStyles = {
         'Out of Stock': 'bg-slate-100  text-slate-500  border-slate-200',
@@ -37,6 +34,9 @@ function AllProducts({ setCurrentPage }) {
     const handleEditProduct = (product) => {
         setIsEditOpen(product)
     };
+
+    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">

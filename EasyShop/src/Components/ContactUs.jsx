@@ -1,8 +1,76 @@
 
-//updated
 import React from 'react'
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { IoIosArrowDown } from "react-icons/io";
+import { IoIosArrowUp } from "react-icons/io";
+
+import { useContactForm } from '../hook/useContact';
+import { useCatList } from '../hook/useVendor';
 
 function ContactUs() {
+
+    const { mutate: submitQuery, isPending: isAdding } = useContactForm();
+    const { data: categories = [], isLoading: isCatLoading, isError, error } = useCatList();
+
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        contact: "",
+        category: "",
+        subCategory: "",
+        orderId: "",
+        message: ""
+    });
+
+    // handle i/p
+    const handleInputChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            [e.target.name]: e.target.value
+        }));
+    };
+
+    // category handler
+    const handleCategory = (categoryValue) => {
+        setFormData(prev => ({
+            ...prev,
+            category: categoryValue,
+            subCategory: ""
+        }));
+        setIsCategoryOpen(false);
+    };
+
+    // submit
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        submitQuery(formData, {
+            onSuccess: (res) => {
+                if (res.status) {
+                    toast.success(res.message || "Query submitted successfully!");
+
+                    setFormData({
+                        firstName: "",
+                        lastName: "",
+                        email: "",
+                        contact: "",
+                        category: "",
+                        subCategory: "",
+                        orderId: "",
+                        message: ""
+                    });
+                }
+            },
+            onError: (err) => {
+                toast.error(err.response?.data?.message || "Something went wrong. Please try again!");
+            }
+        });
+    };
+
     return (
         <section className="bg-white min-h-[70vh]">
 
@@ -31,29 +99,39 @@ function ContactUs() {
             <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6 md:py-16 flex flex-col md:flex-row gap-8">
 
                 {/* left section */}
-                <div className='w-full md:w-[60%] '>
+                <div className='w-full md:w-[60%]'>
 
                     <h1 className='text-md md:text-2xl font-bold text-start uppercase mb-4 md:mb-8 text-gray-800 tracking-tight'>
                         Submit your query
                     </h1>
 
-                    <div className='space-y-4 md:space-y-5'>
+                    <form
+                        onSubmit={handleSubmit}
+                        className='space-y-4 md:space-y-5'>
 
                         {/* first nd last name */}
                         <div className='flex flex-col md:flex-row gap-4'>
                             <div className='flex-1'>
                                 <input
                                     type="text"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleInputChange}
                                     placeholder='First Name *'
                                     className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                    required
                                 />
                             </div>
 
                             <div className='flex-1'>
                                 <input
                                     type="text"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleInputChange}
                                     placeholder='Last Name *'
                                     className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                    required
                                 />
                             </div>
                         </div>
@@ -63,71 +141,149 @@ function ContactUs() {
                             <div className='flex-1'>
                                 <input
                                     type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
                                     placeholder='Email *'
                                     className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                    required
                                 />
                             </div>
 
                             <div className='flex-1'>
                                 <input
                                     type="text"
+                                    name="contact"
+                                    value={formData.contact}
+                                    onChange={handleInputChange}
                                     placeholder='Mobile Number *'
                                     className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                    required
                                 />
                             </div>
                         </div>
 
-                        {/* title */}
-                        <div className='flex-1'>
-                            <textarea
-                                type="text"
-                                placeholder="Title *"
-                                className='w-full h-30 md:h-40 border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'>
-                            </textarea>
-                        </div>
+                        {/* category & sub category */}
+                        <div className='flex flex-col md:flex-row gap-4 items-start'>
+                            <div className='flex-1 w-full relative'>
+                                <div className='cursor-pointer'>
+                                    <div
+                                        onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                                        className={`w-full flex items-center justify-between p-3 bg-gray-50 border rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white transition-all outline-none
+                                     ${isCategoryOpen ? "border-pink-500 ring-pink-500 bg-white" : "border-gray-400"}`}
+                                    >
+                                        <span className={`text-sm md:text-base truncate ${formData.category ? "text-gray-900 font-medium" : "text-gray-400"}`}>
+                                            {formData.category || "Select Category *"}
+                                        </span>
+                                        <div className="text-gray-400">
+                                            {isCategoryOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* category nd sub category */}
-                        <div className='flex flex-col md:flex-row gap-4'>
-                            <div className='flex-1'>
-                                <input
-                                    type="text"
-                                    placeholder='Category *'
-                                    className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
-                                />
+                                {/* dropdown panel */}
+                                {isCategoryOpen && (
+                                    <div className='absolute z-50 left-0 w-full bg-white my-1 rounded-2xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto'>
+
+                                        {/* Case B: Static Options */}
+                                        <div
+                                            onClick={() => handleCategory("Billing & Invoice Related")}
+                                            className='hover:text-pink-600 flex justify-start items-center py-2.5 px-4 hover:bg-pink-50 cursor-pointer text-sm md:text-base'>
+                                            <p>Billing & Invoice Related</p>
+                                        </div>
+
+                                        <div
+                                            onClick={() => handleCategory("Refund & Returns")}
+                                            className='hover:text-pink-600 flex justify-start items-center py-2.5 px-4 hover:bg-pink-50 cursor-pointer text-sm md:text-base'>
+                                            <p>Refund & Returns</p>
+                                        </div>
+
+                                        <div
+                                            onClick={() => handleCategory("Delivery & Shipping Delay")}
+                                            className='hover:text-pink-600 flex justify-start items-center py-2.5 px-4 hover:bg-pink-50 cursor-pointer text-sm md:text-base'>
+                                            <p>Delivery & Shipping Delay</p>
+                                        </div>
+
+                                        <div
+                                            onClick={() => handleCategory("Account & Login Issues")}
+                                            className='hover:text-pink-600 flex justify-start items-center py-2.5 px-4 hover:bg-pink-50 cursor-pointer text-sm md:text-base'>
+                                            <p>Account & Login Issues</p>
+                                        </div>
+
+                                        <hr className="border-gray-100" />
+
+                                        {/* Case A: Dynamic Backend Options */}
+                                        {isCatLoading ? (
+                                            <div className="p-3 text-sm text-gray-400">Loading categories...</div>
+                                        ) : (
+                                            categories?.filter(cat => cat.isActive).map((cat, index) => (
+                                                <div
+                                                    key={index}
+                                                    onClick={() => handleCategory(cat.catName)}
+                                                    className='hover:text-pink-600 flex justify-start items-center py-2.5 px-4 hover:bg-pink-100 cursor-pointer text-sm md:text-base'
+                                                >
+                                                    <p>{cat.catName}</p>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            <div className='flex-1'>
-                                <input
-                                    type="text"
-                                    placeholder='Sub Category *'
-                                    className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
-                                />
-                            </div>
+                            {/* sub category input block */}
+                            {formData.category && !["Billing & Invoice Related", "Refund & Returns", "Delivery & Shipping Delay", "Account & Login Issues"].includes(formData.category) ? (
+                                <div className='flex-1 w-full'>
+                                    <input
+                                        type="text"
+                                        name="subCategory" 
+                                        value={formData.subCategory}
+                                        onChange={handleInputChange}
+                                        placeholder='Sub Category *'
+                                        className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                        required
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex-1 hidden md:block"></div>
+                            )}
                         </div>
 
                         {/* Order Number */}
-                        <div className=''>
-                            <input
-                                type="text"
-                                placeholder='Order Number *'
-                                className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
-                            />
-                        </div>
+                        {formData.category !== "Account & Login Issues" && (
+                            <div className=''>
+                                <input
+                                    type="text"
+                                    name="orderId"
+                                    value={formData.orderId}
+                                    onChange={handleInputChange}
+                                    placeholder={formData.category === "Refund & Returns" ? 'Order Number *' : 'Order Number (Optional)'}
+                                    className='w-full border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'
+                                    required={formData.category === "Refund & Returns"}
+                                />
+                            </div>
+                        )}
 
-                        {/* comments */}
-                        <div className='flex-1'>
+                        {/* message */}
+                        <div>
                             <textarea
-                                type="text"
-                                placeholder="Write comments here *"
-                                className='w-full h-30 md:h-40 border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all'>
-                            </textarea>
+                                name="message"
+                                value={formData.message}
+                                onChange={handleInputChange}
+                                placeholder="Write your message here *"
+                                className='w-full h-30 md:h-40 border border-gray-400 py-3 px-2 md:px-4 rounded-md md:rounded-xl outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 transition-all resize-none'
+                                required
+                            ></textarea>
                         </div>
 
                         {/* button */}
-                        <button className="w-full md:w-auto bg-pink-500 text-white hover:bg-pink-600 px-10 py-3 rounded-md md:rounded-full font-bold transition-all active:scale-95 cursor-pointer shadow-lg">
-                            Submit Query
+                        <button
+                            type="submit" 
+                            disabled={isAdding}
+                            className="w-full md:w-auto bg-pink-500 text-white hover:bg-pink-600 px-10 py-3 rounded-md md:rounded-full font-bold transition-all active:scale-95 cursor-pointer shadow-lg disabled:bg-gray-400"
+                        >
+                            {isAdding ? "Submitting..." : "Submit Query"}
                         </button>
-                    </div>
+                    </form>
 
                 </div>
 

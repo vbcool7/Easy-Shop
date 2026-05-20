@@ -5,11 +5,13 @@ import { Link } from 'react-router-dom';
 import { MdOutlineDashboard } from "react-icons/md";
 import { AiOutlineProduct } from "react-icons/ai";
 import { PiShoppingCartSimple, PiHandCoins } from "react-icons/pi";
-import { TbUsers, TbSettings } from "react-icons/tb"; // Customers & Settings
-import { TiStarOutline } from "react-icons/ti"; // Reviews/Ratings
-import { BiSolidCategory } from "react-icons/bi"; // Categories
-import { ChevronDown, BadgePercent, User } from 'lucide-react'; // Lucide icons for UI/Coupons
+import { TbUsers, TbSettings } from "react-icons/tb";
+import { TiStarOutline } from "react-icons/ti";
+import { BiSolidCategory } from "react-icons/bi";
+import { ChevronDown, BadgePercent, User } from 'lucide-react';
 import { HiOutlineChatAlt2 } from "react-icons/hi";
+import { BookOpen } from 'lucide-react';
+
 import { useGetVendor } from "../../hook/useVendor";
 import { useVendorUnreadCount } from "../../hook/useChat";
 import useAuthStore from "../../store/useAuthStore";
@@ -31,6 +33,15 @@ const menuItems = [
             { id: "Add Product", label: "Add New Product" },
             { id: "Inventory", label: "Stock Inventory" }
         ],
+    },
+    {
+        id: "blog",
+        icon: <BookOpen className='w-6 h-6' />,
+        label: "Blog Management",
+        submenu: [
+            { id: "blogs", label: "Blog List" },
+            { id: "create-blog", label: "Add Blog" },
+        ]
     },
     {
         id: "Orders",

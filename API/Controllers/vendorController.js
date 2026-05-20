@@ -414,9 +414,9 @@ export const updateVendorDetail = async (req, res) => {
         const currentVendor = await Vendor.findById(vendor_id);
 
         if (!currentVendor) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Vendor not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Vendor not found"
             });
         }
 
@@ -566,6 +566,115 @@ export const vendorDashboardStats = async (req, res) => {
             success: false,
             message: "Server Error Occurred"
         });
+    }
+};
+
+// Orders Over Time 
+export const vendorOrdersOverTime = async (req, res) => {
+    try {
+        const vId = new mongoose.Types.ObjectId(req.user.id);
+        const days = parseInt(req.query.period) || 30;
+        const since = new Date();
+        since.setDate(since.getDate() - days);
+
+        const data = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $match: {
+                    "items.vendorId": vId,
+                    "orderStatus": { $in: ["Delivered", "Shipped", "Processing"] },
+                    "createdAt": { $gte: since }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { _id: 1 } },
+            { $project: { _id: 0, date: "$_id", count: 1, revenue: 1 } }
+        ]);
+
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        console.error("Error [vendorOrdersOverTime]:", err);
+        res.status(500).json({ success: false, message: "Server Error Occurred" });
+    }
+};
+
+// Order Status Breakdown
+export const vendorOrderStatus = async (req, res) => {
+    try {
+        const vId = new mongoose.Types.ObjectId(req.user.id);
+
+        const data = await Order.aggregate([
+            { $unwind: "$items" },
+            { $match: { "items.vendorId": vId } },
+            // De-duplicate: one order may have multiple vendor items
+            { $group: { _id: { orderId: "$_id", status: "$orderStatus" } } },
+            { $group: { _id: "$_id.status", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $project: { _id: 0, status: "$_id", count: 1 } }
+        ]);
+
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        console.error("Error [vendorOrderStatus]:", err);
+        res.status(500).json({ success: false, message: "Server Error Occurred" });
+    }
+};
+
+// Top Selling Products
+export const vendorTopProducts = async (req, res) => {
+    try {
+        const vId = new mongoose.Types.ObjectId(req.user.id);
+        const limit = parseInt(req.query.limit) || 5;
+ 
+        const data = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $match: {
+                    "items.vendorId": vId,
+                    "orderStatus": { $in: ["Delivered", "Shipped", "Processing"] }
+                }
+            },
+            {
+                $group: {
+                    _id: "$items.productId",
+                    unitsSold: { $sum: "$items.quantity" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { unitsSold: -1 } },
+            { $limit: limit },
+    
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 0,
+                    productId: "$_id",
+                    name: "$product.prodName",   
+                    image: "$product.prodImage", 
+                    unitsSold: 1,
+                    revenue: 1
+                }
+            }
+        ]);
+ 
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        console.error("Error [vendorTopProducts]:", err);
+        res.status(500).json({ success: false, message: "Server Error Occurred" });
     }
 };
 

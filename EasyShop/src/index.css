@@ -3,18 +3,18 @@
 
 /* Swiper Pagination Dots Custom Styling */
 .swiper-pagination-bullet {
-    background: #FF99CC !important; /* Dark Gray */
-    opacity: 1 !important; /* Opacity ko full karein taaki color saaf dikhe */
-    width: 10px !important; /* Size thoda bada */
-    height: 10px !important; /* Size thoda bada */
-    margin: 0 4px !important; /* Do dots ke beech ki doori */
+    background: #FF99CC !important; 
+    opacity: 1 !important; 
+    width: 10px !important; 
+    height: 10px !important; 
+    margin: 0 4px !important; 
     transition: all 0.3s ease;
 }
 
 .swiper-pagination-bullet-active {
     background: #ec4899 !important;
     opacity: 1;
-    width: 15px; /* Active dot ko thoda lamba ya bada dikhane ke liye */
+    width: 15px; 
     border-radius: 5px;
 }
 
@@ -22,15 +22,14 @@
     padding-bottom: 45px !important;
 }
 
-
 /* Price slider - prod filter*/
 input[type="range"]::-webkit-slider-thumb {
-  pointer-events: auto; /* Taaki mouse click pakad sake */
+  pointer-events: auto; 
   width: 18px;
   height: 18px;
   border-radius: 50%;
   -webkit-appearance: none;
-  background-color: #ec4899; /* Tailwind Pink-500 */
+  background-color: #ec4899; 
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   cursor: pointer;

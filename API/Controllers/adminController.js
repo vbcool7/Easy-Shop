@@ -7,6 +7,7 @@ import Product from '../Models/productModelSchema.js';
 import ReviewRating from '../Models/reviewRatingModelSchema.js';
 import Transaction from '../Models/transactionModelSchema.js';
 import Withdraw from '../Models/withdrawModelSchema.js';
+import Blog from '../Models/blogModelSchema.js';
 
 import { deleteCloudinaryFiles, deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js';
 import bcrypt from 'bcrypt';
@@ -176,7 +177,7 @@ export const updateAdminProfile = async (req, res) => {
 // admin dashboard stats
 export const getAdminDashboardStats = async (req, res) => {
     try {
-        // 1. Total Revenue nikalna (Aggregation)
+        // 1. find total revenue (Aggregation)
         const revenueData = await Order.aggregate([
             { $match: { orderStatus: "Delivered", paymentStatus: "Completed" } },
             { $group: { _id: null, totalSales: { $sum: "$totalAmount" } } }
@@ -184,7 +185,7 @@ export const getAdminDashboardStats = async (req, res) => {
 
         const totalRevenue = revenueData.length > 0 ? revenueData[0].totalSales : 0;
 
-        // 2. counts nikalna
+        // 2. find counts
         const totalOrders = await Order.countDocuments();
 
         // Pending = Processing + Shipped
@@ -216,6 +217,144 @@ export const getAdminDashboardStats = async (req, res) => {
             message: "Server Error Occur"
         });
     };
+};
+
+// Orders over time (Line Chart)
+export const getOrdersOverTime = async (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 30;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        const orders = await Order.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    orders: { $sum: 1 },
+                    revenue: { $sum: "$totalAmount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        const formattedData = orders.map(item => ({
+            date: item._id,
+            orders: item.orders,
+            revenue: item.revenue
+        }));
+
+        res.status(200).json({
+            success: true,
+            count: formattedData.length,
+            data: formattedData
+        });
+
+    } catch (err) {
+        console.log("Error :", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    }
+};
+
+// Order status breakdown (Donut Chart)
+export const getOrderStatusBreakdown = async (req, res) => {
+    try {
+        const breakdown = await Order.aggregate([
+            { $group: { _id: "$orderStatus", count: { $sum: 1 } } }
+        ]);
+
+        const data = breakdown.map(item => ({
+            name: item._id,
+            value: item.count
+        }));
+
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+// Revenue by payment method (Bar Chart)
+export const getRevenueByPaymentMethod = async (req, res) => {
+    try {
+        const data = await Order.aggregate([
+            { $match: { paymentStatus: "Completed" } },
+            {
+                $group: {
+                    _id: "$paymentMethod",
+                    revenue: { $sum: "$totalAmount" },
+                    orders: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const result = data.map(item => ({
+            name: item._id,
+            revenue: item.revenue,
+            orders: item.orders
+        }));
+
+        res.status(200).json({ success: true, data: result });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+// Get Top 5 Selling Products
+export const getTopProducts = async (req, res) => {
+    try {
+        const topProducts = await Order.aggregate([
+            
+            // not include cancel order
+            { $match: { orderStatus: { $ne: "Cancelled" } } },
+              
+            { $unwind: "$items" },
+
+            {
+                $group: {
+                    _id: "$items.productId",
+                    totalSold: { $sum: "$items.quantity" },
+                    totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+
+            { $sort: { totalSold: -1 } },
+
+            { $limit: 5 },
+
+            {
+                $lookup: {
+                    from: "products", 
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+
+            { $unwind: "$productDetails" }
+        ]);
+
+        const formattedData = topProducts.map(item => ({
+            name: item.productDetails.prodName || "Unknown Product", 
+            sales: item.totalSold,
+            revenue: item.totalRevenue
+        }));
+
+        res.status(200).json({ 
+            success: true, 
+            data: formattedData 
+        });
+
+    } catch (err) {
+        console.error("Error :", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Server Error Occur" 
+        });
+    }
 };
 
 // vendors list
@@ -267,9 +406,6 @@ export const toggleVendorStatus = async (req, res) => {
 
         vendor.isActive = !vendor.isActive;
         await vendor.save();
-
-        // console.log("Updated Vendor in DB:", vendor.isActive); // Kya ye toggle hua?
-        // console.log(typeof vendor.isActive, vendor.isActive); // before the toggle
 
         res.status(200).json({
             success: true,
@@ -461,43 +597,73 @@ export const toggleBestSeller = async (req, res) => {
 // all orders
 export const getAllOrders = async (req, res) => {
     try {
-        const { vendorId, status } = req.query; // Status filter bhi add kar sakte ho
+        const { vendorId, status } = req.query;
 
         let query = {};
 
         // 1. Agar specific Vendor ke orders dekhne hain
         if (vendorId) {
-            // Un products ki IDs nikalo jo is vendor ki hain
             const vendorProducts = await Product.find({ vendorId }).distinct('_id');
             query["items.productId"] = { $in: vendorProducts };
         }
 
         // 2. Agar specific status filter karna ho (optional)
         if (status) {
-            query.status = status;
+            query.orderStatus = status;
         }
 
         const orders = await Order.find(query)
             .populate('userId', 'name email profilePhoto')
             .populate({
                 path: 'items.productId',
-                select: 'prodName price prodImage vendorId catId', // Sirf zaroori details
-                populate: { path: 'vendorId', select: 'storeName' },
-                populate: { path: 'catId', select: 'catName' }
+                select: 'prodName price prodImage vendorId catId attributes variants',
+                populate: [
+                    { path: "vendorId", select: "storeName" },
+                    { path: "catId", select: "catName" }
+                ]
             })
             .sort({ createdAt: -1 });
 
-        // Optional: Data transformation
-        // Agar aap chahte ho ki response mein sirf wahi items dikhein jo us vendor ke hain (filter ke waqt)
-        let finalOrders = orders;
-        if (vendorId) {
-            finalOrders = orders.map(order => {
-                const filteredItems = order.items.filter(item =>
-                    item.productId.vendorId._id.toString() === vendorId
+        // Optional: Data transformation 
+        let finalOrders = orders.map(order => {
+            let items = order.items;
+
+            if (vendorId) {
+                items = items.filter(item =>
+                    item.productId?.vendorId?._id?.toString() === vendorId
                 );
-                return { ...order._doc, items: filteredItems };
+            }
+
+            const updatedItems = items.map(item => {
+                const product = item.productId;
+
+                const matchedVariant = product?.variants?.find(
+                    variant => variant._id.toString() === item.variantId?.toString()
+                );
+
+                const colorAttr = product?.attributes?.get?.("Color");
+                const colorImages = item.selectedColor
+                    ? colorAttr?.images?.[item.selectedColor]
+                    : null;
+
+                const variantImage = colorImages?.[0] || product?.prodImage;
+
+
+                return {
+                    ...item._doc,
+                    selectedColor: item.selectedColor || null,
+                    selectedSize: item.selectedSize || null,
+                    variantId: item.variantId || null,
+                    variantStock: matchedVariant?.stock ?? null,
+                    variantImage
+                };
             });
-        }
+
+            return {
+                ...order._doc,
+                items: updatedItems
+            };
+        });
 
         res.status(200).json({
             success: true,
@@ -653,7 +819,7 @@ export const adminReviewList = async (req, res) => {
             .populate({
                 path: 'productId',
                 select: 'prodName vendorId',
-                populate: { path: 'vendorId', select: 'name email profilePhoto' } // Vendor ka naam bhi dikhega
+                populate: { path: 'vendorId', select: 'name email profilePhoto' }
             })
             .sort({ createdAt: -1 });
 
@@ -915,6 +1081,115 @@ export const toggleWithdrawStatus = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server Error Occur"
+        });
+    }
+};
+
+// blog list 
+export const listBlog = async (req, res) => {
+    try {
+        const blogList = await Blog.find()
+            .select("title category status createdAt bannerImage authorType authorCustomName readTime description content blockquote tags trendsList isActive")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: blogList.length,
+            message: "Blog list successfully fetched",
+            data: blogList
+        });
+
+    } catch (err) {
+        console.log("Error : ", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    }
+};
+
+// toggle blog status 
+export const updateBlogStatus = async (req, res) => {
+    try {
+        const { blog_id } = req.params;
+        const { status } = req.body;
+
+        const validStatuses = ['Pending', 'Approved', 'Rejected'];
+
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status"
+            });
+        }
+
+        const blog = await Blog.findByIdAndUpdate(
+            blog_id,
+            { status },
+            { new: true }
+        );
+
+        if (!blog)
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found"
+            });
+
+        return res.status(200).json({
+            success: true,
+            message: `Blog status updated to ${status} successfully`,
+            data: blog
+        });
+
+    } catch (err) {
+        console.log("Error :", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    }
+};
+
+// delete blog
+export const deleteBlog = async (req, res) => {
+    try {
+        const { blog_id } = req.params;
+        const userId = req.user._id || req.user.id;
+        const role = req.user?.role;
+
+        const blog = await Blog.findById(blog_id);
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found"
+            });
+        }
+
+        const blogAuthorId = blog?.authorId || blog?.author;
+
+        if (role !== 'Admin' && role !== 'admin' && blogAuthorId?.toString() !== userId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to delete this blog"
+            });
+        }
+
+        if (blog.bannerImage) {
+            await deleteOldFileFromCloudinary(blog.bannerImage);
+        }
+
+        await Blog.findByIdAndDelete(blog_id);
+
+        res.status(200).json({
+            success: true,
+            message: "Blog deleted successfully"
+        });
+
+    } catch (err) {
+        console.log("Error :", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occurred"
         });
     }
 };

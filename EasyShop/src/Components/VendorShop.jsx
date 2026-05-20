@@ -12,6 +12,7 @@ import { useVendorShopProducts } from '../hook/uesProducts';
 import { useCart } from './CartContext';
 import { useWishList } from './WishListContext';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 function VendorShop() {
 
@@ -27,7 +28,46 @@ function VendorShop() {
 
     const products = data?.pages.flatMap(page => page.data) || [];
 
-    const handleAddToCart = (e, product) => { e.stopPropagation(); addToCart(product); };
+    const handleAddToCart = (product) => {
+
+        const variants = product.variants || [];
+        const availableVariants = variants.filter(v => v.stock > 0);
+
+        const colorValues = product.attributes?.Color?.values || [];
+        const sizeValues = product.attributes?.Size?.values || [];
+
+        const hasMultipleChoices =
+            colorValues.length > 1 ||
+            sizeValues.length > 1 ||
+            availableVariants.length > 1;
+
+        if (hasMultipleChoices) {
+            toast.error("Please select options");
+            navigate(`/product_detail/${product._id}/${product.prodName}`);
+            return;
+        }
+
+        const variant = availableVariants[0];
+
+        if (!variant) {
+            toast.error("Product is out of stock");
+            return;
+        }
+
+        const variantImage = variant.color
+            ? product.attributes?.Color?.images?.[variant.color]?.[0] || product.prodImage
+            : product.prodImage;
+
+        addToCart({
+            ...product,
+            id: product._id,
+            selectedColor: variant.color || null,
+            selectedSize: variant.size || null,
+            variantId: variant._id,
+            prodImage: variantImage
+        });
+    };
+
     const handleWishList = (e, product) => { e.stopPropagation(); addToWishList(product); };
 
     return (
@@ -103,6 +143,7 @@ function VendorShop() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {(products || []).map((product) => {
+                        
                         const isFavorite = wishListItems.some((wishItem) => {
                             const wishId = wishItem.productId?._id || wishItem._id || wishItem.id;
                             return wishId === product._id;
@@ -141,6 +182,7 @@ function VendorShop() {
                                         <span className="text-pink-500 text-base md:text-lg font-black">
                                             ₹{product.price}
                                         </span>
+
                                         {product.originalPrice > product.price && (
                                             <span className="text-gray-400 line-through text-[10px] md:text-xs">
                                                 ₹{product.originalPrice}
@@ -159,7 +201,10 @@ function VendorShop() {
 
                                     {/* Cart Button */}
                                     <button
-                                        onClick={(e) => handleAddToCart(e, product)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddToCart(product);
+                                        }}
                                         className="w-full py-2 bg-gray-900 text-white text-[10px] md:text-xs font-bold rounded-lg mt-3 uppercase tracking-wider hover:bg-pink-500 transition-colors duration-300"
                                     >
                                         Add to Cart

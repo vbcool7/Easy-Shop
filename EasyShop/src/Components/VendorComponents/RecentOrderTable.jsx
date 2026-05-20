@@ -12,9 +12,6 @@ function RecentOrderTable({ setCurrentPage }) {
 
     const [selectedOrderId, setIsSelectedOrderId] = useState(null);
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
-
     const orderStatusStyles = {
         Processing: "bg-amber-50 text-amber-600 border-amber-100",
         Shipped: "bg-blue-50 text-blue-600 border-blue-100",
@@ -25,6 +22,9 @@ function RecentOrderTable({ setCurrentPage }) {
     const handleOrderStatusChange = (orderId, newStatus) => {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
+
+    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -91,7 +91,7 @@ function RecentOrderTable({ setCurrentPage }) {
 
                                         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
                                             <img
-                                                src={order.productDetails?.prodImage}
+                                                src={order.variantImage || order.productDetails?.prodImage}
                                                 alt={order.productDetails?.prodName}
                                                 className="w-full h-full object-cover" />
                                         </div>
@@ -134,9 +134,9 @@ function RecentOrderTable({ setCurrentPage }) {
                                 </td>
 
                                 <td className="px-6 py-4">
-                                    <button 
-                                    onClick={() => setIsSelectedOrderId(order._id)}
-                                    className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-pink-500 group-hover:text-white transition-all">
+                                    <button
+                                        onClick={() => setIsSelectedOrderId(order._id)}
+                                        className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-pink-500 group-hover:text-white transition-all">
                                         <HiOutlineExternalLink className="w-4 h-4" />
                                     </button>
                                 </td>

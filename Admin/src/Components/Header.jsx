@@ -55,7 +55,7 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                     </div>
                 </div>
 
-                {/* Center: Search Bar (Matching Vendor Style) */}
+                {/* Center: Search Bar */}
                 <div className='flex-1 max-w-md hidden sm:block'>
                     <div className='relative group'>
                         <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
@@ -70,12 +70,12 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                 {/* Right Area: Actions & Profile */}
                 <div className='flex items-center space-x-2 lg:space-x-4'>
 
-                    {/* Dark Mode Toggle */}
+                    {/* sun icon */}
                     <button className='p-2.5 rounded-xl text-slate-500 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all'>
                         <Sun className='w-5 h-5 hover:rotate-45 transition-transform' />
                     </button>
 
-                    {/* Notifications with Pink Dot */}
+                    {/* notifications icon */}
                     <div className='relative'>
                         <button className='p-2.5 rounded-xl text-slate-500 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all'>
                             <Bell className='w-5 h-5' />
@@ -120,13 +120,6 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                         {/* Dropdown Menu Overlay */}
                         {open && (
                             <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
-                                <button
-                                    onClick={() => {setCurrentPage('profile-setting'); setOpen(false);}}
-                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-pink-50 dark:hover:bg-slate-700/50 hover:text-pink-600 transition-colors cursor-pointer"
-                                >
-                                    <UserRoundCog className="w-4 h-4" />
-                                    <span>Settings</span>
-                                </button>
 
                                 <div className='h-px bg-slate-100 dark:bg-slate-700 mx-2 my-1'></div>
 

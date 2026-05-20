@@ -17,6 +17,8 @@ import HomeBannerCMS from '../Components/VendorComponents/HomeBannerCMS';
 import FooterCMS from '../Components/VendorComponents/FooterCMS';
 import ShopPolicyCMS from '../Components/VendorComponents/ShopPolicyCMS';
 import VendorChat from '../Components/VendorComponents/VendorChat';
+import Blogs from '../Components/VendorComponents/Blogs';
+import AddBlog from '../Components/VendorComponents/AddBlog';
 
 function VendorPage() {
     const [sideBarCollapsed, setSideBarCollapsed] = useState(false);
@@ -50,6 +52,10 @@ function VendorPage() {
                             {currentPage === "All Products" && <AllProducts setCurrentPage={setCurrentPage} />}
                             {currentPage === "Add Product" && <AddNewProduct setCurrentPage={setCurrentPage}/>}
                             {currentPage === "Inventory" && <VendorStockInventoryPage setCurrentPage={setCurrentPage}/>}
+                            
+                            {/* blog management */}
+                            {currentPage === "blogs" && <Blogs setCurrentPage={setCurrentPage} />}
+                            {currentPage === "create-blog" && <AddBlog setCurrentPage={setCurrentPage} />}
 
                             {/* orders */}
                             {currentPage === "Orders" && <Orders />}

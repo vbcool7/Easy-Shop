@@ -6,14 +6,15 @@ import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { useProductReviews } from '../hook/useReview';
 
 function ProductDetailReview({ prodId }) {
+
     const { data: productReviews = [], isLoading, isError } = useProductReviews(prodId);
     const [reviewOpen, setReviewOpen] = useState(false);
 
-    if (isLoading) return <div className="p-20 text-center">Loading reviews...</div>;
-    if (isError) return <div className="p-20 text-center">Reviews Not Found!</div>;
-
     const totalReviews = productReviews.length;
     const averageRating = totalReviews > 0 ? productReviews[0]?.productId?.averageRating : 0;
+
+    if (isLoading) return <div className="p-20 text-center">Loading reviews...</div>;
+    if (isError) return <div className="p-20 text-center">Reviews Not Found!</div>;
 
     return (
         <div>
@@ -69,7 +70,9 @@ function ProductDetailReview({ prodId }) {
 
                     {/* Right Side: Reviews List */}
                     <div className="lg:col-span-2 space-y-8">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Stories</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            Customer Stories
+                        </h3>
 
                         {totalReviews > 0 ? (
                             <div className="space-y-6">

@@ -15,10 +15,11 @@ import VendorList from "./Components/VendorList";
 import Products from "./Components/Products";
 import Orders from "./Components/Orders";
 import UserList from "./Components/UserList";
-import ProfileSetting from "./Components/ProfileSetting";
 import Reviews from "./Components/Reviews";
 import Transactions from "./Components/Transactions";
 import PayoutRequest from "./Components/PayoutRequest";
+import Blogs from "./Components/Blogs";
+import AddBlog from "./Components/AddBlog";
 
 function App() {
 
@@ -93,6 +94,10 @@ function App() {
                                 {/* products */}
                                 {currentPage === "all-products" && <Products />}
 
+                                {/* manage blogs */}
+                                {currentPage === "blogs" && <Blogs setCurrentPage={setCurrentPage} />}
+                                {currentPage === "create-blog" && <AddBlog setCurrentPage={setCurrentPage} />}
+
                                 {/* orders */}
                                 {currentPage === "platform-orders" && <Orders />}
                                 
@@ -108,8 +113,6 @@ function App() {
                                 {/* reviews */}
                                 {currentPage === "review" && <Reviews />}
 
-                                {/* profile setting */}
-                                {currentPage === "profile-setting" && <ProfileSetting />}
                             </div>
                         </main>
                     </div>

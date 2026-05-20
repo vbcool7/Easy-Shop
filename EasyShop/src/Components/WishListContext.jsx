@@ -30,6 +30,13 @@ export const WishListProvider = ({ children }) => {
         });
     }, [serverWishList]);
 
+    // clear wishlist when user logs out or changes
+    useEffect(() => {
+        if (!user) {
+            setWishListItems([]);
+        }
+    }, [user]);
+
     const addToWishList = (product) => {
         if (!user) {
             toast.error("Please login to add items to wishlist");
@@ -88,8 +95,7 @@ export const WishListProvider = ({ children }) => {
     const removeFromWishList = (productId) => {
         if (!user) return;
 
-        toast.success("Removed from wishl");
-        toggleWishList(productId);
+        toggleWishList({ productId });
 
         setWishListItems(prev =>
             prev.filter(item => item.productId?._id?.toString() !== productId?.toString())

@@ -183,40 +183,49 @@ function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCa
                 )}
             </div>
 
-            {/* --- YAHAN SE DYNAMIC LOGIC START HAI --- */}
-            {filterOptions && Object.entries(filterOptions).map(([attrName, values]) => (
-                <div key={attrName} className='mb-4 border-b border-slate-100 pb-4'>
-                    <button
-                        onClick={() => setOpenAttrSections(prev => ({
-                            ...prev, [attrName]: !prev[attrName]
-                        }))}
-                        className='w-full flex justify-between items-center text-sm font-bold text-slate-700 py-2'>
-                        {attrName}
-                        <span>{openAttrSections[attrName] ? '▲' : '▼'}</span>
-                    </button>
+            {/* --- DYNAMIC LOGIC --- */}
+            {filterOptions && Object.entries(filterOptions).map(([attrName, values]) => {
 
-                    {openAttrSections[attrName] && (
-                        <div className='mt-2 space-y-2'>
-                            {values.map((val) => (
-                                <label key={val} className='flex items-center gap-2 cursor-pointer'>
-                                    <input
-                                        type='checkbox'
-                                        checked={selectedAttrs[attrName] === val}
-                                        onChange={() => setSelectedAttrs(prev => ({
-                                            ...prev,
-                                            // toggle — if same value clicked again, remove it
-                                            [attrName]: prev[attrName] === val ? undefined : val
-                                        }))}
-                                        className='accent-pink-500'
-                                    />
-                                    <span className='text-sm text-slate-600'>{val}</span>
-                                </label>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            ))}
+                const safeValues = Array.isArray(values) ? values : [];
 
+                if (safeValues.length === 0) return null;
+
+                return (
+                    <div key={attrName} className='mb-4 border-b border-slate-100 pb-4'>
+                        <button
+                            onClick={() => setOpenAttrSections(prev => ({
+                                ...prev,
+                                [attrName]: !prev[attrName]
+                            }))}
+                            className='w-full flex justify-between items-center text-sm font-bold text-slate-700 py-2'
+                        >
+                            {attrName}
+                            <span>{openAttrSections[attrName] ? '▲' : '▼'}</span>
+                        </button>
+
+                        {openAttrSections[attrName] && (
+                            <div className='mt-2 space-y-2'>
+                                {safeValues.map((val) => (
+                                    <label key={`${attrName}-${val}`} className='flex items-center gap-2 cursor-pointer'>
+                                        <input
+                                            type='checkbox'
+                                            checked={selectedAttrs[attrName] === val}
+                                            onChange={() => setSelectedAttrs(prev => ({
+                                                ...prev,
+                                                [attrName]: prev[attrName] === val ? undefined : val
+                                            }))}
+                                            className='accent-pink-500'
+                                        />
+                                        <span className='text-sm text-slate-600'>
+                                            {String(val)}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
             {/* --- DYNAMIC LOGIC END --- */}
 
         </section>

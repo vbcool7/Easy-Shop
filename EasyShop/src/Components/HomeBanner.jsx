@@ -1,7 +1,6 @@
 
-//updated
 import React from 'react';
-import HomeBannerImg1 from '../assets/Images/HomeBannerImg1.jpg';
+import HomeBannerImg2 from '../assets/Images/HomeBannerImg2.jpg';
 
 function HomeBanner() {
     return (
@@ -11,7 +10,7 @@ function HomeBanner() {
 
                 <div className='w-full h-100 md:h-140'>
                     <img
-                        src={HomeBannerImg1}
+                        src={HomeBannerImg2}
                         alt="HomeBannerImg"
                         className='w-full h-full object-cover rounded-3xl'
                     />

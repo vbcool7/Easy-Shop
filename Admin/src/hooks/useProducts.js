@@ -15,7 +15,7 @@ export const useGetProducts = (search = "") => {
     });
 };
 
-// update prod status
+// update prod status - prod table
 export const useUpdateProductStatus = () => {
     const queryClient = useQueryClient();
 

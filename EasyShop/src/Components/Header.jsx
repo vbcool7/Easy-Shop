@@ -1,17 +1,19 @@
 
-//updated
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import MegaMenuImg from '../assets/Images/MegaMenuImg.jpg';
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { PiListHeartBold, PiHeadsetFill } from "react-icons/pi";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
 import { RxCross2 } from "react-icons/rx";
 
+import { useMegaMenu } from '../hook/useCategories';
+
 function Header() {
 
     const navigate = useNavigate();
+
+    const { data: menuData, isLoading, isError } = useMegaMenu();
 
     const [isOpen, setIsOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
@@ -36,56 +38,6 @@ function Header() {
         },
     ];
 
-    const dropDownMenus = [
-        {
-            menu: "HEALTH AND BEAUTY"
-        },
-        {
-            menu: "SMARTPHONE & TABLE",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "AUTOMOTIVE & MOTORCYCLE",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "FURNITURE",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "SPORT & OUTDOORS",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "ELECTRONICS",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "BAGS & SHOE"
-        },
-        {
-            menu: "ACCESSORIES"
-        },
-        {
-            menu: "ENTANGLEMENT",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "OUTDOOR AND NATURE",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "HEALTH PRODUCT"
-        },
-        {
-            menu: "WESTERN WOMAN",
-            icon: <MdOutlineArrowForwardIos />
-        },
-        {
-            menu: "INDUSTRIAL PRODUCT"
-        },
-    ];
-
     return (
         <section className="w-full bg-white px-4 lg:px-6">
             <div className="max-w-6xl mx-auto shadow-sm rounded-xl flex items-center my-4 bg-white overflow-visible border border-gray-100">
@@ -93,7 +45,7 @@ function Header() {
                 {/* --- LEFT SIDE (Desktop: All Departments | Mobile: Support Section) --- */}
                 <div className='w-full lg:w-[28%] relative'>
 
-                    {/* Desktop view: All Departments Button */}
+                    {/* All Departments Button - Desktop view (hide on mobile)  */}
                     <div
                         onClick={() => setIsOpen(!isOpen)}
                         className={`hidden lg:flex items-center justify-between px-6 py-4 bg-pink-500 cursor-pointer transition-all duration-300 
@@ -101,7 +53,9 @@ function Header() {
                     >
                         <div className='flex items-center gap-3'>
                             <PiListHeartBold className='text-xl text-white' />
-                            <span className='text-sm text-white font-bold tracking-wider uppercase'>All Departments</span>
+                            <span className='text-sm text-white font-bold tracking-wider uppercase'>
+                                All Departments
+                            </span>
                         </div>
                         {isOpen ? <IoIosArrowUp className='text-white' /> : <IoIosArrowDown className='text-white' />}
                     </div>
@@ -146,103 +100,84 @@ function Header() {
                         )}
                     </div>
 
-                    {/* Dropdown Menu (Style Same Rakha Hai) */}
+                    {/* Dropdown Mega Menu */}
                     {isOpen && (
                         <>
-                            {/* when we click outside then drop down will close */}
                             <div
                                 className="fixed inset-0 z-10"
                                 onClick={() => setIsOpen(false)}>
                             </div>
 
                             <div className="absolute left-0 top-full w-full bg-white shadow-2xl border-x border-b border-gray-100 rounded-b-xl z-100 animate-in fade-in slide-in-from-top-2">
-                                {dropDownMenus.map((item, index) => (
+                                {menuData?.map((category, index) => (
                                     <div
-                                        key={index}
-                                        onMouseEnter={() => item.icon && setActiveMenu(index)}
+                                        key={category._id}
+                                        onMouseEnter={() => setActiveMenu(index)}
                                         onMouseLeave={() => setActiveMenu(null)}
                                         className='flex items-center justify-between px-6 py-3 hover:bg-pink-50 hover:text-pink-600 cursor-pointer transition-colors group'
                                     >
-                                        <p
-                                            className="text-[13px] font-medium text-gray-700 group-hover:translate-x-1 transition-transform">
-                                            {item.menu}
+                                        <p className="text-[13px] font-medium text-gray-700 group-hover:translate-x-1 transition-transform">
+                                            {category.catName}
                                         </p>
 
-                                        <span
-                                            className='text-xs text-gray-400 group-hover:text-pink-500'>
-                                            {item.icon}
-                                        </span>
+                                        {category.subcategories?.length > 0 && (
+                                            <span className='text-xs text-gray-400 group-hover:text-pink-500'>
+                                                <MdOutlineArrowForwardIos />
+                                            </span>
+                                        )}
 
                                         {/* Mega Menu Content */}
-                                        {activeMenu === index && item.icon && (
+                                        {activeMenu === index && category.subcategories?.length > 0 && (
                                             <div className="absolute left-full top-0 w-207.5 bg-white p-8 shadow-2xl border-l border-pink-100 z-110 rounded-r-xl animate-in fade-in slide-in-from-left-2 duration-200">
 
                                                 <div className="grid grid-cols-3 gap-10">
+                                                    {category.subcategories.slice(0, 6).map((sub) => (
+                                                        <div
+                                                            key={sub._id}
+                                                            className="space-y-4">
 
-                                                    {/* Column 1 */}
-                                                    <div className="space-y-10">
-                                                        <div>
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100 hover:text-pink-500 cursor-pointer">Accessories & Parts</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px]">
-                                                                <p className="hover:text-pink-500 cursor-pointer">CABLES AND ADAPTERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">BATTERIES</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">CHARGERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">ELECTRONICS CIGARETTES</p>
+                                                            <div>
+                                                                <h1 className="text-[15px] font-bold pb-2 border-b border-gray-100 text-pink-600 uppercase tracking-tight">
+                                                                    {sub.subCatName}
+                                                                </h1>
+
+                                                                <div className="mt-1 flex flex-col space-y-2">
+                                                                    {sub.allowedAttributes?.slice(0, 3).map((attr) => (
+                                                                        <p
+                                                                            key={attr._id}
+                                                                            className="text-[13px] text-gray-600 hover:text-pink-500 cursor-pointer flex items-center transition-all"
+                                                                            onClick={() => {
+                                                                                navigate(`/all_products/${category._id}/${sub.subCatName}?subCatId=${sub._id}`);
+                                                                                setIsOpen(false);
+                                                                            }}
+                                                                        >
+                                                                            <span className="mr-2 text-[10px] text-pink-300">●</span>
+                                                                            Shop by {attr.name}
+                                                                        </p>
+                                                                    ))}
+
+                                                                    {/* View All */}
+                                                                    <p
+                                                                        className="text-[13px] font-semibold text-gray-400 hover:text-pink-600 cursor-pointer pt-1"
+                                                                        onClick={() => {
+                                                                            navigate(`/all_products/${category._id}/${sub.subCatName}`);
+                                                                            setIsOpen(false);
+                                                                        }}
+                                                                    >
+                                                                        Browse All products →
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                    ))}
 
-                                                        <div className="pt-4">
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100">Electronic Cigarettes</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px] uppercase">
-                                                                <p className="hover:text-pink-500 cursor-pointer">Audio & Video</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">Televisions</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">Projectors</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Column 2 */}
-                                                    <div className="space-y-10">
-                                                        <div>
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100">Smart Electronics</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px]">
-                                                                <p className="hover:text-pink-500 cursor-pointer">CABLES AND ADAPTERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">CHARGERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">BATTERIES</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">Watch Fashion</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="pt-4">
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100">Portable Audio</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px] uppercase">
-                                                                <p className="hover:text-pink-500 cursor-pointer">TV Receivers</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">TV Sticks</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Column 3 */}
-                                                    <div className="space-y-10">
-                                                        <div>
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100">Smart Electronics</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px]">
-                                                                <p className="hover:text-pink-500 cursor-pointer">CABLES AND ADAPTERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">CHARGERS</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">BATTERIES</p>
-                                                                <p className="hover:text-pink-500 cursor-pointer">Watch Fashion</p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="pt-4">
-                                                            <h1 className="text-[16px] font-bold pb-2 border-b border-gray-100">Makeup Kit</h1>
-                                                            <div className="mt-3 space-y-2 text-gray-600 text-[13px] uppercase">
-                                                                <img
-                                                                    src={MegaMenuImg}
-                                                                    alt="MegaMenuImage"
-                                                                    className="w-full h-auto rounded-md shadow-sm" />
-                                                            </div>
-                                                        </div>
+                                                    {/* Right Side Panel Image Section */}
+                                                    <div className="col-span-1 flex items-end ">
+                                                        <img
+                                                            src={category.catImage}
+                                                            alt={category.catName}
+                                                            className="w-full h-auto rounded-md shadow-sm object-cover aspect-4/3"
+                                                        />
                                                     </div>
 
                                                 </div>
@@ -252,7 +187,6 @@ function Header() {
                                 ))}
                             </div>
                         </>
-
                     )}
                 </div>
 

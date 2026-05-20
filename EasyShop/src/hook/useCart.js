@@ -23,13 +23,15 @@ export const useGetCart = () => {
 // add to cart
 export const useAddToCart = () => {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async ({ productId, quantity, selectedColor, selectedSize, prodImage }) => {
+        mutationFn: async ({ productId, quantity, selectedColor, selectedSize,variantId, prodImage }) => {
             const { data } = await API.post('/cart/cart-add', {
                 productId,
                 quantity,
                 selectedColor,
                 selectedSize,
+                variantId,
                 prodImage
             });
             return data;
@@ -46,27 +48,57 @@ export const useAddToCart = () => {
 // remove from cart
 export const useRemoveFromCart = () => {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async (prodId) => {
-            const { data } = await API.delete(`/cart/cart-remove/${prodId}`);
+        mutationFn: async ({ prodId, variantId }) => {
+            const { data } = await API.delete(`/cart/cart-remove/${prodId}`, {
+                data: { variantId }
+            });
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['cart']);
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
         }
     });
 };
 
-// update quantity
-export const useUpdateCartQuantity = () => {
+// clear cart
+export const useClearCart = () => {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async ({ productId, action }) => {
-            const { data } = await API.put('/cart/cart-quantity-update', { productId, action });
+        mutationFn: async () => {
+            const { data } = await API.delete('/cart/cart-clear');
             return data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['cart']);
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to clear cart");
+        }
+    });
+};
+
+
+// update quantity
+export const useUpdateCartQuantity = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ productId, variantId, action }) => {
+             const { data } = await API.put('/cart/cart-quantity-update', {
+                productId,
+                variantId,
+                action
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Failed to update quantity");
         }
     });
 };

@@ -101,7 +101,7 @@ export const getUserReviews = async (req, res) => {
     }
 };
 
-// user
+// user - prod detail page
 export const getProductReviews = async (req, res) => {
     try {
         const { prod_id } = req.params;
@@ -113,7 +113,10 @@ export const getProductReviews = async (req, res) => {
             });
         }
 
-        const reviews = await ReviewRating.find({ productId: prod_id, status: 'Approved' })
+        const reviews = await ReviewRating.find({
+            productId: prod_id,
+            status: 'Approved'
+        })
             .populate('userId', 'name profilePhoto')
             .populate('productId', 'averageRating totalReviews')
             .sort({ createdAt: -1 });
@@ -137,6 +140,40 @@ export const getProductReviews = async (req, res) => {
         console.log("Error : ", err);
         res.status(500).json({
             success: false,
+            message: "Server Error Occur"
+        });
+    }
+};
+
+// user - home page reviews
+export const getApprovedReviewsForHome = async (req, res) => {
+    try {
+        const reviews = await ReviewRating.find({ status: 'Approved' })
+            .populate('userId', 'name profilePhoto') 
+            .populate('productId', 'prodName prodImage') 
+            .sort({ createdAt: -1 }) 
+            .limit(10); 
+
+        if (reviews.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No approved reviews available for Home Page yet.",
+                count: 0,
+                data: []
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Home page approved reviews fetched successfully",
+            count: reviews.length,
+            data: reviews
+        });
+
+    } catch (err) {
+        console.log("Error :", err);
+        res.status(500).json({
+            status: false,
             message: "Server Error Occur"
         });
     }

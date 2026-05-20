@@ -8,17 +8,17 @@ export const deleteCloudinaryFiles = async (fileData) => {
 
         let publicIds = [];
 
-        // Case 1: Agar req.file (Single Upload) pass kiya gaya ho
+        // Case 1: if single upload
         if (fileData.filename) {
             publicIds.push(fileData.filename);
         }
-        // Case 2: Agar req.files (Multiple Fields/Array) pass kiya gaya ho
+        // Case 2: multiple fields
         else {
             const allFiles = Object.values(fileData).flat();
             publicIds = allFiles.map(f => f.filename).filter(id => id);
         }
 
-        // Sabhi IDs ko delete karein
+        // dlt all id's
         for (const id of publicIds) {
             await cloudinary.uploader.destroy(id);
             console.log(`Cleanup Done: Deleted ${id} from Cloudinary`);
@@ -31,39 +31,42 @@ export const deleteCloudinaryFiles = async (fileData) => {
 // for update api - dlt old files
 export const deleteOldFileFromCloudinary = async (fileUrl) => {
     try {
-        if (fileUrl) {
-            // Yeh Regex URL se 'upload/' ke baad wala aur extension se pehle wala saara part nikal lega
-            // Example: .../upload/v12345/vendor_docs/my_image.jpg -> vendor_docs/my_image
+        if (!fileUrl || typeof fileUrl !== 'string') return;
+
+        // decode URL first
+        const decodedUrl = decodeURIComponent(fileUrl);
+
+        let publicId = "";
+
+        // METHOD A: Split Logic (Modern & Safe)
+        const parts = fileUrl.split('/');
+        const uploadIndex = parts.indexOf('upload');
+
+        if (uploadIndex !== -1) {
+            const lastPart = parts[parts.length - 1].split('.')[0];
+            const folderParts = parts.slice(uploadIndex + 2, parts.length - 1);
+            publicId = [...folderParts, lastPart].join('/');
+        }
+
+        // METHOD B: Fallback (Agar split logic se ID nahi mili toh regex try karein)
+        if (!publicId) {
             const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/;
             const match = fileUrl.match(regex);
+            if (match) publicId = match[1];
+        }
 
-            if (match && match[1]) {
-                const publicId = match[1];
-                await cloudinary.uploader.destroy(publicId);
-                console.log(`Old file deleted: ${publicId}`);
-            }
+        if (publicId) {
+            const result = await cloudinary.uploader.destroy(publicId);
+            console.log(`Cloudinary Delete [${publicId}]:`, result.result);
         }
     } catch (error) {
-        console.error("Error deleting old file:", error);
+        console.error("Error in deleteOldFileFromCloudinary:", error);
     }
 };
 
 // cleaning Cloudinary files if validation fails
-// export const cleanupUploadedFiles = async (files) => {
-//     if (!files) return;
-//     const allFiles = [];
-//     if (files['prodImage']) allFiles.push(files['prodImage'][0]);
-//     if (files['prodImages']) allFiles.push(...files['prodImages']);
-
-//     for (const file of allFiles) {
-//         await deleteCloudinaryFiles(file);
-//     }
-// };
-
-// cleaning Cloudinary files if validation fails
 export const cleanupUploadedFiles = async (files) => {
     if (!files) return;
-    // Direct poora files object bhej do, logic deleteCloudinaryFiles sambhaal lega
     await deleteCloudinaryFiles(files);
 };
 
@@ -71,7 +74,6 @@ export const cleanupUploadedFiles = async (files) => {
 export const deleteGalleryImages = async (imageArray) => {
     try {
         if (imageArray && Array.isArray(imageArray) && imageArray.length > 0) {
-            // Saari images ko parallel delete karne ke liye Promise.all use karein (Fast)
             await Promise.all(
                 imageArray.map(imgUrl => deleteOldFileFromCloudinary(imgUrl))
             );
@@ -79,5 +81,21 @@ export const deleteGalleryImages = async (imageArray) => {
         }
     } catch (error) {
         console.error("Error in deleteGalleryImages helper:", error);
+    }
+};
+
+// Specially for Delete API - Handles URLs and Spaces
+export const deleteProductAssetsFromCloudinary = async (urls) => {
+    try {
+        if (!urls || !Array.isArray(urls) || urls.length === 0) return;
+
+        // reuse existing deleteOldFileFromCloudinary for each URL
+        await Promise.all(
+            urls.map(url => deleteOldFileFromCloudinary(url))
+        );
+
+        console.log(`Processed ${urls.length} images for deletion.`);
+    } catch (error) {
+        console.error("Error in deleteProductAssetsFromCloudinary:", error);
     }
 };

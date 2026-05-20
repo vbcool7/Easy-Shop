@@ -43,6 +43,11 @@ const orderSchema = new mongoose.Schema(
                     type: String,
                     default: null
                 },
+
+                variantId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    default: null
+                }
             }
         ],
 

@@ -12,9 +12,6 @@ function Orders() {
 
     const [selectedOrder, setIsSelectedOrder] = useState(null);
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
-
     const orderStatusStyles = {
         Delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
         Processing: "bg-amber-50 text-amber-600 border-amber-100",
@@ -63,6 +60,9 @@ function Orders() {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
 
+    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
+
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
@@ -95,7 +95,7 @@ function Orders() {
                         <tr className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
                             <th className="px-6 py-4">Order ID</th>
                             <th className="px-6 py-4">Product</th>
-                            <th className="px-6 py-4">Items</th>
+                            <th className="px-6 py-4">Order Qty</th>
                             <th className="px-6 py-4">Customer</th>
                             <th className="px-6 py-4">Amount</th>
                             <th className="px-6 py-4">Payment Method</th>
@@ -104,7 +104,7 @@ function Orders() {
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
-                    
+
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                         {orderList?.map((order) => (
                             <tr
@@ -130,27 +130,42 @@ function Orders() {
 
                                         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
                                             <img
-                                                src={order.items[0]?.productId?.prodImage}
+                                                src={order.items[0]?.variantImage || order.items[0]?.productId?.prodImage}
                                                 alt={order.items[0]?.productId?.prodName}
                                                 className="w-full h-full object-cover" />
                                         </div>
 
+                                        {/* prod detail */}
                                         <div className="max-w-35">
                                             <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                                                 {order.items[0]?.productId?.prodName}
                                             </p>
 
-                                            <p className="text-[10px] text-slate-400 uppercase font-bold">
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {order.items[0]?.selectedColor && (
+                                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                        {order.items[0].selectedColor}
+                                                    </span>
+                                                )}
+
+                                                {order.items[0]?.selectedSize && (
+                                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                        Size: {order.items[0].selectedSize}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold mt-1">
                                                 {order.items[0]?.productId?.catId?.catName || '---'}
                                             </p>
-
                                         </div>
+
                                     </div>
                                 </td>
-
-                                {/* stock */}
+                                 
+                                {/* order qty */}
                                 <td className="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">
-                                    {order.items?.length || 0} items
+                                    {order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0} items
                                 </td>
 
                                 {/* Customer Info */}

@@ -33,14 +33,18 @@ const storage = new CloudinaryStorage({
             folderName = 'EasyShop/Admin'
         }
 
+        else if (req.baseUrl.includes('blog')) {
+            folderName = 'EasyShop/Blogs'
+        }
+
         return {
             folder: folderName,
             allowed_formats: ['jpg', 'png', 'jpeg'],
             public_id: `${file.fieldname}-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
             transformation: [
-                { quality: 'auto:good' },  // auto optimize quality
-                { fetch_format: 'auto' },   // serve webp to supported browsers
-                { width: 1080, height: 1080, crop: 'limit' } // max size limit
+                { quality: 'auto:good' },  
+                { fetch_format: 'auto' },   
+                { width: 1080, height: 1080, crop: 'limit' } 
             ]
         };
     },

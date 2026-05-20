@@ -11,6 +11,19 @@ export const useCatList = () => {
             const { data } = await API.get('/category/category-list');
             return data.data;
         },
-        staleTime: 5 * 60 * 1000, // 5 minute tak data "fresh" rahega
+        staleTime: 5 * 60 * 1000, 
+    });
+};
+
+// mega menu
+export const useMegaMenu = () => {
+    return useQuery({
+        queryKey: ['megaMenu'],
+        queryFn: async () => {
+            const {data} = await API.get('/category/category-tree-get');
+            return data.data;
+        },
+        staleTime: 5 * 60 * 1000, 
+        refetchOnWindowFocus: false, // avoid bg call
     });
 };

@@ -4,6 +4,8 @@ import { GoHeart } from "react-icons/go";
 import { GoHeartFill } from "react-icons/go";
 import { IoMdStar } from "react-icons/io";
 import { IoMdStarOutline } from "react-icons/io";
+import toast from 'react-hot-toast';
+
 import "swiper/css";
 import "swiper/css/autoplay";
 import "swiper/css/pagination";
@@ -17,11 +19,52 @@ import { useNewArrivalProducts } from '../hook/uesProducts';
 
 function HomeNewProducts() {
 
-    const { addToCart } = useCart();  //from context api
+    const { addToCart } = useCart();
     const { wishListItems, addToWishList } = useWishList();
 
     const navigate = useNavigate();
     const { data: newProducts, isLoading } = useNewArrivalProducts();
+    
+    // add to cart
+    const handleAddToCart = (product) => {
+
+        const variants = product.variants || [];
+        const availableVariants = variants.filter(v => v.stock > 0);
+
+        const colorValues = product.attributes?.Color?.values || [];
+        const sizeValues = product.attributes?.Size?.values || [];
+
+        const hasMultipleChoices =
+            colorValues.length > 1 ||
+            sizeValues.length > 1 ||
+            availableVariants.length > 1;
+
+        if (hasMultipleChoices) {
+            toast.error("Please select options");
+            navigate(`/product_detail/${product._id}/${product.prodName}`);
+            return;
+        }
+
+        const variant = availableVariants[0];
+
+        if (!variant) {
+            toast.error("Product is out of stock");
+            return;
+        }
+
+        const variantImage = variant.color
+            ? product.attributes?.Color?.images?.[variant.color]?.[0] || product.prodImage
+            : product.prodImage;
+
+        addToCart({
+            ...product,
+            id: product._id,
+            selectedColor: variant.color || null,
+            selectedSize: variant.size || null,
+            variantId: variant._id,
+            prodImage: variantImage
+        });
+    };
 
     if (isLoading) return <p>Loading New Arrivals...</p>;
 
@@ -57,7 +100,7 @@ function HomeNewProducts() {
                         breakpoints={{
                             0: { slidesPerView: 1 },
                             640: { slidesPerView: 2 },
-                            1024: { slidesPerView: 3 }, 
+                            1024: { slidesPerView: 3 },
                             1280: { slidesPerView: 4 },
                         }}
                         className="pb-14"
@@ -80,7 +123,7 @@ function HomeNewProducts() {
                                             <img
                                                 src={prod.prodImage}
                                                 alt={prod.prodName}
-                                                onClick={() => navigate(`/product_detail/${prod.id}/${prod.prodName}`)}
+                                                onClick={() => navigate(`/product_detail/${prod._id}/${prod.prodName}`)}
                                                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
 
@@ -105,11 +148,14 @@ function HomeNewProducts() {
                                                 </div>
                                             </button>
 
-                                            {/* Add to Cart Button - Image ke upar slide hokar aayega */}
+                                            {/* Add to Cart Button */}
                                             <div className="absolute bottom-0 left-0 w-full p-3 transform translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out z-20">
 
                                                 <button
-                                                    onClick={() => addToCart(prod)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAddToCart(prod);
+                                                    }}
                                                     className="w-full bg-pink-500 text-white text-xs font-bold py-3 rounded-lg shadow-xl hover:bg-pink-600 active:scale-95 transition-all cursor-pointer">
                                                     ADD TO CART
                                                 </button>

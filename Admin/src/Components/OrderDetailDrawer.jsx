@@ -53,21 +53,41 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                                     className="flex items-center gap-4 p-3 rounded-xl border border-slate-50 dark:border-slate-800 bg-slate-50/30">
 
                                     <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-                                        <img src={item.productId?.prodImage}
+                                        <img
+                                            src={item.variantImage || item.productId?.prodImage}
                                             alt="product"
                                             className="w-full h-full object-cover" />
                                     </div>
 
                                     <div className="flex-1">
+
+                                        {/* prod name */}
                                         <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 line-clamp-1">
                                             {item.productId?.prodName}
                                         </h4>
 
+                                        {/* color and size */}
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {item.selectedColor && (
+                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                    {item.selectedColor}
+                                                </span>
+                                            )}
+
+                                            {item.selectedSize && (
+                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                    Size: {item.selectedSize}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* qty */}
                                         <p className="text-xs text-slate-400">
                                             Qty: {item.quantity} x  ₹{item.price}
                                         </p>
                                     </div>
 
+                                    {/* price */}
                                     <div className="text-sm font-black text-slate-800 dark:text-white">
                                         ₹{item.quantity * item.price}
                                     </div>
@@ -112,12 +132,12 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                             </p>
                             <p className={`text-[10px] font-bold mt-1 
                                 ${order.paymentStatus === 'Completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                ● {order.paymentStatus} - payment 
+                                ● {order.paymentStatus} - payment
                             </p>
 
                             <p className={`text-[10px] font-bold mt-1 
                                 ${statusColors[order.orderStatus] || 'text-slate-500'}`}>
-                                ● {order.orderStatus} - order 
+                                ● {order.orderStatus} - order
                             </p>
                         </div>
                     </section>

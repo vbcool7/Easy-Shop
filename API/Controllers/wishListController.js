@@ -71,7 +71,7 @@ export const getWishList = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Here is your wishList items",
-            count: wishList.length,
+            count: wishList.items.length,
             data: wishList
         });
 

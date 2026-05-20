@@ -4,19 +4,19 @@ import Category from '../Models/categoryModelSchema.js';
 import SubCategory from '../Models/subCategoryModelSchema.js';
 import Vendor from '../Models/vendorModelSchema.js';
 import Order from '../Models/orderModelSchema.js';
-import { deleteOldFileFromCloudinary, cleanupUploadedFiles, deleteGalleryImages } from '../utils/cloudinaryUtils.js';
+import { deleteOldFileFromCloudinary, cleanupUploadedFiles, deleteGalleryImages, deleteProductAssetsFromCloudinary } from '../utils/cloudinaryUtils.js';
 import mongoose from 'mongoose';
 
 export const addProduct = async (req, res) => {
     try {
         const { subCat_id } = req.params;
-        const { prodName, description, price, originalPrice, stock, attributes, colorAttrName, colorValues } = req.body;
+        const { prodName, description, price, originalPrice, stock, attributes, colorAttrName, colorValues, variants } = req.body;
 
         // check if color variant product
         const isColorVariant = !!colorAttrName && !!colorValues;
 
         // 1. Mandatory Fields Check (Sabse Pehle)
-        if (!prodName || !description || !price || !originalPrice || !stock || !attributes) {
+        if (!prodName || !description || !price || !originalPrice || !attributes) {
             if (req.files) await cleanupUploadedFiles(req.files);
             return res.status(400).json({
                 success: false,
@@ -54,7 +54,6 @@ export const addProduct = async (req, res) => {
             });
         }
 
-        // 3. Dynamic Attribute Validation
         let incomingAttrs;
         try {
             incomingAttrs = typeof attributes === 'string'
@@ -66,6 +65,45 @@ export const addProduct = async (req, res) => {
                 success: false,
                 message: "Invalid attributes format"
             });
+        }
+
+        let parsedVariants = [];
+
+        try {
+            parsedVariants = variants
+                ? (typeof variants === "string" ? JSON.parse(variants) : variants)
+                : [];
+        } catch (e) {
+            if (req.files) await cleanupUploadedFiles(req.files);
+            return res.status(400).json({
+                success: false,
+                message: "Invalid variants format"
+            });
+        }
+
+        let finalStock;
+
+        if (parsedVariants.length > 0) {
+            finalStock = parsedVariants.reduce(
+                (sum, item) => sum + (Number(item.stock) || 0),
+                0
+            );
+        } else {
+            if (stock === undefined || stock === null || stock === "") {
+                if (req.files) await cleanupUploadedFiles(req.files);
+                return res.status(400).json({
+                    success: false,
+                    message: "Stock is required"
+                });
+            }
+
+            finalStock = Number(stock) || 0;
+
+            parsedVariants = [{
+                color: null,
+                size: null,
+                stock: finalStock
+            }];
         }
 
         const allowedKeys = subCategory.allowedAttributes.map(a => a.name);
@@ -83,7 +121,12 @@ export const addProduct = async (req, res) => {
         const vendorId = req.user.role === 'vendor' ? req.user.id : null;
         const addedBy = req.user.id;
         const role = req.user.role;
-        const baseSlug = prodName.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+        const baseSlug = prodName
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
 
         // Slug unique banane ke liye vendorId ya timestamp jodna achha hai
         const finalSlug = vendorId ? `${baseSlug}-${vendorId}` : `${baseSlug}-admin`;
@@ -104,17 +147,27 @@ export const addProduct = async (req, res) => {
 
         if (isColorVariant) {
             // Parse color values
-            const colors = JSON.parse(colorValues);
+            let colors = [];
+            try {
+                colors = typeof colorValues === "string" ? JSON.parse(colorValues) : colorValues;
+            } catch (e) {
+                if (req.files) await cleanupUploadedFiles(req.files);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid color values format"
+                });
+            }
 
-            // Group uploaded files by color
-            const colorImagesMap = {}; // { Red: [url1, url2], Pink: [url3] }
+            // Group uploaded files by color { Red: [url1, url2], Pink: [url3] }
+            const colorImagesMap = {};
 
-            req.files.forEach(file => {
-                // fieldname format: colorImg_Red_0
+            (req.files || []).forEach(file => {
+                // fieldname: colorImg_Pastel Pink_0
                 if (file.fieldname.startsWith('colorImg_')) {
-                    const parts = file.fieldname.split('_');
-                    // parts = ['colorImg', 'Red', '0']
-                    const colorName = parts[1];
+                    const firstUnderscoreIdx = file.fieldname.indexOf('_');
+                    const lastUnderscoreIdx = file.fieldname.lastIndexOf('_');
+                    const colorName = file.fieldname.substring(firstUnderscoreIdx + 1, lastUnderscoreIdx);
+
                     if (!colorImagesMap[colorName]) colorImagesMap[colorName] = [];
                     colorImagesMap[colorName].push(file.path); // cloudinary URL
                 }
@@ -129,27 +182,24 @@ export const addProduct = async (req, res) => {
             // Set prodImage and prodImages from first color's images
             const firstColor = colors[0];
             const firstColorImages = colorImagesMap[firstColor] || [];
+
             prodImage = firstColorImages[0] || '';
             prodImages = firstColorImages.slice(1);
 
+            if (!prodImage) {
+                if (req.files) await cleanupUploadedFiles(req.files);
+                return res.status(400).json({
+                    success: false,
+                    message: "At least one image is required for the first color"
+                });
+            }
+
         } else {
             // Non-color variant — existing logic
-            prodImage = req.files.find(f => f.fieldname === 'prodImage')?.path || '';
-            prodImages = req.files
+            prodImage = (req.files || []).find(f => f.fieldname === 'prodImage')?.path || '';
+            prodImages = (req.files || [])
                 .filter(f => f.fieldname === 'prodImages')
                 .map(f => f.path);
-        }
-
-        let finalStock = parseInt(stock); // frontend already sends correct stock
-
-        // this block is now redundant since frontend calculates stock correctly
-        // but keep as safety net
-        if (incomingAttrs['Size']?.stock && Object.keys(incomingAttrs['Size'].stock).length > 0) {
-            finalStock = Object.values(incomingAttrs['Size'].stock)
-                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-        } else if (incomingAttrs[colorAttrName]?.stock && Object.keys(incomingAttrs[colorAttrName]?.stock || {}).length > 0) {
-            finalStock = Object.values(incomingAttrs[colorAttrName].stock)
-                .reduce((sum, s) => sum + (parseInt(s) || 0), 0);
         }
 
         const newProduct = new Product({
@@ -164,6 +214,7 @@ export const addProduct = async (req, res) => {
             price,
             originalPrice,
             stock: finalStock,
+            variants: parsedVariants,
             attributes: incomingAttrs,
             addedBy,
             role,
@@ -187,7 +238,7 @@ export const addProduct = async (req, res) => {
     };
 };
 
-// user
+// all products - user
 export const allProductList = async (req, res) => {
     try {
         const { catId, subCatId, vendorId, isNewArrival, isBestSeller, sort, minPrice, maxPrice, ...filters } = req.query;
@@ -217,18 +268,26 @@ export const allProductList = async (req, res) => {
         if (sort === "bestSeller") sortQuery = { totalSold: -1 };
 
         // Dynamic Attributes Filtering
+        const attrConditions = [];
+
         Object.keys(filters).forEach((key) => {
-            if (filters[key]) {
-                query[`attributes.${key}`] = filters[key];
+            const value = filters[key];
+
+            if (value) {
+                attrConditions.push({
+                    $or: [
+                        { [`attributes.${key}`]: value },
+                        { [`attributes.${key}.values`]: value }
+                    ]
+                });
             }
         });
 
-        //  console.log("1. Filters received:", filters);
-        // console.log("2. Query built:", JSON.stringify(query));
+        if (attrConditions.length > 0) {
+            query.$and = attrConditions;
+        }
 
-        const products = await Product.find(query).sort(sortQuery);
-
-        // console.log("3. Products found count:", products.length);
+        const products = await Product.find(query).sort(sortQuery).populate('vendorId');
 
         res.status(200).json({
             success: true,
@@ -245,6 +304,7 @@ export const allProductList = async (req, res) => {
     };
 };
 
+// filter sidebar - user
 export const getProductFilterOptions = async (req, res) => {
     try {
         const { catId } = req.params;
@@ -262,16 +322,44 @@ export const getProductFilterOptions = async (req, res) => {
         const products = await Product.find(query).select('attributes');
 
         const filterOptions = {};
+
+        const getAttributeValues = (value) => {
+            if (value && typeof value === "object" && Array.isArray(value.values)) {
+                return value.values;
+            }
+
+            if (Array.isArray(value)) {
+                return value;
+            }
+
+            if (value !== undefined && value !== null && value !== "") {
+                return [value];
+            }
+
+            return [];
+        };
+
         products.forEach(product => {
             if (!product.attributes) return;
+
             product.attributes.forEach((value, key) => {
-                if (!filterOptions[key]) filterOptions[key] = new Set();
-                filterOptions[key].add(value);
+                const values = getAttributeValues(value);
+
+                if (!filterOptions[key]) {
+                    filterOptions[key] = new Set();
+                }
+
+                values.forEach(item => {
+                    if (item !== undefined && item !== null && item !== "") {
+                        filterOptions[key].add(String(item));
+                    }
+                });
             });
         });
 
         // convert Sets to arrays
         const result = {};
+
         Object.entries(filterOptions).forEach(([key, valueSet]) => {
             result[key] = Array.from(valueSet);
         });
@@ -388,11 +476,11 @@ export const getVendorShopProducts = async (req, res) => {
     try {
         const { vendor_id } = req.params;
 
-        // 1. Frontend se page aur limit lo
+        // 1. get page or limit from frontend
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 4;
 
-        // 2. Skip calculate karo (e.g., page 2 ke liye pehle 12 products skip honge)
+        // 2. skip cal
         const skip = (page - 1) * limit;
 
         // 3.
@@ -403,16 +491,16 @@ export const getVendorShopProducts = async (req, res) => {
         })
             .skip(skip)
             .limit(limit)
-            .select('prodName prodImage price originalPrice averageRating totalReviews slug')
+            .select('prodName prodImage price originalPrice averageRating totalReviews slug variants attributes')
             .sort({ createdAt: -1 });
 
-        // 4. Total products count karo taaki frontend ko pata chale aur data hai ya nahi
+        // 4. count total prods
         const totalProducts = await Product.countDocuments({ vendorId: vendor_id });
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.status(200).json({
             success: true,
-            message: "Specific vendor products",
+            message: "Specific vendor's shop products",
             data: products,
             totalPages,
             currentPage: page
@@ -502,8 +590,7 @@ export const detailProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { prod_id } = req.params;
-
-        const { prodName, description, price, originalPrice, stock, isActive } = req.body;
+        const { prodName, description, price, originalPrice, stock, isActive, variants, colorAttrName, colorValues } = req.body;
 
         const updates = {};
 
@@ -516,26 +603,24 @@ export const updateProduct = async (req, res) => {
             });
         }
 
-        // Ownership Check: Agar user Admin nahi hai, toh check karo ki wahi owner hai ya nahi
         if (req.user.role !== 'admin' && product.vendorId.toString() !== req.user.id.toString()) {
             if (req.files) await cleanupUploadedFiles(req.files);
             return res.status(403).json({
                 success: false,
-                message: "Access Denied! You can only edit your own products."
+                message: "Access Denied!"
             });
         }
 
-        // Agar vendor edit kar raha hai, toh status reset karna ek acchi practice hai
-        if (req.user.role === 'vendor') {
-            updates.status = 'Pending';
-        }
+        if (req.user.role === 'vendor') updates.status = 'Pending';
 
         if (prodName) {
             updates.prodName = prodName.trim();
-            updates.slug = prodName.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+            updates.slug = prodName.toLowerCase().trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
 
             const alreadyExists = await Product.findOne({
-                // subCatId: Product.subCatId,
                 _id: { $ne: prod_id },
                 $or: [{ prodName: updates.prodName }, { slug: updates.slug }]
             });
@@ -544,19 +629,18 @@ export const updateProduct = async (req, res) => {
                 if (req.files) await cleanupUploadedFiles(req.files);
                 return res.status(400).json({
                     success: false,
-                    message: "Another product with this name/slug already exists"
+                    message: "Product with this name already exists"
                 });
             }
         }
 
-        // Frontend se poora merged object aayega, hum use as-is overwrite karenge
+        // attributes
         if (req.body.attributes) {
             try {
                 updates.attributes = typeof req.body.attributes === 'string'
                     ? JSON.parse(req.body.attributes)
                     : req.body.attributes;
             } catch (error) {
-                console.error("Attributes parsing error:", error);
                 if (req.files) await cleanupUploadedFiles(req.files);
                 return res.status(400).json({
                     success: false,
@@ -565,31 +649,116 @@ export const updateProduct = async (req, res) => {
             }
         }
 
+        // variants
+        if (variants) {
+            try {
+                const parsedVariants = typeof variants === 'string'
+                    ? JSON.parse(variants)
+                    : variants;
+
+                updates.variants = parsedVariants;
+
+                // recalculate total stock from variants
+                updates.stock = parsedVariants.reduce(
+                    (sum, v) => sum + (Number(v.stock) || 0), 0
+                );
+            } catch (error) {
+                if (req.files) await cleanupUploadedFiles(req.files);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid variants format"
+                });
+            }
+        } else if (stock !== undefined) {
+            updates.stock = stock;
+        }
+
         if (description !== undefined) updates.description = description;
         if (price !== undefined) updates.price = price;
         if (originalPrice !== undefined) updates.originalPrice = originalPrice;
-        if (stock !== undefined) updates.stock = stock;
         if (isActive !== undefined) updates.isActive = isActive;
 
-        if (req.files && Object.keys(req.files).length > 0) {
+        // handle images
+        const isColorVariant = !!colorAttrName && !!colorValues;
 
-            // A. Main Image Update
-            if (req.files['prodImage'] && req.files['prodImage'].length > 0) {
-                if (product.prodImage) {
-                    await deleteOldFileFromCloudinary(product.prodImage);
+        if (isColorVariant) {
+            // 1. Current images fetch karein database se
+            const existingColorImages =
+                product.attributes?.get?.(colorAttrName)?.images ||
+                product.attributes?.[colorAttrName]?.images ||
+                {};
+
+            const newColors = typeof colorValues === 'string' ? JSON.parse(colorValues) : colorValues;
+            const existingColors = Object.keys(existingColorImages);
+
+            // 2. Identify and Delete Removed Colors' Images (Yeh hamesha chalega)
+            const removedColors = existingColors.filter(c => !newColors.includes(c));
+
+            for (const removedColor of removedColors) {
+                const imagesToDelete = existingColorImages[removedColor] || [];
+                if (imagesToDelete.length > 0) {
+                    await deleteGalleryImages(imagesToDelete); // Cloudinary Cleanup
                 }
-                updates.prodImage = req.files['prodImage'][0].path;
             }
 
-            // B. Gallery Update
-            if (req.files['prodImages'] && req.files['prodImages'].length > 0) {
-                if (product.prodImages && product.prodImages.length > 0) {
-                    await deleteGalleryImages(product.prodImages);
+            // 3. Update the local map (Removed colors ko map se hatayein)
+            const colorImagesMap = { ...existingColorImages };
+            removedColors.forEach(c => delete colorImagesMap[c]);
+
+            // 4. Handle New File Uploads
+            if ((req.files || []).length > 0) {
+                const filesByColor = {};
+                req.files.forEach(file => {
+                    if (file.fieldname.startsWith("colorImg_")) {
+                        const colorName = file.fieldname
+                            .replace("colorImg_", "")
+                            .replace(/_\d+$/, "");
+
+                        if (!filesByColor[colorName]) filesByColor[colorName] = [];
+                        filesByColor[colorName].push(file.path);
+                    }
+                });
+
+                for (const [colorName, newImageUrls] of Object.entries(filesByColor)) {
+                    const oldImageUrls = colorImagesMap[colorName] || [];
+                    if (oldImageUrls.length > 0) {
+                        await deleteGalleryImages(oldImageUrls); // Purani replace karein
+                    }
+                    colorImagesMap[colorName] = newImageUrls;
                 }
-                updates.prodImages = req.files['prodImages'].map(file => file.path);
+            }
+
+            // 5. Sync with updates.attributes
+            if (updates.attributes && updates.attributes[colorAttrName]) {
+                updates.attributes[colorAttrName].images = colorImagesMap;
+            }
+
+            // 6. ProdImage Update (Sky Blue add hone par thumbnail update)
+            const colorsArray = typeof colorValues === "string" ? JSON.parse(colorValues) : colorValues;
+            const firstColorImages = colorImagesMap[colorsArray[0]] || [];
+            if (firstColorImages.length > 0) {
+                updates.prodImage = firstColorImages[0];
+                updates.prodImages = firstColorImages.slice(1);
+            }
+
+        } else if ((req.files || []).length > 0) {
+            // Simple Product Image Logic (Bina color variant wala)
+            const files = req.files || [];
+            const prodImageFile = files.find(f => f.fieldname === "prodImage");
+            const prodImagesFiles = files.filter(f => f.fieldname === "prodImages");
+
+            if (prodImageFile) {
+                if (product.prodImage) await deleteOldFileFromCloudinary(product.prodImage);
+                updates.prodImage = prodImageFile.path;
+            }
+
+            if (prodImagesFiles.length > 0) {
+                if (product.prodImages?.length > 0) await deleteGalleryImages(product.prodImages);
+                updates.prodImages = prodImagesFiles.map(f => f.path);
             }
         }
 
+        // Final Save
         const updatedProduct = await Product.findByIdAndUpdate(
             prod_id,
             { $set: updates },
@@ -603,9 +772,10 @@ export const updateProduct = async (req, res) => {
         });
 
     } catch (err) {
-        console.log("Error : ", err);
+        console.error("Full Error Details:", JSON.stringify(err, null, 2));
+        console.error("Error:", err);
         res.status(500).json({
-            status: false,
+            success: false,
             message: "Server Error Occur"
         });
     }
@@ -689,25 +859,51 @@ export const deleteProduct = async (req, res) => {
             });
         }
 
-        // Main Image
-        if (product.prodImage) {
-            try {
-                await deleteOldFileFromCloudinary(product.prodImage);
-            } catch (imgErr) {
-                console.log("Main image delete failed, skipping...", imgErr);
-            }
+        // --- CLOUDINARY CLEANUP START ---
+        const imagesToDelete = new Set();
+
+        // 1. Main Thumbnail aur Gallery Images
+        if (product.prodImage) imagesToDelete.add(product.prodImage);
+        if (product.prodImages?.length > 0) {
+            product.prodImages.forEach(img => imagesToDelete.add(img));
         }
 
-        // Gallery Images
-        if (product.prodImages && product.prodImages.length > 0) {
-            try {
-                await deleteGalleryImages(product.prodImages);
-            } catch (imgErr) {
-                console.log("Gallery images delete failed, skipping...", imgErr);
-            }
+        // 2. All Variants (Color, Size, etc.) ki images nikalne ke liye deep loop
+        let attributes = {};
+
+        if (product.attributes instanceof Map) {
+            attributes = Object.fromEntries(product.attributes);
+        } else {
+            attributes = product.toObject().attributes || {};
         }
+
+        Object.keys(attributes).forEach(attrKey => {
+            const attributeValue = attributes[attrKey];
+
+            // Check karein agar is attribute ke andar 'images' object hai
+            if (attributeValue && attributeValue.images && typeof attributeValue.images === 'object') {
+
+                // attributeValue.images ke andar har color/variant ki array hoti hai
+                Object.values(attributeValue.images).forEach(imageArray => {
+                    if (Array.isArray(imageArray)) {
+                        imageArray.forEach(url => {
+                            if (url && typeof url === 'string') imagesToDelete.add(url);
+                        });
+                    }
+                });
+            }
+        });
+
+        // 3. Ab dedicated function ko saari unique URLs bhej dein
+        if (imagesToDelete.size > 0) {
+            const finalUrls = Array.from(imagesToDelete);
+            console.log(`Total unique images found for deletion: ${finalUrls.length}`);
+            await deleteProductAssetsFromCloudinary(finalUrls);
+        }
+        // --- CLOUDINARY CLEANUP END ---
 
         await Product.findByIdAndDelete(prod_id);
+
         res.status(200).json({
             success: true,
             message: "Product deleted successfully",
@@ -722,7 +918,7 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-// agar admin side se prod approve ho gya but vendor k pass stock nhi h to wo inactive kr skta h
+// vendor - agar admin side se prod approve ho gya but vendor k pass stock nhi h to wo inactive kr skta h
 export const toggleProductActive = async (req, res) => {
     try {
         const { prod_id } = req.params;
@@ -896,35 +1092,13 @@ export const getTopSellingProducts = async (req, res) => {
     try {
         const vId = new mongoose.Types.ObjectId(req.user.id);
 
-        const topProducts = await Order.aggregate([
-            // 1. Sirf is vendor ke delivered orders uthao
-            { $unwind: "$items" },
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "items.productId",
-                    foreignField: "_id",
-                    as: "productDetails"
-                }
-            },
-            { $unwind: "$productDetails" },
-            { $match: { "productDetails.vendorId": vId, "orderStatus": "Delivered" } },
-
-            // 2. Product wise sales count calculate karo
-            {
-                $group: {
-                    _id: "$items.productId",
-                    name: { $first: "$productDetails.prodName" },
-                    image: { $first: "$productDetails.prodImage" }, // Array ka pehla image
-                    price: { $first: "$productDetails.price" },
-                    totalSales: { $sum: "$items.quantity" }
-                }
-            },
-
-            // 3. Sabse zyada sales wale products upar rakho aur limit karo
-            { $sort: { totalSales: -1 } },
-            { $limit: 5 }
-        ]);
+        const topProducts = await Product.find(
+            { vendorId: vId, status: "Approved", totalSold: { $gt: 0 } },
+            { prodName: 1, prodImage: 1, price: 1, totalSold: 1 }
+        )
+            .sort({ totalSold: -1 })
+            .limit(5)
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -959,6 +1133,37 @@ export const getStockAlerts = async (req, res) => {
             // Virtual 'stockStatus' automatic JSON mein include ho jayega
             data: alerts
         });
+    } catch (err) {
+        console.log("Error :", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    }
+};
+
+// search bar
+export const getSearchSuggestions = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query || query.trim() === "") {
+            return res.status(200).json([]);
+        }
+
+        const searchRegex = new RegExp(query, 'i');
+
+        const suggestions = await Product.find({
+            $or: [
+                { prodName: searchRegex },
+                { description: searchRegex }
+            ]
+        })
+            .select("prodName prodImage price description")
+            .limit(6);
+
+        res.status(200).json(suggestions);
+
     } catch (err) {
         console.log("Error :", err);
         res.status(500).json({

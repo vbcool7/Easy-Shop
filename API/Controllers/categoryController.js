@@ -71,9 +71,9 @@ export const listCategory = async (req, res) => {
         const list = await Category.aggregate([
             {
                 $lookup: {
-                    from: "products", // products collection ka naam
+                    from: "products", 
                     localField: "_id",
-                    foreignField: "catId", // Product model mein category field ka naam
+                    foreignField: "catId", 
                     as: "products"
                 }
             },
@@ -305,27 +305,28 @@ export const toggleCategoryStatus = async (req, res) => {
 export const getCategoryTree = async (req, res) => {
     try {
         const tree = await Category.aggregate([
-
-            // 1. Sirf active categories uthao
+             
+            // 1. only active cat
             { $match: { isActive: true } },
 
             // 2. SubCategories ke saath join karo
             {
                 $lookup: {
-                    from: "subcategories",      // Aapke MongoDB collection ka asli naam (usually plural hota hai)
-                    localField: "_id",          // Category ki ID
-                    foreignField: "catId",      // SubCategory mein stored Parent ID
+                    from: "subcategories",      
+                    localField: "_id",          // Category ID
+                    foreignField: "catId",      // catId stored in sub cat
                     as: "subcategories"         // Is naam se array banega
                 }
             },
 
-            // 3. Optional: Sirf wahi fields dikhao jo zaroori hain
+            // 3. Optional: show needed fileds
             {
                 $project: {
                     catName: 1,
                     slug: 1,
                     catImage: 1,
                     "subcategories.subCatName": 1,
+                    "subcategories.allowedAttributes": 1,
                     "subcategories.slug": 1,
                     "subcategories._id": 1
                 }
@@ -340,6 +341,7 @@ export const getCategoryTree = async (req, res) => {
             count: tree.length,
             data: tree
         });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({

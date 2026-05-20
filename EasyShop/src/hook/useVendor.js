@@ -39,3 +39,33 @@ export const useVendorStats = () => {
         },
     });
 };
+
+export const useVendorOrdersOverTime = (period = 30) => {
+    return useQuery({
+        queryKey: ["vendorOrdersOverTime", period],
+        queryFn: async () => {
+            const { data } = await API.get(`/vendor/orders-over-time?period=${period}`);
+            return data.data;
+        },
+    });
+};
+ 
+export const useVendorOrderStatus = () => {
+    return useQuery({
+        queryKey: ["vendorOrderStatus"],
+        queryFn: async () => {
+            const { data } = await API.get("/vendor/order-status");
+            return data.data;
+        },
+    });
+};
+ 
+export const useVendorTopProducts = (limit = 5) => {
+    return useQuery({
+        queryKey: ["vendorTopProducts", limit],
+        queryFn: async () => {
+            const { data } = await API.get(`/vendor/top-products?limit=${limit}`);
+            return data.data;
+        },
+    });
+};

@@ -1,5 +1,4 @@
 
-//updated
 import React from 'react'
 import NewProductBanner from '../assets/Images/NewProductBanner.jpg';
 

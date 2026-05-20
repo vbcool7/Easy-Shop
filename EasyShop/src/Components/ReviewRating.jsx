@@ -100,8 +100,10 @@ function ReviewRating() {
                             {/* Product Image */}
                             <div className='w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-lg shadow-gray-100 shrink-0'>
                                 <img
-                                    src={item.productId?.prodImage}
-                                    alt={item.productId?.prodName}
+                                    src={
+                                        item.productId?.attributes?.Color?.images?.[item.selectedColor]?.[0]
+                                        || item.productId?.prodImage
+                                    }
                                     className="w-full h-full object-cover"
                                 />
                             </div>

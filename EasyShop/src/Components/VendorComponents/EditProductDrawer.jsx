@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { HiOutlineX, HiOutlineSave, HiOutlineInformationCircle } from "react-icons/hi";
 import { useUpdateProduct } from '../hooks/useProducts';
@@ -169,20 +168,38 @@ const EditProductDrawer = ({ product, isOpen, onClose }) => {
                                             className={`w-full h-full object-cover ${!mainImage && 'opacity-50'}`}
                                         />
                                     </div>
+
                                     <div className="flex-1">
-                                        <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Cover Image</label>
-                                        <input type="file" onChange={handleMainImage} className="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100 cursor-pointer" accept="image/*" />
+                                        <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">
+                                            Cover Image
+                                        </label>
+                                        <input
+                                            type="file"
+                                            onChange={handleMainImage}
+                                            className="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-pink-50 file:text-pink-600 hover:file:bg-pink-100 cursor-pointer" accept="image/*" />
                                     </div>
                                 </div>
 
                                 {/* Gallery Input */}
                                 <div>
-                                    <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Gallery (Multiple)</label>
-                                    <input type="file" multiple onChange={handleGalleryImages} className="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer" accept="image/*" />
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">
+                                        Gallery (Multiple)
+                                    </label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={handleGalleryImages}
+                                        className="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer"
+                                        accept="image/*"
+                                    />
                                     <div className="flex gap-1.5 mt-2 overflow-x-auto py-1">
                                         {(galleryImages.length > 0 ? galleryImages : product?.prodImages || []).map((img, i) => (
-                                            <div key={i} className="w-8 h-8 rounded-lg border overflow-hidden shrink-0 shadow-sm">
-                                                <img src={typeof img === 'string' ? img : URL.createObjectURL(img)} className="w-full h-full object-cover" />
+                                            <div
+                                                key={i}
+                                                className="w-8 h-8 rounded-lg border overflow-hidden shrink-0 shadow-sm">
+                                                <img
+                                                    src={typeof img === 'string' ? img : URL.createObjectURL(img)}
+                                                    className="w-full h-full object-cover" />
                                             </div>
                                         ))}
                                     </div>
@@ -252,7 +269,6 @@ const EditProductDrawer = ({ product, isOpen, onClose }) => {
                     </div>
 
                     {/* Footer */}
-
                     <div className="p-6 border-t border-pink-200 flex gap-4">
 
                         <button

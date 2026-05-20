@@ -1,10 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import EasyShopLoader from '../EasyShopLoader';
-import StatsCard from './StatsCard';
 import RecentOrderTable from './RecentOrderTable';
 import AnalyticsSplit from './AnalyticsSplit';
 import DashboardChatIcon from './DashboardChatIcon';
+import VendorDashboardStats from './DashboardCharts/VendorDashboardStats';
+import VendorOrdersOverTimeChart from './DashboardCharts/VendorOrdersOverTimeChart';
+import VendorOrderStatusChart from './DashboardCharts/VendorOrderStatusChart';
+import VendorTopProductsChart from './DashboardCharts/VendorTopProductsChart';
 
 function VendorDashboard({ setCurrentPage }) {
 
@@ -21,7 +24,22 @@ function VendorDashboard({ setCurrentPage }) {
   return (
     <>
       <div className='space-y-8'>
-        <StatsCard />
+        <VendorDashboardStats />
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <div className="lg:col-span-2">
+            <VendorOrdersOverTimeChart />
+          </div>
+          <div className="lg:col-span-1">
+            <VendorOrderStatusChart />
+          </div>
+        </div>
+
+        {/* Top Products Bar Chart  */}
+        <VendorTopProductsChart />
+
         <RecentOrderTable setCurrentPage={setCurrentPage} />
         <AnalyticsSplit setCurrentPage={setCurrentPage} />
       </div>

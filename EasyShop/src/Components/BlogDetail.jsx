@@ -1,5 +1,4 @@
 
-//updated
 import React from 'react'
 import Logo from '../assets/Images/Logo.png';
 import { FaFacebook } from "react-icons/fa6";
@@ -8,80 +7,21 @@ import { FaLinkedinIn } from "react-icons/fa";
 import { IoLogoWhatsapp } from "react-icons/io";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
+import EasyShopLoader from '../Components/EasyShopLoader';
+
+import { useBlogDetail, useRelatedBlogs } from '../hook/useBlog';
 
 function BlogDetail() {
 
     const { blogId } = useParams();
     const navigate = useNavigate();
 
-    const blogData = [
-        {
-            id: 1,
-            title: "5 Summer Fashion Trends to Watch in 2026",
-            desc: "Discover the coolest fabrics and styles to stay trendy this summer...",
-            image: "https://images.unsplash.com/photo-1632194978058-4f2f48bc68c2?q=80&w=774&auto=format&fit=crop",
-            date: "March 1, 2026",
-            author: "Admin",
-            quote: "Fashion is the armor to survive the reality of everyday life.",
-            summary: "2026 is all about breezy comfort and bold pastels. We are seeing a huge comeback of linen co-ord sets and crochet handbags. If you want to stay cool and stylish, opt for light-weighted fabrics like organic cotton and colors like lavender and mint green.",
-            points: ["Linen Co-ords", "Pastel Palettes", "Crochet Accessories"]
-        },
-        {
-            id: 2,
-            title: "How to Style Your Red Sneakers",
-            desc: "Red sneakers are a statement. Here is how you can pair them with any outfit...",
-            image: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=464&auto=format&fit=crop",
-            date: "Feb 28, 2026",
-            author: "Style Guide",
-            quote: "Be bold, be brave, and let your shoes do the talking.",
-            summary: "Red sneakers are the ultimate statement piece. The secret to styling them is keeping the rest of your outfit neutral. Try pairing them with classic blue denim and a crisp white t-shirt for that effortless streetwear vibe.",
-            points: ["Neutral Tones", "Denim Pairing", "Confidence is Key"]
-        },
-        {
-            id: 3,
-            title: "Skincare Routine for Glowing Skin",
-            desc: "Using the right serum can change your life. Learn the basics of hydration...",
-            image: "https://images.unsplash.com/photo-1601049413574-214d105b26e4?q=80&w=873&auto=format&fit=crop",
-            date: "Feb 25, 2026",
-            author: "Beauty Expert",
-            quote: "Your skin is an investment, not an expense.",
-            summary: "Glowing skin starts with hydration. A perfect routine for 2026 involves a gentle cleanser, followed by a Vitamin C serum for brightening. Never skip your moisturizer and, most importantly, apply sunscreen even if you are indoors.",
-            points: ["Gentle Cleansing", "Vitamin C Boost", "Daily Sun Protection"]
-        },
-        {
-            id: 4,
-            title: "Accessory Essentials: Level Up Your Look",
-            desc: "From statement necklaces to elegant purses, find out which accessories are a must-have this season...",
-            image: "https://images.unsplash.com/photo-1511556820780-d912e42b4980?auto=format&fit=crop&w=600&q=80",
-            date: "Feb 20, 2026",
-            author: "Trend Setter",
-            quote: "Accessories are the exclamation point of a woman's outfit.",
-            summary: "Accessories are the soul of an outfit. This year, layered gold chains and chunky '90s-style hoops are winning hearts. A simple dress can be transformed into a party look just by adding a statement belt or a silk scarf.",
-            points: ["Layered Gold Chains", "Statement Belts", "Chunky Hoops"]
-        },
-        {
-            id: 5,
-            title: "The Ultimate Guide to Matte Lipsticks",
-            desc: "Long-lasting, smudge-proof, and bold. Here's everything you need to know about choosing the right shade...",
-            image: "https://images.unsplash.com/photo-1570088727237-68500d217455?q=80&w=451&auto=format&fit=crop",
-            date: "Feb 15, 2026",
-            author: "Beauty Guru",
-            quote: "Put on some lipstick and pull yourself together.",
-            summary: "The perfect matte lip requires preparation. Always exfoliate your lips before application to avoid cracks. This season, deep berry and nude terracotta shades are trending for that long-lasting smudge-proof finish.",
-            points: ["Lip Exfoliation", "Nude Terracotta", "Matching Liners"]
-        },
-        {
-            id: 6,
-            title: "Sustainable Fashion: Chic and Conscious",
-            desc: "Learn how to build a wardrobe that looks good and feels good for the planet. Style meets ethics...",
-            image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80",
-            date: "Feb 10, 2026",
-            author: "Eco Stylist",
-            quote: "There is no beauty in the finest cloth if it makes hunger and unhappiness.",
-            summary: "Choosing sustainable fashion means choosing a better future. Look for brands that use recycled materials and fair-trade practices. Building a 'Capsule Wardrobe' with high-quality basics that last for years is the new trend.",
-            points: ["Recycled Materials", "Fair-Trade Fabrics", "Capsule Wardrobes"]
-        }
-    ];
+    const { data: blogDetail, isLoading, isError } = useBlogDetail(blogId);
+
+    const { data } = useRelatedBlogs(blogId);
+    const relatedBlogs = data?.relatedBlogs || [];
+
+    console.log(relatedBlogs);
 
     const shareLinks = [
         { name: 'Facebook', icon: <FaFacebook />, color: 'hover:bg-blue-600' },
@@ -90,18 +30,17 @@ function BlogDetail() {
         { name: 'WhatsApp', icon: <IoLogoWhatsapp />, color: 'hover:bg-green-500' },
     ];
 
-    // particular prod detail
-    const blogDetail = blogData.find((item) => item.id === parseInt(blogId));
+    if (isLoading) {
+        return <EasyShopLoader />
+    }
 
-    // exclude current blog
-    const excludeCurrentBlog = blogData.filter((item) => item.id !== blogDetail.id);
-
-    // Baki bache blogs ko shuffle (random) karke pehle 3 utha lein
-    const randomBlog = React.useMemo(() => {
-        return [...excludeCurrentBlog].sort(() => 0.5 - Math.random()).slice(0, 3);
-    }, [blogDetail.id]);
-
-    if (!blogDetail) return <div>Blog not found!</div>;
+    if (isError || !blogDetail) {
+        return (
+            <div className="text-center py-20 text-red-500 font-medium">
+                Blog Details could not be loaded. Please try again.
+            </div>
+        );
+    }
 
     return (
         <section className="bg-white">
@@ -118,7 +57,7 @@ function BlogDetail() {
                     {/* badge */}
                     <div className="flex justify-center md:mb-6">
                         <span className="inline-block px-2 py-1 md:px-4 md:py-1.5 mb-6 text-[10px] md:text-xs font-bold tracking-widest text-pink-600 uppercase bg-white rounded-full shadow-sm border border-pink-100">
-                            Lifestyle & Fashion
+                            {blogDetail.category}
                         </span>
                     </div>
 
@@ -131,32 +70,47 @@ function BlogDetail() {
                     <div className='flex items-center justify-center gap-3 md:gap-6'>
                         <div className="relative">
                             <img
-                                src={Logo}
-                                alt="Author"
+                                src={blogDetail.authorId?.storeLogo || Logo}
+                                alt={blogDetail.authorCustomName || "EasyShop Author"}
                                 className='w-14 h-14 md:w-18 md:h-18 object-contain rounded-full bg-white p-2 border border-pink-200 shadow-md'
+                                onError={(e) => {
+                                    e.target.src = Logo;
+                                }}
                             />
                         </div>
 
                         <div className='h-10 w-px bg-pink-200 hidden md:block'></div> {/* Vertical Divider */}
 
                         <div className='flex flex-col'>
-                            <h4 className='text-gray-900 font-bold text-md md:text-lg leading-none'>{blogDetail.author}</h4>
+                            <h4 className='text-gray-900 font-bold text-md md:text-lg leading-none'>
+                                {blogDetail.authorCustomName || "EasyShop Team"}
+                            </h4>
+
                             <div className="flex items-center gap-2 text-gray-500 text-xs md:text-sm mt-2">
-                                <span>{blogDetail.date}</span>
+                                <span>
+                                    {new Date(blogDetail.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short', day: 'numeric', year: 'numeric'
+                                    })}
+                                </span>
+
                                 <span className="w-1 h-1 bg-pink-300 rounded-full"></span>
-                                <span>5 min read</span>
+
+                                <span>
+                                    {blogDetail.readTime || '3 min read'}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* section */}
             <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6 md:pt-16">
 
                 <div className='shadow-xl md:shadow-2xl rounded-2xl md:rounded-3xl overflow-hidden'>
                     <img
-                        src={blogDetail.image}
-                        alt='Blog Image'
+                        src={blogDetail.bannerImage}
+                        alt={blogDetail.title}
                         className='h-64 sm:h-96 md:h-125 w-full object-cover shadow-inner'
                     />
                 </div>
@@ -169,27 +123,47 @@ function BlogDetail() {
                 <article className="prose prose-lg max-w-none">
 
                     <p className="text-gray-700 text-lg md:text-xl leading-relaxed first-letter:text-5xl md:first-letter:text-7xl first-letter:font-bold first-letter:text-pink-500 first-letter:mr-3 first-letter:float-left">
-                        {blogDetail.summary}
+                        {blogDetail.description}
                     </p>
 
-                    <div className="my-10 border-l-4 border-pink-500 bg-pink-50 p-8 rounded-r-2xl italic">
-                        <p className="text-md md:text-2xl text-gray-800 font-medium">
-                            "{blogDetail.quote}"
-                        </p>
-                    </div>
-
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 md:mt-12 mb-6">Why this matters in 2026?</h2>
-                    <p className="text-gray-600 leading-8 mb-6">
-                        {blogDetail.desc}
+                    <p className="text-gray-600 leading-8 mb-6 whitespace-pre-line">
+                        {blogDetail.content}
                     </p>
 
-                    <ul className="space-y-4 text-gray-700 list-disc pl-5 mb-10 text-md md:text-lg">
-                        {blogDetail.points.map((point, i) => (
-                            <li key={i}>
-                                <span className="font-bold text-pink-600">Trend {i + 1}:</span> {point}
-                            </li>
-                        ))}
-                    </ul>
+                    {blogDetail.blockquote && (
+                        <div className="my-10 border-l-4 border-pink-500 bg-pink-50 p-8 rounded-r-2xl italic">
+                            <p className="text-md md:text-2xl text-gray-800 font-medium">
+                                "{blogDetail.blockquote}"
+                            </p>
+                        </div>
+                    )}
+
+                    {/* trends */}
+                    {blogDetail.trendsList && blogDetail.trendsList.length > 0 && (
+                        <div className="mt-12">
+                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-6 tracking-tight">
+                                Latest Trends & Highlights
+                            </h2>
+
+                            <div className="space-y-4">
+                                {blogDetail.trendsList.map((point, i) => (
+                                    <div
+                                        key={point._id || i}
+                                        className="p-5 md:p-6 bg-slate-50/70 rounded-2xl border border-slate-100/80 hover:border-pink-100 dark:hover:border-pink-900/30 transition-all duration-200 shadow-xs flex flex-col gap-1.5"
+                                    >
+                                        <h3 className="text-md md:text-lg font-bold text-gray-900 flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-pink-500 shrink-0"></span>
+                                            {point.title}
+                                        </h3>
+
+                                        <p className="text-sm md:text-base text-gray-600 leading-relaxed pl-4">
+                                            {point.desc}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                 </article>
 
@@ -210,54 +184,87 @@ function BlogDetail() {
                 </div>
             </div>
 
-            {/* Related Posts */}
-            <div className="max-w-6xl mx-auto px-4 lg:px-6 bg-gray-50/50 rounded-3xl mb-20">
+            {/* related blogs */}
+            <div className="max-w-6xl mx-auto px-4 lg:px-6 bg-gray-50/50 rounded-3xl mb-20 py-8 md:py-12">
                 <div className="flex justify-between items-end md:mb-10">
-
                     <div>
-                        <span className="text-pink-500 font-bold text-xs uppercase tracking-[0.2em]">Up Next</span>
-                        <h3 className="text-2xl md:text-3xl font-black text-gray-900 mt-2">Related Stories</h3>
+                        <h3 className="text-2xl md:text-3xl font-black text-gray-900 mt-2">
+                            Related Stories
+                        </h3>
                     </div>
 
-                    {/* vew all of desktop */}
+                    {/* View all for desktop - Ab tabhi dikhega jab related blogs hon */}
+                    {relatedBlogs && relatedBlogs.length > 0 && (
+                        <button
+                            onClick={() => navigate('/blog')}
+                            className="hidden md:flex text-pink-600 font-bold text-sm hover:underline cursor-pointer">
+                            View All →
+                        </button>
+                    )}
+                </div>
+
+                {/* View all for mobile */}
+                {relatedBlogs && relatedBlogs.length > 0 && (
                     <button
                         onClick={() => navigate('/blog')}
-                        className="hidden md:flex text-pink-600 font-bold text-sm hover:underline cursor-pointer">
+                        className="md:hidden w-full my-3 text-pink-600 font-bold text-sm text-end hover:underline cursor-pointer">
                         View All →
                     </button>
-                </div>
+                )}
 
-                {/* vew all of mob */}
-                <button
-                    onClick={() => navigate('/blog')}
-                    className="md:hidden w-full my-3 text-pink-600 font-bold text-sm text-end hover:underline cursor-pointer">
-                    View All →
-                </button>
+                {relatedBlogs && relatedBlogs.length > 0 ? (
+                    // Case A: Related Blogs Found
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {relatedBlogs.map((item) => (
+                            <div
+                                key={item._id}
+                                onClick={() => {
+                                    navigate(`/blog_detail/${item._id}`);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="group cursor-pointer"
+                            >
+                                <div className="relative overflow-hidden rounded-xl md:rounded-2xl aspect-video mb-4">
+                                    <img
+                                        src={item.bannerImage}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                </div>
+                                <h4 className="font-bold text-gray-900 group-hover:text-pink-500 transition-colors line-clamp-2 leading-snug">
+                                    {item.title}
+                                </h4>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {randomBlog.map((item, index) => (
-                        <div
-                            key={index}
-                            onClick={() => {
-                                navigate(`/blog_detail/${item.id}`);
-                                window.scrollTo({ top: 0, behavior: 'smooth' }); // Naye blog par upar scroll karne ke liye
-                            }}
-                            className="group cursor-pointer"
-                        >
-                            <div className="relative overflow-hidden rounded-xl md:rounded-2xl aspect-video mb-4">
-                                <img
-                                    src={item.image}
-                                    alt="Blog Image"
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <p className="text-gray-500 text-xs mt-2 uppercase tracking-tighter font-semibold">
+                                    {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short', day: 'numeric', year: 'numeric'
+                                    })}
+                                </p>
                             </div>
-                            <h4 className="font-bold text-gray-900 group-hover:text-pink-500 transition-colors line-clamp-2 leading-snug">
-                                {item.title}
-                            </h4>
-                            <p className="text-gray-500 text-xs mt-2 uppercase tracking-tighter font-semibold">{item.date}</p>
+                        ))}
+                    </div>
+                ) : (
+                    // Case B: No Related Blogs Found (Premium Empty State)
+                    <div className="flex flex-col items-center justify-center text-center py-12 px-4 rounded-2xl border border-dashed border-gray-200 bg-white shadow-xs">
+                        <div className="w-12 h-12 rounded-full bg-pink-50 flex items-center justify-center mb-4">
+                            <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
                         </div>
-                    ))}
-                </div>
-
+                        <h5 className="text-gray-800 font-bold text-lg mb-1">
+                            No Related Blogs Found
+                        </h5>
+                        <p className="text-gray-500 text-sm max-w-sm mb-5">
+                            We couldn't find any similar stories in this category right now. Explore our main feed for more updates.
+                        </p>
+                        <button
+                            onClick={() => navigate('/blog')}
+                            className="px-5 py-2 text-xs bg-pink-500 text-white font-bold rounded-full hover:bg-pink-600 transition-all shadow-xs active:scale-95 cursor-pointer"
+                        >
+                            Explore All Blogs
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* comment post */}

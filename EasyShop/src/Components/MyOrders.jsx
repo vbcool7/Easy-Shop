@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react'
-import NewProd3 from '../assets/Images/NewProd3.png';
 import { IoIosSearch } from "react-icons/io";
 import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
@@ -127,8 +126,7 @@ function MyOrders() {
                     ${showMobileFilters ? 'translate-x-0' : 'translate-x-full'}
     
                          lg:inset-auto lg:translate-x-0 lg:z-0 lg:w-[25%] lg:p-4 lg:block lg:h-fit lg:sticky lg:top-20 lg:rounded-2xl lg:border lg:border-gray-100 lg:shadow-sm
-                        ${showMobileFilters ? 'block' : 'hidden lg:block'}
-`                   }>
+                        ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
 
                     {/* Mobile Header: Close Icon (Sirf Mobile par dikhega) */}
                     <div className="flex lg:hidden justify-between items-center mb-6 border-b pb-4">
@@ -309,47 +307,73 @@ function MyOrders() {
                                     </div>
                                 </div>
 
-                                {/* Content Section: Image and Info */}
-                                <div className="flex flex-col sm:flex-row gap-6 items-center">
-                                    {/* Product Image */}
-                                    <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shrink-0">
-                                        <img
-                                            src={order.items[0]?.productId?.prodImage}
-                                            alt={order.items[0]?.productId?.prodName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
+                                {/* Content Section */}
+                                {order.items.map((item, itemIdx) => {
+                                    return (
+                                        <div
+                                            key={item._id}
+                                            className="flex flex-col sm:flex-row gap-6 items-center">
 
-                                    {/* Product Info */}
-                                    <div className="flex-1 text-center sm:text-left">
-                                        <h4 className="font-bold text-gray-900 text-base">
-                                            {order.items[0]?.productId?.prodName}
-                                        </h4>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Qty: {order.items[0]?.quantity} •
-                                            <span className="font-bold text-gray-800 ml-1">
-                                                ₹{order.items[0]?.price}
-                                            </span>
-                                        </p>
-                                    </div>
+                                            {/* Product Image */}
+                                            <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shrink-0">
+                                                <img
+                                                    src={
+                                                        item.productId?.attributes?.Color?.images?.[item.selectedColor]?.[0]
+                                                        || item.productId?.prodImage
+                                                    }
+                                                    alt={item.productId?.prodName}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
 
-                                    {/* Buttons */}
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                        <button
-                                            onClick={() => navigate(`/order_track/${order._id}`)}
-                                            className="flex-1 sm:w-32 py-2.5 bg-gray-900 text-white rounded-xl text-[11px] font-bold uppercase hover:bg-gray-800 transition-colors cursor-pointer"
-                                        >
-                                            Details
-                                        </button>
+                                            {/* Product Info */}
+                                            <div className="flex-1 text-center sm:text-left min-w-0">
+                                                <h4 className="font-bold text-gray-900 text-base">
+                                                    {item.productId?.prodName}
+                                                </h4>
 
-                                        <button
-                                            onClick={() => navigate(`/review_rating/${order._id}`)}
-                                            className="flex-1 sm:w-32 py-2.5 bg-pink-500 text-white rounded-xl text-[11px] font-bold uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-colors cursor-pointer"
-                                        >
-                                            Write a Review
-                                        </button>
-                                    </div>
-                                </div>
+                                                <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mt-2">
+                                                    {item.selectedColor && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                            Color: <span className="font-bold text-gray-800">{item.selectedColor}</span>
+                                                        </span>
+                                                    )}
+
+                                                    {item.selectedSize && (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-pink-50 text-pink-600 border border-pink-100">
+                                                            Size: <span className="font-bold text-pink-700">{item.selectedSize}</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <p className="text-xs text-gray-500 mt-2">
+                                                    Qty: <span className="font-medium text-gray-700">{item.quantity}</span> •
+                                                    <span className="font-bold text-gray-800 ml-1">
+                                                        ₹{item.price}
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            {/* Buttons */}
+                                            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                                <button
+                                                    onClick={() => navigate(`/order_track/${order._id}`)}
+                                                    className="flex-1 sm:w-32 py-2.5 bg-gray-900 text-white rounded-xl text-[11px] font-bold uppercase hover:bg-gray-800 transition-colors cursor-pointer"
+                                                >
+                                                    Details
+                                                </button>
+
+                                                <button
+                                                    onClick={() => navigate(`/review_rating/${order._id}`)}
+                                                    className="flex-1 sm:w-32 py-2.5 bg-pink-500 text-white rounded-xl text-[11px] font-bold uppercase shadow-lg shadow-pink-100 hover:bg-pink-600 transition-colors cursor-pointer"
+                                                >
+                                                    Write a Review
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+
                             </div>
                         ))
                     ) : (

@@ -16,6 +16,9 @@ import {
     getVendorCustomers,
     getVendorCustomerStats,
     getCustomerDetailsForVendor,
+    vendorOrdersOverTime,
+    vendorOrderStatus,
+    vendorTopProducts,
 } from '../Controllers/vendorController.js';
 
 const router = express.Router();
@@ -46,5 +49,8 @@ router.get("/vendor-dashboard-stats", authMiddleware(['vendor']), vendorDashboar
 router.get('/vendor-customers', authMiddleware(['vendor']), getVendorCustomers);
 router.get('/vendor-customer-stats', authMiddleware(['vendor']), getVendorCustomerStats);
 router.get('/vendor-customer-detail/:id', authMiddleware(['vendor']), getCustomerDetailsForVendor);
+router.get("/orders-over-time", authMiddleware(['vendor']), vendorOrdersOverTime);
+router.get("/order-status", authMiddleware(['vendor']), vendorOrderStatus);
+router.get("/top-products",authMiddleware(['vendor']), vendorTopProducts);
 
 export default router;

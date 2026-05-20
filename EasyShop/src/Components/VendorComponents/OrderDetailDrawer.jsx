@@ -32,9 +32,16 @@ function OrderDetailDrawer({ orderId, isOpen, onClose }) {
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
-                        <h2 className="text-xl font-black text-slate-800 dark:text-white">Order Details</h2>
+
+                        <h2 className="text-xl font-black text-slate-800 dark:text-white">
+                            Order Details
+                        </h2>
+
                         <div className="flex gap-2 mt-1">
-                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">ID: #{order._id}</p>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                                ID: #{order._id}
+                            </p>
+
                             <span className="text-[10px] text-slate-300">|</span>
                             <p className="text-[10px] text-slate-400 font-bold">
                                 {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -50,8 +57,8 @@ function OrderDetailDrawer({ orderId, isOpen, onClose }) {
                 </div>
 
                 <div className="p-6 space-y-8">
-                    {/* 1. Items List (Aapka logic sahi hai) */}
 
+                    {/* 1. Items List */}
                     <section>
 
                         <div className="flex items-center gap-2 mb-4">
@@ -80,43 +87,42 @@ function OrderDetailDrawer({ orderId, isOpen, onClose }) {
 
                                     <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden shrink-0">
 
-                                        <img src={item.productId?.prodImage}
-
-                                            alt="product"
-
+                                        <img
+                                            src={item.variantImage || item.productId?.prodImage}
+                                            alt={item.productId?.prodName || "product"}
                                             className="w-full h-full object-cover" />
-
                                     </div>
-
-
 
                                     <div className="flex-1">
 
+                                        {/* prod name */}
                                         <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 line-clamp-1">
-
                                             {item.productId?.prodName}
-
                                         </h4>
 
+                                        {/* color, size */}
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {item.selectedColor && (
+                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                    {item.selectedColor}
+                                                </span>
+                                            )}
 
+                                            {item.selectedSize && (
+                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                    Size: {item.selectedSize}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                        <p className="text-xs text-slate-400">
-
-                                            Qty: {item.quantity} x  ₹{item.price}
-
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            Qty: {item.quantity} x ₹{item.price}
                                         </p>
-
                                     </div>
-
-
 
                                     <div className="text-sm font-black text-slate-800 dark:text-white">
-
                                         ₹{item.quantity * item.price}
-
                                     </div>
-
-
 
                                 </div>
 

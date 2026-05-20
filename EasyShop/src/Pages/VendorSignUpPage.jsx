@@ -9,8 +9,6 @@ function VendorSignupPage() {
 
     const { data: categories = [], isLoading: isCatLoading, isError, error } = useCatList();
 
-    // console.log("QUERY STATE:", { categories, isCatLoading, isError, error });
-
     const [step, setStep] = useState(1);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
     const [formData, setFormData] = useState({

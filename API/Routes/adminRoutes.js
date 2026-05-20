@@ -26,7 +26,14 @@ import {
     toggleTransactionStatus,
     getAllWithdrawRequests,
     toggleWithdrawStatus,
-    toggleBestSeller
+    toggleBestSeller,
+    listBlog,
+    updateBlogStatus,
+    deleteBlog,
+    getOrdersOverTime,
+    getOrderStatusBreakdown,
+    getRevenueByPaymentMethod,
+    getTopProducts
 
 } from '../Controllers/adminController.js';
 
@@ -38,7 +45,6 @@ router.post('/admin-logout', logoutAdmin);
 router.get('/admin-detail', authMiddleware(['admin']), getAdmin);
 router.get('/admin-profile-setting', authMiddleware(['admin']), updateAdminProfile);
 
-router.get('/get-admin-stats', authMiddleware(['admin']), getAdminDashboardStats);
 router.get('/get-vendor-list', authMiddleware(['admin']), getVendorList);
 router.patch('/vendor-toggle-status/:vendor_id', authMiddleware(['admin']), toggleVendorStatus);
 router.get('/get-product-list', authMiddleware(['admin']), getAdminProductList);
@@ -57,5 +63,14 @@ router.patch('/toggle-transaction-status/:transaction_id', authMiddleware(['admi
 router.get('/get-all-withdrawal-request', authMiddleware(['admin']), getAllWithdrawRequests);
 router.patch('/toggle-withdraw-status/:withdraw_id', authMiddleware(['admin']), toggleWithdrawStatus);
 router.patch('/toggle-best-seller/:product_id', authMiddleware(['admin']), toggleBestSeller);
+router.get('/list-blog', authMiddleware(['admin']), listBlog);
+router.patch('/update-blog-status/:blog_id', authMiddleware(['admin']), updateBlogStatus);
+router.delete('/delete-blog/:blog_id', authMiddleware(['admin']), deleteBlog);
+
+router.get('/dashboard-stats', authMiddleware(['admin']), getAdminDashboardStats);
+router.get('/orders-over-time', authMiddleware(['admin']), getOrdersOverTime);
+router.get('/order-status-breakdown', authMiddleware(['admin']), getOrderStatusBreakdown);
+router.get('/revenue-by-payment', authMiddleware(['admin']), getRevenueByPaymentMethod);
+router.get('/top-products', authMiddleware(['admin']), getTopProducts);
 
 export default router;

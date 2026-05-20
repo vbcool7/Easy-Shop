@@ -16,11 +16,12 @@ import {
     countProducts,
     getFilteredProducts,
     getInventoryStats,
-    getTopSellingProducts, 
+    getTopSellingProducts,
     getStockAlerts,
     getProductFilterOptions,
     getSimilarProducts,
-    getVendorShopProducts
+    getVendorShopProducts,
+    getSearchSuggestions
 } from '../Controllers/productController.js';
 
 const router = express.Router();
@@ -31,6 +32,7 @@ router.get('/product-filter', getFilteredProducts);
 router.get('/filter-options/:catId', getProductFilterOptions);
 router.get('/get-similar-products/:prod_id', getSimilarProducts);
 router.get('/get-vendor-shop-products/:vendor_id', getVendorShopProducts);
+router.get('/get-search-suggestions', getSearchSuggestions);
 
 router.post(
     '/product-add/:subCat_id',
@@ -41,10 +43,7 @@ router.post(
 router.put(
     '/product-update/:prod_id',
     authMiddleware(['vendor', 'admin']),
-    upload.fields([
-        { name: "prodImage", maxCount: 1 },
-        { name: "prodImages", maxCount: 5 }
-    ]),
+    upload.any(),
     updateProduct);
 
 router.get('/get-my-category', authMiddleware(['vendor', 'admin']), getMyCategories);

@@ -21,9 +21,6 @@ function Orders() {
 
     const [selectedOrderId, setIsSelectedOrderId] = useState(null);
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
-
     const orderStatusStyles = {
         Processing: "bg-amber-50 text-amber-600 border-amber-100",
         Shipped: "bg-blue-50 text-blue-600 border-blue-100",
@@ -73,7 +70,7 @@ function Orders() {
     const stats = [
         {
             label: "Pending",
-            count: getStats?.Pending || 0, 
+            count: getStats?.Pending || 0,
             color: "text-yellow-600",
             bg: "bg-yellow-50",
             borderColor: "border-yellow-400",
@@ -117,6 +114,9 @@ function Orders() {
     const handleOrderStatusChange = (orderId, newStatus) => {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
+
+    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
 
     return (
         <div>
@@ -239,16 +239,32 @@ function Orders() {
 
                                                     <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
                                                         <img
-                                                            src={order.productDetails?.prodImage}
+                                                            src={order.variantImage || order.productDetails?.prodImage}
                                                             alt={order.productDetails?.prodName}
                                                             className="w-full h-full object-cover" />
                                                     </div>
 
+                                                    {/* prod info color, size */}
                                                     <div className="max-w-35">
                                                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                                                             {order.productDetails?.prodName}
                                                         </p>
+
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {order.items?.selectedColor && (
+                                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                                    {order.items.selectedColor}
+                                                                </span>
+                                                            )}
+
+                                                            {order.items?.selectedSize && (
+                                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                                    Size: {order.items.selectedSize}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
+
                                                 </div>
                                             </td>
 
@@ -262,7 +278,7 @@ function Orders() {
                                             {/* 5. Total Amount */}
                                             <td className="px-6 py-4">
                                                 <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                    ₹{order.productDetails?.price}
+                                                    ₹{((order.items?.price || 0) * (order.items?.quantity || 0)).toLocaleString()}
                                                 </span>
                                             </td>
 

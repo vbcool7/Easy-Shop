@@ -9,6 +9,24 @@ import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import sendEmail from '../utils/sendEmail.js';
 
+// helper function for both place orders
+const findMatchingVariant = (product, selectedColor, selectedSize) => {
+    const hasColor = product.attributes?.get?.('Color')?.values?.length > 0;
+    const hasSize = product.attributes?.get?.('Size')?.values?.length > 0;
+
+    return product.variants.find(v => {
+        const colorMatch = hasColor
+            ? v.color === selectedColor
+            : v.color == null;
+
+        const sizeMatch = hasSize
+            ? v.size === selectedSize
+            : v.size == null;
+
+        return colorMatch && sizeMatch;
+    });
+};
+
 // check out
 export const placeCartOrder = async (req, res) => {
     try {
@@ -56,17 +74,27 @@ export const placeCartOrder = async (req, res) => {
             }
 
             // check size stock if selectedSize exists
-            if (item.selectedSize) {
-                const sizeStock = product.attributes?.get('Size')?.stock?.[item.selectedSize] ?? 0;
-                if (sizeStock < item.quantity) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `${product.prodName} in size ${item.selectedSize} out of stock. Only ${sizeStock} remaining.`
-                    });
-                }
+            const variant = findMatchingVariant(
+                product,
+                item.selectedColor || null,
+                item.selectedSize || null
+            );
+
+            if (!variant) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid variant selected for ${product.prodName}`
+                });
             }
 
-            // Order items array taiyaar karo
+            if (variant.stock < item.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `${product.prodName} selected variant out of stock. Only ${variant.stock} remaining.`
+                });
+            }
+
+            // prepare Order items array 
             orderItems.push({
                 productId: product._id,
                 vendorId: product.vendorId,
@@ -74,6 +102,7 @@ export const placeCartOrder = async (req, res) => {
                 price: product.price,
                 selectedColor: item.selectedColor || null,
                 selectedSize: item.selectedSize || null,
+                variantId: variant._id
             });
 
             totalAmount += product.price * item.quantity;
@@ -91,23 +120,21 @@ export const placeCartOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // 4. Sabse Important: Product ka Stock Update karo (main top)
+        // 4. stock update
         for (const item of orderItems) {
-            await Product.findByIdAndUpdate(item.productId, {
-                $inc: {
-                    stock: -item.quantity,
-                    totalSold: item.quantity
-                }
-            });
-
-            // decrease size stock if selectedSize exists
-            if (item.selectedSize) {
-                await Product.findByIdAndUpdate(item.productId, {
+            await Product.updateOne(
+                {
+                    _id: item.productId,
+                    "variants._id": item.variantId
+                },
+                {
                     $inc: {
-                        [`attributes.Size.stock.${item.selectedSize}`]: -item.quantity
+                        stock: -item.quantity,
+                        totalSold: item.quantity,
+                        "variants.$.stock": -item.quantity
                     }
-                });
-            }
+                }
+            );
         }
 
         // 5. Cart Empty kar do
@@ -147,22 +174,38 @@ export const placeDirectOrder = async (req, res) => {
 
         const product = await Product.findById(prod_id);
 
-        if (!product || product.stock < quantity) {
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
+        if (product.stock < quantity) {
             return res.status(400).json({
                 success: false,
                 message: `${product?.prodName || "Product"} out of stock.`
             });
         }
 
-        // check size stock
-        if (selectedSize) {
-            const sizeStock = product.attributes?.get('Size')?.stock?.[selectedSize] ?? 0;
-            if (sizeStock < quantity) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Size ${selectedSize} out of stock. Only ${sizeStock} remaining.`
-                });
-            }
+        const variant = findMatchingVariant(
+            product,
+            selectedColor || null,
+            selectedSize || null
+        );
+
+        if (!variant) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid variant selected"
+            });
+        }
+
+        if (variant.stock < quantity) {
+            return res.status(400).json({
+                success: false,
+                message: `Selected variant out of stock. Only ${variant.stock} remaining.`
+            });
         }
 
         const newOrder = new Order({
@@ -174,6 +217,7 @@ export const placeDirectOrder = async (req, res) => {
                 price: product.price,
                 selectedColor: selectedColor || null,
                 selectedSize: selectedSize || null,
+                variantId: variant._id
             }],
 
             totalAmount: product.price * quantity,
@@ -184,25 +228,25 @@ export const placeDirectOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // order place decrease quantity
-        await Product.findByIdAndUpdate(prod_id, {
-            $inc: {
-                stock: -quantity,
-                totalSold: quantity
-            }
-        });
-
-        // decrease size stock
-        if (selectedSize) {
-            await Product.findByIdAndUpdate(prod_id, {
+        // order placed then decrease quantity
+        await Product.updateOne(
+            {
+                _id: prod_id,
+                "variants._id": variant._id
+            },
+            {
                 $inc: {
-                    [`attributes.Size.stock.${selectedSize}`]: -quantity
+                    stock: -quantity,
+                    totalSold: quantity,
+                    "variants.$.stock": -quantity
                 }
-            });
-        }
+            }
+        );
 
-        //  (Optional) Agar ye product cart mein tha, toh wahan se hata do
-        await Cart.findOneAndUpdate({ userId }, { $pull: { items: { productId: prod_id } } });
+        await Cart.findOneAndUpdate(
+            { userId },
+            { $pull: { items: { productId: prod_id } } }
+        );
 
         res.status(201).json({
             success: true,
@@ -225,8 +269,27 @@ export const userOrderHistory = async (req, res) => {
         const userId = req.user.id;
 
         const orders = await Order.find({ userId })
-            .populate("items.productId", "prodName prodImage price  quantity")
+            .populate("items.productId", "prodName prodImage price quantity images attributes variants prodImages")
             .sort({ createdAt: -1 });
+
+        const data = orders.map(order => {
+            const o = order.toObject();
+            o.items = o.items.map(item => {
+                if (item.productId?.attributes) {
+                    const attrs = item.productId.attributes instanceof Map
+                        ? Object.fromEntries(item.productId.attributes)
+                        : item.productId.attributes;
+
+                    const colorData = attrs?.Color instanceof Map
+                        ? Object.fromEntries(attrs.Color)
+                        : attrs?.Color;
+
+                    item.productId.colorImages = colorData?.images || {};
+                }
+                return item;
+            });
+            return o;
+        });
 
         res.status(200).json({
             success: true,
@@ -249,7 +312,7 @@ export const getSingleOrderDetail = async (req, res) => {
         const { order_id } = req.params;
 
         const order = await Order.findById(order_id)
-            .populate('items.productId', 'prodImage prodName price quantity')
+            .populate('items.productId', 'prodImage prodName price quantity attributes variants')
             .populate('userId', 'name contact address');
 
         if (!order) {
@@ -307,9 +370,27 @@ export const cancelOrder = async (req, res) => {
 
         // stock increase after cancel
         for (const item of order.items) {
-            await Product.findByIdAndUpdate(item.productId, {
-                $inc: { stock: item.quantity } // Stock plus 
-            });
+            if (item.variantId) {
+                // restore variant stock
+                await Product.updateOne(
+                    {
+                        _id: item.productId,
+                        "variants._id": item.variantId
+                    },
+                    {
+                        $inc: {
+                            stock: item.quantity,
+                            totalSold: -item.quantity,
+                            "variants.$.stock": item.quantity
+                        }
+                    }
+                );
+            } else {
+                // no variant — just restore total stock
+                await Product.findByIdAndUpdate(item.productId, {
+                    $inc: { stock: item.quantity, totalSold: -item.quantity }
+                });
+            }
         }
 
         res.status(200).json({
@@ -333,8 +414,6 @@ export const orderInvoiceDownload = async (req, res) => {
         const user_id = req.user.id;
         const user_role = req.user.role;
 
-        console.log("Params received:", req.params);
-        // Check karein ki ID valid hai ya nahi
         if (!order_id || order_id === 'undefined') {
             return res.status(400).json({
                 success: false,
@@ -397,7 +476,7 @@ export const orderInvoiceDownload = async (req, res) => {
         doc.fillColor('#000').fontSize(20).text('INVOICE', 50, 160);
         doc.fontSize(10).text(`Invoice Number: ${order._id}`, 50, 200);
         doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 50, 215);
-        doc.text(`Total Amount: INR ${order.totalAmount}`, 50, 230);
+        doc.text(`Total Amount: INR ${totalAmountToPrint}`, 50, 230);
 
         // 5. Customer Details
         doc.text(`Bill To:`, 300, 200);
@@ -410,17 +489,20 @@ export const orderInvoiceDownload = async (req, res) => {
         const tableTop = 300;
         doc.font('Helvetica-Bold');
         doc.text('Item', 50, tableTop);
+        doc.text('Color', 180, tableTop);
+        doc.text('Size', 230, tableTop);
         doc.text('Qty', 280, tableTop);
         doc.text('Price', 350, tableTop);
         doc.text('Total', 450, tableTop);
         doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
 
-        // Table Content mein ab 'itemsToPrint' use karein
         // Table Content
         let i = 0;
         itemsToPrint.forEach(item => {
             const y = tableTop + 30 + (i * 25);
             doc.font('Helvetica').text(item.productId.prodName, 50, y);
+            doc.text(item.selectedColor || '-', 180, y);
+            doc.text(item.selectedSize || '-', 230, y);
             doc.text(item.quantity.toString(), 280, y);
             doc.text(`INR ${item.price}`, 350, y);
             doc.text(`INR ${item.price * item.quantity}`, 450, y);
@@ -466,7 +548,9 @@ export const getVendorOrders = async (req, res) => {
                     as: "productDetails"
                 }
             },
+
             { $unwind: "$productDetails" },
+
             {
                 $match: {
                     "productDetails.vendorId": new mongoose.Types.ObjectId(vendorId)
@@ -481,7 +565,39 @@ export const getVendorOrders = async (req, res) => {
                     as: "customerDetails"
                 }
             },
+
             { $unwind: "$customerDetails" },
+
+            {
+                $addFields: {
+                    colorImageEntry: {
+                        $first: {
+                            $filter: {
+                                input: {
+                                    $objectToArray: {
+                                        $ifNull: ["$productDetails.attributes.Color.images", {}]
+                                    }
+                                },
+                                as: "img",
+                                cond: {
+                                    $eq: ["$$img.k", "$items.selectedColor"]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            {
+                $addFields: {
+                    variantImage: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$colorImageEntry.v", 0] },
+                            "$productDetails.prodImage"
+                        ]
+                    }
+                }
+            },
 
             // 5. Sirf wahi data select karein jo zaroori hai (Privacy ke liye)
             {
@@ -495,9 +611,16 @@ export const getVendorOrders = async (req, res) => {
                     orderStatus: 1,
                     "items.quantity": 1,
                     "items.price": 1,
+                    "items.selectedColor": 1,
+                    "items.selectedSize": 1,
+                    "items.variantId": 1,
+
+                    variantImage: 1,
+
                     "productDetails.prodName": 1,
                     "productDetails.prodImage": 1,
                     "productDetails.price": 1,
+
                     "customerDetails.name": 1,
                     "customerDetails.email": 1,
                     "customerDetails.address": 1
@@ -599,7 +722,7 @@ export const getVendorSingleOrderDetail = async (req, res) => {
             .populate('userId', 'name email profilePhoto')
             .populate({
                 path: 'items.productId',
-                select: 'prodName prodImage price catId',
+                select: 'prodName prodImage price catId attributes variants',
                 populate: {
                     path: 'catId',
                     select: 'catName'
@@ -613,7 +736,7 @@ export const getVendorSingleOrderDetail = async (req, res) => {
             });
         }
 
-        // Security Check: Kya is order mein is vendor ka koi product hai?
+        // Security Check
         const isOwnOrder = order.items.some(
             item => item.vendorId?.toString() === vendor_id
         );
@@ -625,10 +748,26 @@ export const getVendorSingleOrderDetail = async (req, res) => {
             });
         }
 
+        const finalOrder = order.toObject();
+
+        finalOrder.items = order.items.map((item) => {
+            const product = item.productId;
+            const colorAttr = product?.attributes?.get?.("Color");
+
+            const colorImages = item.selectedColor
+                ? colorAttr?.images?.[item.selectedColor]
+                : null;
+
+            return {
+                ...item.toObject(),
+                variantImage: colorImages?.[0] || product?.prodImage
+            };
+        });
+
         res.status(200).json({
             success: true,
             message: "Here is Specific vendor's order deatil",
-            data: order
+            data: finalOrder
         });
 
     } catch (err) {
@@ -766,17 +905,36 @@ export const updateOrderStatus = async (req, res) => {
 
         // Stock restore on cancellation (only once, only if not already cancelled)
         if (status === "Cancelled" && order.orderStatus !== "Cancelled") {
-            const stockUpdates = order.items.map(item => ({
-                updateOne: {
-                    filter: { _id: item.productId },
-                    update: {
-                        $inc: {
-                            stock: item.quantity,
-                            totalSold: -item.quantity
-                        }
+            const stockUpdates = order.items.map(item => {
+                const update = {
+                    $inc: {
+                        stock: item.quantity,
+                        totalSold: -item.quantity
                     }
+                };
+
+                // if variant exists, restore variant stock too
+                if (item.variantId) {
+                    update.$inc["variants.$.stock"] = item.quantity;
+                    return {
+                        updateOne: {
+                            filter: {
+                                _id: item.productId,
+                                "variants._id": item.variantId
+                            },
+                            update
+                        }
+                    };
                 }
-            }));
+
+                return {
+                    updateOne: {
+                        filter: { _id: item.productId },
+                        update
+                    }
+                };
+            });
+
             await Product.bulkWrite(stockUpdates);
         }
 

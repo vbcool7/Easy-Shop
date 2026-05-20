@@ -12,6 +12,7 @@ import { AiOutlineTransaction } from "react-icons/ai";
 import { HiOutlineBanknotes } from "react-icons/hi2";
 
 import { ChevronDown, User, BadgePercent } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 import { useGetAdmin } from "../hooks/useAdminStats";
 
@@ -43,8 +44,17 @@ const menuItems = [
     {
         id: "all-products",
         icon: <MdOutlineShoppingBag className='w-6 h-6' />,
-        label: "All Products", // Saare vendors ke products dekhne ke liye
+        label: "All Products", 
         active: false,
+    },
+    {
+        id: "blog",
+        icon: <BookOpen className='w-6 h-6' />,
+        label: "Blog Management",
+        submenu: [
+            { id: "blogs", label: "Blog List" },
+            { id: "create-blog", label: "Add Blog" },
+        ]
     },
     {
         id: "platform-orders",

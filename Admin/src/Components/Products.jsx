@@ -20,9 +20,6 @@ function Products() {
 
     const [selectedProduct, setSelectedProduct] = useState("");
 
-    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
-
     // status toggle
     const statusStyles = {
         Approved: 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -68,6 +65,9 @@ function Products() {
             }
         });
     }
+
+    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -264,8 +264,14 @@ function Products() {
 
                                             <button
                                                 onClick={() => handleDeleteClick(product)}
-                                                className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90 cursor-pointer">
-                                                <LiaTrashSolid className="text-lg md:text-xl" />
+                                                disabled={isDeleting}
+                                                className={`p-2 rounded-lg transition-all 
+                                                     ${isDeleting
+                                                        ? "bg-red-50/50 text-red-300 cursor-not-allowed opacity-70" // Delete ke time light color
+                                                        : "bg-red-50 text-red-500 hover:bg-red-500 hover:text-white active:scale-90 cursor-pointer" // Normal color
+                                                    }`}
+                                            >
+                                                <LiaTrashSolid className={`text-lg md:text-xl ${isDeleting ? "animate-pulse" : ""}`} />
                                             </button>
                                         </div>
                                     </td>
@@ -283,7 +289,7 @@ function Products() {
                 onClose={() => setIsEditOpen(null)}
             />
 
-            {/* delete popup */}
+            {/* delete product popup */}
             <div
                 className={`fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-100 px-4 transition-all duration-300 
                  ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
@@ -294,7 +300,7 @@ function Products() {
                 ></div>
 
                 <div
-                    onClick={(e) => e.stopPropagation()} // Box ke andar click karne par band nahi hoga
+                    onClick={(e) => e.stopPropagation()}
                     className={`relative transform transition-all duration-300 rounded-[2.5rem] bg-white dark:bg-slate-900 p-8 shadow-2xl w-full max-w-md border border-pink-50 dark:border-slate-800
                     ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
                 >
@@ -322,7 +328,8 @@ function Products() {
                     <div className="mt-8 flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
-                            onClick={() => setIsDeletedOpen(false)}
+                            onClick={() => !isDeleting && setIsDeletedOpen(false)}
+                            disabled={isDeleting}
                             className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95"
                         >
                             No, Keep it

@@ -19,9 +19,6 @@ const ReviewTable = () => {
 
     const reviews = data?.data || [];
 
-    if (isLoading) return <div className="p-10 text-center font-bold text-pink-500">Loading Reviews...</div>;
-    if (isError) return <div className="p-10 text-center text-red-500">Error loading reviews.</div>;
-
     // status toggle
     const statusStyles = {
         Approved: 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -45,6 +42,9 @@ const ReviewTable = () => {
             }
         });
     }
+
+    if (isLoading) return <div className="p-10 text-center font-bold text-pink-500">Loading Reviews...</div>;
+    if (isError) return <div className="p-10 text-center text-red-500">Error loading reviews.</div>;
 
     return (
         <div className="p-6 bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
@@ -71,6 +71,7 @@ const ReviewTable = () => {
             {/* Table */}
             <div className="w-full overflow-x-auto scrollbar-hide">
                 <table className="w-full text-left border-collapse min-w-225">
+
                     <thead>
                         <tr className="border-b border-slate-100 dark:border-slate-800">
                             <th className="pb-4 pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-55">User / Customer</th>
@@ -80,9 +81,12 @@ const ReviewTable = () => {
                             <th className="pb-4 pr-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20 text-right">Action</th>
                         </tr>
                     </thead>
+
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
                         {reviews.length > 0 ? reviews.map((review) => (
-                            <tr key={review._id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-all duration-200">
+                            <tr 
+                            key={review._id} 
+                            className="group hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-all duration-200">
 
                                 {/* 1. Customer Info */}
                                 <td className="py-4 pl-4 whitespace-nowrap">

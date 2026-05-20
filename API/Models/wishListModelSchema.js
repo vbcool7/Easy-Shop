@@ -16,11 +16,11 @@ const wishListSchema = new mongoose.Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "Product",
                     required: true,
-                    unique: true
                 },
+                
                 selectedColor: { type: String, default: null },
                 selectedSize: { type: String, default: null },
-                prodImage: { type: String, default: null }, // selected color image
+                prodImage: { type: String, default: null }, 
             }
         ],
 

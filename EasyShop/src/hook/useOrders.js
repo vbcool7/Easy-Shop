@@ -54,7 +54,7 @@ export const useOrderInvoiceDownload = () => {
     return useMutation({
         mutationFn: async (order_id) => {
             const response = await API.get(`/order/download-invoice/${order_id}`, {
-                responseType: 'blob' 
+                responseType: 'blob'
             });
             return response.data;
         },
@@ -110,39 +110,23 @@ export const usePlaceCartOrder = () => {
     });
 };
 
-// place direct order 
-// export const usePlaceDirectOrder = () => {
-//     const queryClient = useQueryClient();
-
-//     return useMutation({
-//         mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod }) => {
-//             const { data } = await API.post(`/order/place-direct-order/${prod_id}`, {
-//                 quantity,
-//                 shippingAddress,
-//                 paymentMethod
-//             });
-//             return data;
-//         },
-//         onError: (error) => {
-//             const message = error.response?.data?.message || "Failed to place order";
-//             toast.error(message);
-//         }
-//     });
-// };
-
 export const usePlaceDirectOrder = () => {
     const queryClient = useQueryClient();
-
+    
     return useMutation({
         mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod, selectedColor, selectedSize }) => {
             const { data } = await API.post(`/order/place-direct-order/${prod_id}`, {
                 quantity,
                 shippingAddress,
                 paymentMethod,
-                selectedColor,   
-                selectedSize     
+                selectedColor,
+                selectedSize
             });
             return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['cart']);
+            queryClient.invalidateQueries({ queryKey: ["orders"] });
         },
         onError: (error) => {
             const message = error.response?.data?.message || "Failed to place order";

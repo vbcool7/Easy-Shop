@@ -15,8 +15,6 @@ const businessMenu = [
 
 function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isCatLoading }) {
 
-    // console.log("BI PROPS:", { categories, isCatLoading });
-
     const [isBusinessOpen, setIsBusinessOpen] = useState(false);
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [selectedCat, setSelectedCat] = useState(null);
@@ -43,9 +41,9 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
         setFormData(prev => ({
             ...prev,
             category: cat.catName,
-            categoryLicenseUpload: null  // reset if user switches category
+            categoryLicenseUpload: null  
         }));
-        setSelectedCat(cat);  // store full cat object in local state
+        setSelectedCat(cat);  
         setIsCategoryOpen(false);
     };
 

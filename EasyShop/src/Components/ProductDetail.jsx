@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { IoMdStar } from "react-icons/io";
 import { IoBagHandleOutline } from "react-icons/io5";
@@ -32,8 +32,11 @@ import toast from 'react-hot-toast';
 
 function ProductDetail() {
 
+    const location = useLocation();
+    const initialSelectedColor = location.state?.selectColor;
+
     const { prodId, prodName } = useParams();
-    const { addToCart } = useCart();
+    const { cartItems, addToCart } = useCart();
     const { wishListItems, addToWishList } = useWishList();
 
     const { user } = useAuthStore();
@@ -50,42 +53,81 @@ function ProductDetail() {
     const [qty, setQty] = useState(1);
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-    // detect variants
     const colorAttr = product?.attributes?.Color;
     const sizeAttr = product?.attributes?.Size;
     const hasColorVariant = colorAttr?.values?.length > 0;
     const hasSize = sizeAttr?.values?.length > 0;
+    const variants = product?.variants || [];
 
-    // selected color/size state — change from index to actual value
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
 
-    // set default color on product load
     useEffect(() => {
-        if (product) {
+        if (!product) return;
+
+        setSelectedSize(null);
+        setQty(1);
+
+        if (hasColorVariant) {
+            const colorToSelect =
+                initialSelectedColor && colorAttr.values.includes(initialSelectedColor)
+                    ? initialSelectedColor
+                    : colorAttr.values[0];
+
+            setSelectedColor(colorToSelect);
+
+            const colorImages = colorAttr.images?.[colorToSelect] || [];
+            setMainImage(colorImages[0] || product.prodImage);
+        } else {
+            setSelectedColor(null);
             setMainImage(product.prodImage);
-            if (hasColorVariant) {
-                setSelectedColor(colorAttr.values[0]);
-            }
         }
-    }, [prodId, product]);
+    }, [prodId, product, initialSelectedColor]);
 
-    const colorStock = colorAttr?.stock || {};
-    const sizeStock = sizeAttr?.stock || {};
+    const currentVariant = variants.find(v => {
+        const colorMatch = hasColorVariant
+            ? v.color === selectedColor
+            : v.color == null;
 
-    const hasColorStock = hasColorVariant && Object.keys(colorStock).length > 0;
-    const hasSizeStock = hasSize && Object.keys(sizeStock).length > 0;
+        const sizeMatch = hasSize
+            ? v.size === selectedSize
+            : v.size == null;
 
-    const currentStock = hasColorStock && selectedColor
-        ? colorStock[selectedColor] ?? 0
-        : hasSizeStock && selectedSize
-            ? sizeStock[selectedSize] ?? 0
-            : product?.stock ?? 0;
+        return colorMatch && sizeMatch;
+    });
 
+    const currentStock = currentVariant?.stock ?? 0;
 
-    // when color changes → update images
+    const canShowStock =
+        (!hasColorVariant || selectedColor) &&
+        (!hasSize || selectedSize);
+
+    const getSizeStock = (size) => {
+        const variant = variants.find(v => {
+            const colorMatch = hasColorVariant
+                ? v.color === selectedColor
+                : v.color == null;
+
+            return colorMatch && v.size === size;
+        });
+
+        return variant?.stock ?? 0;
+    };
+
+    const getColorStock = (color) => {
+        if (hasSize) {
+            return variants
+                .filter(v => v.color === color)
+                .reduce((sum, v) => sum + Number(v.stock || 0), 0);
+        }
+
+        const variant = variants.find(v => v.color === color && v.size == null);
+        return variant?.stock ?? 0;
+    };
+
     const handleColorSelect = (color) => {
         setSelectedColor(color);
+        setSelectedSize(null);
         setQty(1);
 
         const colorImages = colorAttr?.images?.[color] || [];
@@ -94,17 +136,9 @@ function ProductDetail() {
         }
     };
 
-    // get current thumbnails based on selected color
     const currentThumbnails = hasColorVariant && selectedColor
         ? (colorAttr?.images?.[selectedColor] || [])
         : (product?.prodImages || []);
-
-    // set main image when product loads
-    useEffect(() => {
-        if (product) {
-            setMainImage(product.prodImage);
-        }
-    }, [prodId, product]);
 
     const breadcrumbItems = [
         { label: "Home", path: "/" },
@@ -115,16 +149,15 @@ function ProductDetail() {
         { label: product?.prodName || "Product" }
     ];
 
-    // wishlist
     const isFavorite = wishListItems.some((wishItem) => {
         const wishId = wishItem.productId?._id || wishItem._id || wishItem.id;
         const currentProdId = product?._id || product?.id;
         const idMatch = wishId === currentProdId;
 
-        // if product has color variants, also check color matches
         if (hasColorVariant) {
             return idMatch && wishItem.selectedColor === selectedColor;
         }
+
         return idMatch;
     });
 
@@ -134,45 +167,73 @@ function ProductDetail() {
         addToWishList({
             ...product,
             id: product?._id || product?.id,
-            prodImage: mainImage,  // use currently displayed image
+            prodImage: mainImage,
             selectedColor: selectedColor || null,
-            selectedSize: selectedSize || null
+            selectedSize: selectedSize || null,
+            variantId: currentVariant?._id || null
         });
     };
 
     const handleAddToCart = () => {
+
+        if (hasColorVariant && !selectedColor) {
+            toast.error("Please select a color");
+            return;
+        }
+
         if (hasSize && !selectedSize) {
             toast.error("Please select a size");
             return;
         }
-        // check size stock
-        if (hasSize && selectedSize) {
-            const sizeStock = sizeAttr?.stock?.[selectedSize] ?? 0;
-            if (sizeStock === 0) {
-                toast.error(`${selectedSize} is out of stock`);
-                return;
-            }
+
+        if (!canShowStock || currentStock <= 0) {
+            toast.error("Selected variant is out of stock");
+            return;
         }
+        
+        // stock available check 
+        const cartItem = cartItems.find(item =>
+            (item._id || item.id) === (product._id || product.id) &&
+            item.variantId?.toString() === currentVariant?._id?.toString()
+        );
+
+        const cartQty = cartItem?.quantity || 0;
+
+        if (cartQty + qty > currentStock) {
+            toast.error(`You already have ${cartQty} in cart. Only ${currentStock} available.`);
+            return;
+        }
+
         addToCart({
             ...product,
             id: product._id || product.id,
+            quantity: qty,
             selectedColor: selectedColor || null,
             selectedSize: selectedSize || null,
+            variantId: currentVariant?._id || null,
             prodImage: mainImage
         });
     };
 
-    // handle Buy-Now
     const handleBuyNow = () => {
-
         if (!user) {
             toast.error("Please login to place order");
-            navigate('/login');
+            navigate("/login");
             return;
         }
 
         if (hasSize && !selectedSize) {
             toast.error("Please select a size");
+            return;
+        }
+
+        if (!canShowStock || currentStock <= 0) {
+            toast.error("Selected variant is out of stock");
+            return;
+        }
+
+        if (qty > currentStock) {
+            toast.error(`Only ${currentStock} items available`);
             return;
         }
 
@@ -185,36 +246,49 @@ function ProductDetail() {
                 img: mainImage,
                 selectedColor: selectedColor || null,
                 selectedSize: selectedSize || null,
+                variantId: currentVariant?._id || null
             }],
             total: product.price * qty,
             isDirectBuy: true
         };
-        navigate('/place_order', { state: checkOutData });
+
+        navigate("/place_order", { state: checkOutData });
     };
 
-    // pincode check — no change needed
     const handleCheck = () => {
         const pinRegex = /^[1-9][0-9]{5}$/;
+
         if (!pinRegex.test(pincode)) {
             alert("Please enter a valid 6-digit pincode");
             setShowDetails(false);
             return;
         }
+
         if (pincode.length === 6) {
             let days = 5;
-            if (pincode.startsWith('11')) days = 2;
-            if (pincode.startsWith('40') || pincode.startsWith('45')) days = 3;
+
+            if (pincode.startsWith("11")) days = 2;
+            if (pincode.startsWith("40") || pincode.startsWith("45")) days = 3;
+
             const deliveryDateObj = new Date();
             deliveryDateObj.setDate(deliveryDateObj.getDate() + days);
-            const formattedDate = deliveryDateObj.toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'short'
+
+            const formattedDate = deliveryDateObj.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short"
             });
+
             setEstimatedDate(formattedDate);
             setShowDetails(true);
         }
     };
 
     const handleInc = () => {
+        if (!canShowStock) {
+            toast.error("Please select a variant");
+            return;
+        }
+
         if (qty < currentStock) {
             setQty(qty + 1);
         } else {
@@ -223,27 +297,29 @@ function ProductDetail() {
     };
 
     const handleDec = () => {
-        if (qty > 1)
+        if (qty > 1) {
             setQty(qty - 1);
+        }
     };
 
     const handleSizeSelect = (size) => {
         setSelectedSize(size);
         setQty(1);
-    }
+    };
 
-    // chat btn
     const handleChatWithSeller = () => {
         if (!user) {
             toast.error("Please login to chat with seller");
-            navigate('/login');
+            navigate("/login");
             return;
-        } else if (!product?.vendorId?._id) {
-            return;
-        } else {
-            setIsChatOpen(true);
         }
-    }
+
+        if (!product?.vendorId?._id) {
+            return;
+        }
+
+        setIsChatOpen(true);
+    };
 
     if (isLoading) return <EasyShopLoader />;
     if (isError || !product) return <div className="p-20 text-center">Product Not Found!</div>;
@@ -372,20 +448,34 @@ function ProductDetail() {
                             <p className="text-sm font-semibold text-gray-800 mb-2">
                                 Color: <span className="text-pink-500 font-bold">{selectedColor}</span>
                             </p>
+
                             <div className="flex flex-wrap gap-2">
-                                {colorAttr.values.map((color) => (
-                                    <button
-                                        key={color}
-                                        onClick={() => handleColorSelect(color)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-bold border-2 transition-all cursor-pointer
-                                            ${selectedColor === color
-                                                ? 'border-pink-500 bg-pink-50 text-pink-600'
-                                                : 'border-gray-200 text-gray-600 hover:border-pink-300'
-                                            }`}
-                                    >
-                                        {color}
-                                    </button>
-                                ))}
+                                {colorAttr.values.map((color) => {
+                                    const colorStock = getColorStock(color);
+                                    const isOutOfStock = colorStock === 0;
+
+                                    return (
+                                        <button
+                                            key={color}
+                                            onClick={() => !isOutOfStock && handleColorSelect(color)}
+                                            disabled={isOutOfStock}
+                                            className={`px-4 py-1.5 rounded-full text-xs font-bold border-2 transition-all
+                            ${isOutOfStock
+                                                    ? "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed"
+                                                    : selectedColor === color
+                                                        ? "border-pink-500 bg-pink-50 text-pink-600 cursor-pointer"
+                                                        : "border-gray-200 text-gray-600 hover:border-pink-300 cursor-pointer"
+                                                }`}
+                                        >
+                                            {isOutOfStock ? (
+                                                <span className="flex items-center gap-1">
+                                                    <span className="line-through">{color}</span>
+                                                    <span className="text-[8px] text-red-400 font-black">Out</span>
+                                                </span>
+                                            ) : color}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -393,20 +483,19 @@ function ProductDetail() {
                     {/* Size Selector */}
                     {hasSize && (
                         <div className="mb-3">
-
                             <p className="text-sm font-semibold text-gray-800 mb-2">
-                                Size: <span className="text-pink-500 font-bold">{selectedSize || 'Select Size'}</span>
+                                Size: <span className="text-pink-500 font-bold">{selectedSize || "Select Size"}</span>
 
-                                {/* Low stock warning */}
-                                {selectedSize && sizeAttr?.stock?.[selectedSize] > 0 && sizeAttr?.stock?.[selectedSize] <= 5 && (
+                                {selectedSize && currentStock > 0 && currentStock <= 5 && (
                                     <span className="ml-2 text-orange-500 text-xs font-bold">
-                                        Only {sizeAttr.stock[selectedSize]} left!
+                                        Only {currentStock} left!
                                     </span>
                                 )}
                             </p>
+
                             <div className="flex flex-wrap gap-2">
                                 {sizeAttr.values.map((size) => {
-                                    const sizeStock = sizeAttr?.stock?.[size] ?? 0;
+                                    const sizeStock = getSizeStock(size);
                                     const isOutOfStock = sizeStock === 0;
 
                                     return (
@@ -414,12 +503,12 @@ function ProductDetail() {
                                             key={size}
                                             onClick={() => !isOutOfStock && handleSizeSelect(size)}
                                             disabled={isOutOfStock}
-                                            className={`px-3 h-10 rounded-lg text-xs font-bold border-2 transition-all relative
+                                            className={`px-3 h-10 min-w-10 rounded-lg text-xs font-bold border-2 transition-all relative whitespace-nowrap
                                                 ${isOutOfStock
-                                                    ? 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50'
+                                                    ? "border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50"
                                                     : selectedSize === size
-                                                        ? 'border-pink-500 bg-pink-500 text-white cursor-pointer'
-                                                        : 'border-gray-200 text-gray-600 hover:border-pink-300 cursor-pointer'
+                                                        ? "border-pink-500 bg-pink-500 text-white cursor-pointer"
+                                                        : "border-gray-200 text-gray-600 hover:border-pink-300 cursor-pointer"
                                                 }`}
                                         >
                                             {isOutOfStock ? (
@@ -436,16 +525,16 @@ function ProductDetail() {
                     )}
 
                     {/* quantity section */}
-                    <div className='mt-1 md:mt-0 flex flex-row items-start md:flex-col gap-2 md:gap-0'>
+                    <div className="mt-1 md:mt-0 flex flex-row items-start md:flex-col gap-2 md:gap-0">
                         <span className="text-[16px] md:text-xl text-black font-semibold">
                             Quantity
                         </span>
 
                         <div className="flex items-center justify-between w-28 md:w-32 text-gray-700 border-2 border-gray-200 rounded-lg py-1 px-1 md:py-2 md:px-2 md:my-4">
-
                             <button
                                 onClick={handleDec}
-                                className="p-1 text-pink-500 font-bold hover:bg-pink-50 rounded-md transition-colors cursor-pointer">
+                                className="p-1 text-pink-500 font-bold hover:bg-pink-50 rounded-md transition-colors cursor-pointer"
+                            >
                                 <FaMinus className="text-xs md:text-sm" />
                             </button>
 
@@ -455,18 +544,19 @@ function ProductDetail() {
 
                             <button
                                 onClick={handleInc}
-                                className="p-1 text-pink-500 font-bold hover:bg-pink-50 rounded-md transition-colors cursor-pointer">
+                                className="p-1 text-pink-500 font-bold hover:bg-pink-50 rounded-md transition-colors cursor-pointer"
+                            >
                                 <FaPlus className="text-xs md:text-sm" />
                             </button>
                         </div>
 
-                        {/* max stock hint */}
                         <p className="text-[11px] text-gray-400 font-medium">
-                            {currentStock} in stock
-                            {hasSize && selectedSize ? ` for size ${selectedSize}` : ""}
-                            {hasColorStock && selectedColor && !hasSizeStock ? ` for ${selectedColor}` : ""}
+                            {canShowStock
+                                ? `${currentStock} in stock`
+                                : hasSize
+                                    ? "Select size to see stock"
+                                    : "Select variant to see stock"}
                         </p>
-
                     </div>
 
                     <hr className='my-1 md:my-2 border-gray-300' />

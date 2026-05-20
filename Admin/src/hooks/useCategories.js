@@ -39,7 +39,6 @@ export const useToggleCatStatus = () => {
 // add cat
 export const useAddCategory = () => {
 
-    // List ko refresh karne ke liye
     const queryClient = useQueryClient();
 
     return useMutation({

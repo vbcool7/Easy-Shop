@@ -21,7 +21,7 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
     if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching products...</p>;
     if (isError) return <p className="p-10 text-center text-red-500">Error loading products...</p>;
 
-     // --------Edit--------
+    // --------Edit--------
     const handleEditProduct = (product) => {
         setIsEditOpen(product)
     };
@@ -50,15 +50,15 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                             className="flex items-center justify-between p-3 rounded-2xl hover:bg-pink-50/50 transition-colors">
                             <div className="flex items-center gap-4">
                                 <img
-                                    src={product.image}
-                                    alt={product.name}
+                                    src={product.prodImage}
+                                    alt={product.prodName}
                                     className="w-12 h-12 rounded-xl object-cover border border-pink-100" />
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                        {product.name}
+                                        {product.prodName}
                                     </h3>
                                     <p className="text-xs text-slate-400">
-                                        {product.totalSales} Sales
+                                        {product.totalSold} Sales
                                     </p>
                                 </div>
                             </div>
@@ -101,9 +101,9 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                                     Only {product.stock} units left
                                 </p>
 
-                                <button 
-                                onClick={() => handleEditProduct(product)}
-                                className="text-[10px] font-bold text-slate-500 underline uppercase tracking-tighter">
+                                <button
+                                    onClick={() => handleEditProduct(product)}
+                                    className="text-[10px] font-bold text-slate-500 underline uppercase tracking-tighter">
                                     Restock Now
                                 </button>
                             </div>

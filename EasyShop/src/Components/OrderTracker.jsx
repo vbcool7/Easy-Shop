@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import NewProd3 from '../assets/Images/NewProd3.png';
 import { FaRegFileAlt } from "react-icons/fa";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiQuestionLine } from "react-icons/ri";
@@ -14,7 +13,7 @@ function OrderTracker() {
     const navigate = useNavigate();
 
     const { data: orderDetail, isLoading, isError } = useOrderDetail(orderId);
-    const {mutate: downloadInvoice, isPending: isDownloading} = useOrderInvoiceDownload();
+    const { mutate: downloadInvoice, isPending: isDownloading } = useOrderInvoiceDownload();
 
     const statusStyles = {
         Delivered: 'text-green-600',
@@ -61,9 +60,9 @@ function OrderTracker() {
                         </p>
                     </div>
                 </div>
-                 
+
                 {/* progress bar */}
-                <OrderProgressBar orderStatus={orderDetail?.orderStatus}/>
+                <OrderProgressBar orderStatus={orderDetail?.orderStatus} />
 
                 {/* Parent section */}
                 <div className="mt-10 p-4 md:p-8 border rounded-3xl border-gray-100 shadow-sm flex flex-col lg:flex-row gap-8 md:gap-10 bg-white">
@@ -84,8 +83,10 @@ function OrderTracker() {
                                 <div className="flex gap-3 md:gap-4 items-center">
                                     <div className="relative shrink-0 overflow-hidden rounded-xl border border-gray-100">
                                         <img
-                                            src={item.productId?.prodImage}
-                                            alt={item.productId?.prodName}
+                                            src={
+                                                item.productId?.attributes?.Color?.images?.[item.selectedColor]?.[0]
+                                                || item.productId?.prodImage
+                                            }
                                             className='w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-cover group-hover:scale-105 transition-transform duration-500'
                                         />
                                     </div>
@@ -221,7 +222,7 @@ function OrderTracker() {
                         <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-500">
                             <FaRegFileAlt className='text-xl' />
                         </div>
-                        
+
                         <div>
                             <h4 className="text-sm font-bold text-gray-800">Need a copy of your bill?</h4>
                             <p className="text-xs text-gray-400">Download your official tax invoice (PDF)</p>
@@ -231,9 +232,9 @@ function OrderTracker() {
                     {/* Right: Action Buttons */}
                     <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
 
-                        <button 
-                        onClick={() => downloadInvoice(orderId)}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border-2 border-pink-500 text-pink-500 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-pink-50 transition-all active:scale-95 cursor-pointer">
+                        <button
+                            onClick={() => downloadInvoice(orderId)}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border-2 border-pink-500 text-pink-500 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-pink-50 transition-all active:scale-95 cursor-pointer">
                             <MdOutlineFileDownload className='text-xl' />
                             {isDownloading ? "Downloading..." : "Download Invoice"}
                         </button>

@@ -103,6 +103,7 @@ function ReviewRating() {
 
         {/* Header & Filter */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+
           <div>
             <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Customer Feedback</h2>
             <p className="text-[11px] text-slate-400 font-medium">Reviews for your listed products</p>
@@ -123,6 +124,7 @@ function ReviewRating() {
         {/* Table */}
         <div className="w-full overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse min-w-212">
+
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <th className="pb-4 pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[25%]">Customer</th>
@@ -132,9 +134,12 @@ function ReviewRating() {
                 <th className="pb-4 pr-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[10%] text-right">Action</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
               {reviews.length > 0 ? reviews.map((review) => (
-                <tr key={review._id} className="group hover:bg-slate-50/40 dark:hover:bg-slate-900/40 transition-all duration-200">
+                <tr
+                  key={review._id}
+                  className="group hover:bg-slate-50/40 dark:hover:bg-slate-900/40 transition-all duration-200">
 
                   {/* 1. Customer Info */}
                   <td className="py-4 pl-4">

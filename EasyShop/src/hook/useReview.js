@@ -96,3 +96,15 @@ export const useProductReviews = (prod_id) => {
         staleTime: 1000 * 60 * 5
     });
 };
+
+// home review
+export const useApprovedReviews = () => {
+    return useQuery({
+        queryKey: ['approvedReviews'],
+        queryFn: async () => {
+            const { data } = await API.get('/review/get-approved-reviews-home');
+            return data.data;
+        },
+        staleTime: 5 * 60 * 1000,
+    });
+};

@@ -14,6 +14,8 @@ import transactionRoutes from './transactionRoutes.js';
 import withdrawRoutes from './withdrawRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import messageRoutes from './messageRoutes.js';
+import contactRoutes from './contactRoutes.js';
+import blogRoutes from './blogRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -31,5 +33,7 @@ rootRouter.use("/transaction", transactionRoutes);
 rootRouter.use("/withdraw", withdrawRoutes);
 rootRouter.use("/admin", adminRoutes);
 rootRouter.use("/message", messageRoutes);
+rootRouter.use("/contact", contactRoutes);
+rootRouter.use("/blog", blogRoutes);
 
 export default rootRouter;

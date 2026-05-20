@@ -32,6 +32,7 @@ import VendorLayout from "./Layouts/VendorLayout";
 import ProfileLayout from "./Components/VendorComponents/ProfileLayout";
 import UserProfileLayout from "./Components/UserProfileComponents/UserProfileLayout";
 import VendorShop from "./Components/VendorShop";
+import SearchResults from "./Components/SearchResults";
 
 function App() {
 
@@ -75,6 +76,7 @@ function App() {
           <Route path="/order_track/:orderId" element={<OrderTracker />} />
           <Route path="/review_rating/:orderId" element={<ReviewRating />} />
           <Route path="/shop/:vendorId" element={<VendorShop/>} />
+          <Route path="/search" element={<SearchResults/>} />
           
           {/* redirect from cart */}
           <Route path="/product_detail/:prodId" element={<ProductDetail />} />

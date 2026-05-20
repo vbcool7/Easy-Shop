@@ -119,14 +119,19 @@ function SubCategories({ setCurrentPage }) {
             {/* Heading with Search & Add Button */}
             <div className="p-4 md:p-6 border-b border-pink-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 
-                {/* Title */}
+                {/* Title & Badge */}
                 <div>
-                    <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                        Sub-Categories
-                    </h2>
+                    <div className='flex items-center gap-2.5'>
+                        <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+                            Sub-Categories
+                        </h2>
+                        <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
+                            Total: {subCatList?.length || 0}
+                        </span>
+                    </div>
 
-                    <p className="text-[11px] md:text-xs text-slate-500 mt-1">
-                        Manage and organize your sub categories
+                    <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Manage and organize your sub-categories.
                     </p>
                 </div>
 
@@ -134,14 +139,15 @@ function SubCategories({ setCurrentPage }) {
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <input
                         type="text"
-                        placeholder="Search products..."
-                        className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
+                        placeholder="Search sub-categories..."
+                        className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
                     />
 
                     {/* Add Button */}
                     <button
                         onClick={() => setCurrentPage('add-sub-category')}
-                        className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 text-white px-2 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 transition-all active:scale-95 shrink-0 cursor-pointer">
+                        className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none transition-all active:scale-95 shrink-0 cursor-pointer"
+                    >
                         + Add New
                     </button>
                 </div>

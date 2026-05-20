@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema(
         vendorId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Vendor',
-            required: function () { return this.role === 'Vendor'; }, // Sirf Vendor ke liye mandatory
+            required: function () { return this.role === 'vendor'; }, // Sirf Vendor ke liye mandatory
             index: true
         },
 
@@ -57,6 +57,29 @@ const productSchema = new mongoose.Schema(
             required: true
         },
 
+        variants: [
+            {
+                color: {
+                    type: String,
+                    default: null,
+                    trim: true
+                },
+
+                size: {
+                    type: String,
+                    default: null,
+                    trim: true
+                },
+
+                stock: {
+                    type: Number,
+                    required: true,
+                    default: 0,
+                    min: 0
+                }
+            }
+        ],
+
         attributes: {
             type: Map,
             of: mongoose.Schema.Types.Mixed // Mixed matlab String, Number, ya Array kuch bhi aa sakta hai
@@ -71,6 +94,11 @@ const productSchema = new mongoose.Schema(
             type: [String],
             default: []
         },
+
+        images: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+},
 
         addedBy: {
             type: mongoose.Schema.Types.ObjectId,

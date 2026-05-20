@@ -139,7 +139,7 @@ function PlaceOrderForm() {
 
             <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 md:py-5 lg:py-15">
 
-                {/* form section */}
+                {/* left - form section */}
                 <div className="w-full lg:w-[60%] space-y-8 order-2 lg:order-1">
                     <section className="bg-white p-5 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
 
@@ -305,22 +305,45 @@ function PlaceOrderForm() {
                         <div className="max-h-52 md:max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar space-y-4">
                             {displayItems && displayItems.map((item) => (
                                 <div
-                                    key={item._id}
+                                    key={item._id|| item.id || item.variantId}
                                     className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+
+                                    {/* image */}
                                     <div className="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100">
                                         <img
                                             src={item.prodImage || item.img}
                                             alt={item.prodName || item.name}
                                             className="w-full h-full object-cover" />
                                     </div>
+
                                     <div className="flex-1 min-w-0">
+
+                                        {/* prod name */}
                                         <h4 className="text-[13px] font-bold text-gray-800 truncate mb-1">
                                             {item.prodName || item.name}
                                         </h4>
-                                        <span className="text-[10px] font-bold bg-pink-100 px-2 py-1 rounded-lg text-pink-600 uppercase tracking-wider">
-                                            Qty: {item.quantity || 1}
-                                        </span>
+                                        
+                                        {/* prod info */}
+                                        <div className="flex flex-wrap gap-1">
+                                            {item.selectedColor && (
+                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
+                                                    {item.selectedColor}
+                                                </span>
+                                            )}
+
+                                            {item.selectedSize && (
+                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
+                                                    Size: {item.selectedSize}
+                                                </span>
+                                            )}
+
+                                            <span className="text-[10px] font-bold bg-pink-100 px-2 py-1 rounded-lg text-pink-600 uppercase tracking-wider">
+                                                Qty: {item.quantity || 1}
+                                            </span>
+                                        </div>
+
                                     </div>
+
                                     <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
                                         ₹{item.price * (item.quantity || 1)}
                                     </p>
@@ -371,7 +394,7 @@ function PlaceOrderForm() {
                             </div>
                         </div>
 
-                        {/* Place Order Button */}
+                        {/* Place Order button */}
                         <div className='hidden lg:block'>
                             <button
                                 onClick={handlePlaceOrder}
@@ -389,7 +412,7 @@ function PlaceOrderForm() {
                     </div>
                 </div>
 
-                {/* cod pop-up */}
+                {/* cod payment pop-up */}
                 {isopenCod && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-100 p-4">
                         <div className="bg-white p-8 rounded-[3rem] text-center max-w-sm w-full shadow-2xl animate-in zoom-in duration-300">
@@ -415,7 +438,7 @@ function PlaceOrderForm() {
                     </div>
                 )}
 
-                {/* online pop-up */}
+                {/* online payment pop-up */}
                 {isopenOnline && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-100 p-4">
                         <div className="bg-white p-6 rounded-[3rem] text-center max-w-sm w-full shadow-2xl animate-in zoom-in duration-300">

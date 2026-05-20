@@ -31,20 +31,6 @@ function HomeBestSeller() {
                     </p>
                 </div>
 
-
-                {/* Section Heading */}
-                {/* <div className="flex justify-end mb-10">
-                    <button className="hidden md:flex text-gray-500 hover:text-pink-500 font-semibold transition-colors gap-2">
-                        View All Collection <span className="text-xl">→</span>
-                    </button>
-                </div>
-
-                <div className="lex justify-end mb-5">
-                    <button className="md:hidden text-sm text-gray-500 hover:text-pink-500 font-semibold transition-colors gap-2">
-                        View More<span className="text-xl">→</span>
-                    </button>
-                </div> */}
-
                 {/* Product Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
 
@@ -71,7 +57,15 @@ function HomeBestSeller() {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            navigate('/all_products');
+                                            navigate(`/shop/${item.vendorId?._id || item.vendorId}`, {
+                                                state: {
+                                                    storeName: item.vendorId?.storeName,
+                                                    storeLogo: item.vendorId?.storeLogo,
+                                                    aboutShop: item.vendorId?.aboutShop,
+                                                    city: item.vendorId?.city,
+                                                    vendorState: item.vendorId?.state,
+                                                }
+                                            });
                                         }}
                                         className="flex items-center justify-center w-full bg-white/90 backdrop-blur-md text-gray-900 py-3 rounded-xl font-bold shadow-xl cursor-pointer hover:bg-pink-500 hover:text-white transition-all">
                                         View Shop <span className="text-2xl px-2">→</span>
@@ -92,8 +86,6 @@ function HomeBestSeller() {
                         </div>
                     ))}
                 </div>
-
-
             </div>
 
         </section>

@@ -8,11 +8,13 @@ import {
     getUserReviews,
     getVendorReviewStats,
     vendorReviewList,
+    getApprovedReviewsForHome
 } from '../Controllers/reviewRatingController.js';
 
 const router = express.Router();
 
 router.get('/get-product-reviews/:prod_id', getProductReviews);
+router.get('/get-approved-reviews-home', getApprovedReviewsForHome);
 
 router.post('/review-add/:prod_id', authMiddleware(['user']), addReview);
 router.get('/get-user-reviews', authMiddleware(['user']), getUserReviews);

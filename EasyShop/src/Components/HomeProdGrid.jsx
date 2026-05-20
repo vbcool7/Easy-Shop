@@ -9,12 +9,12 @@ function HomeProdGrid() {
 
     const { data: subCategories, isLoading, isError } = useSubCatList();
 
-    // Sirf active sub categories filter
+    // only active sub categories filter
     const activeSubCats = subCategories?.filter(subCat => subCat.isActive) || [];
 
     // show itmes
     const bentoItems = activeSubCats.filter(item =>
-        ['home-decor', 'sports-shoes', 'casual-shirts-t-shirts', 'skincare', 'mens-watches', 'computer-accessories', 'traditional-jewelry'].includes(item.slug)
+        ['home-decor', 'sports-shoes', 'casual-shirts-t-shirts', 'skincare', 'mens-watches', 'professional-makeup', 'traditional-jewelry'].includes(item.slug)
     );
 
     const homeDecor = bentoItems.find(item => item.slug === 'home-decor');
@@ -22,7 +22,7 @@ function HomeProdGrid() {
     const shirts = bentoItems.find(item => item.slug === 'casual-shirts-t-shirts');
     const skinCare = bentoItems.find(item => item.slug === 'skincare');
     const watches = bentoItems.find(item => item.slug === 'mens-watches');
-    const computer = bentoItems.find(item => item.slug === 'computer-accessories');
+    const makeup = bentoItems.find(item => item.slug === 'professional-makeup');
     const jewelry = bentoItems.find(item => item.slug === 'traditional-jewelry');
 
     if (isLoading) return <p className="text-center py-10">Loading Collections...</p>;
@@ -147,20 +147,20 @@ function HomeProdGrid() {
                         </div>
                     </div>
 
-                    {/* 6. Small Box (computer) */}
+                    {/* 6. Small Box (makeup) */}
                     <div
-                        onClick={() => navigate(`/all_products/${computer?.catId}/${computer?.catName}?subCatId=${computer?._id}`)}
+                        onClick={() => navigate(`/all_products/${makeup?.catId}/${makeup?.catName}?subCatId=${makeup?._id}`)}
                         className="relative group overflow-hidden rounded-3xl bg-gray-100 h-64 md:h-50 cursor-pointer">
                         <img
-                            src={computer?.subCatImage}
-                            alt={computer?.subCatName}
+                            src={makeup?.subCatImage}
+                            alt={makeup?.subCatName}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-all duration-300"></div>
                         <div className="absolute bottom-6 left-6 text-white">
-                            <h3 className="text-xl font-bold text-pink-500">
-                                {computer?.subCatName}
+                            <h3 className="text-xl font-bold text-white">
+                                {makeup?.subCatName}
                             </h3>
-                            <p className="text-xs font-bold text-gray-700">Exclusive Styles</p>
+                            <p className="text-xs font-bold text-pink-600">Exclusive Styles</p>
                         </div>
                     </div>
 

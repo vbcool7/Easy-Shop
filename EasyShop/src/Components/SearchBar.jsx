@@ -9,11 +9,13 @@ import { PiShoppingCartSimple } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useCart } from './CartContext';
 import { allFaqs } from './Data';
-import { allProducts } from './Data';
 import toast from 'react-hot-toast';
 
 import useAuthStore from '../store/useAuthStore';
 import { useUserLogout, useVendorLogout } from '../hook/useAuth';
+import { useCatList } from '../hook/useCategories';
+import { useSearchSuggestions } from '../hook/uesProducts';
+import { useQueryClient } from '@tanstack/react-query';
 
 function SearchBar() {
 
@@ -26,11 +28,25 @@ function SearchBar() {
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
+    const queryClient = useQueryClient();
+
+    const { data: catList, isLoading } = useCatList();
     const { mutate: logoutUser, isUserPending } = useUserLogout();
     const { mutate: logoutVendor, isVendorPending } = useVendorLogout();
 
-    const clearStore = useAuthStore((state) => state.logout); // Zustand wala logout
+    const {
+        searchQuery,
+        setSearchQuery,
+        suggestions,
+        showDropdown,
+        setShowDropdown,
+        dropdownRef,
+        clearSearch
+    } = useSearchSuggestions(300);
 
+    const clearStore = useAuthStore((state) => state.logout); // Zustand logout
+
+    // logout
     const handleLogout = () => {
 
         const logoutMutation = user?.role === 'vendor' ? logoutVendor : logoutUser;
@@ -38,11 +54,13 @@ function SearchBar() {
         logoutMutation(null, {
             onSuccess: (res) => {
                 clearStore();
+                queryClient.clear();
                 navigate('/login');
                 toast.success(res.message || "Logout successful!");
             },
             onError: (error) => {
                 clearStore();
+                queryClient.clear();
                 navigate('/login')
             }
         });
@@ -51,22 +69,27 @@ function SearchBar() {
     //quantity update
     const totalQuantity = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
-    // search - Filter products based on name or description
-    const searchProducts = allProducts.filter(p =>
-        p.categoryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.desc.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 3); // Top 3 results
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        
+        if (searchQuery.trim()) {
+            setShowDropdown(false);
+            setIsOpen(false);
+            navigate(`/search?query=${searchQuery}`);
+            setSearchQuery("");
+        }
+    };
 
-    // Filter FAQs based on question
+    // Filter FAQs
     const searchFaqs = allFaqs.filter(f =>
         f.question.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 2); // Top 2 results
+    ).slice(0, 2);
 
-    // Ye function click handle karega
+    // redirect
     const handleRedirect = (item, type) => {
-        setSearchTerm("");
+        clearSearch();
         if (type === 'product') {
-            navigate(`/product_detail/${item.id}`);
+            navigate(`/product_detail/${item._id}/${item.prodName}`);
         } else if (type === 'faq') {
             navigate(`/faqs?query=${item.question}`);
         }
@@ -216,9 +239,12 @@ function SearchBar() {
                     </div>
                 </div>
 
-
                 {/* Search Bar */}
-                <div className="w-full md:flex-1 md:mx-10 order-3 md:order-2 mt-4 md:mt-0">
+                <form
+                    onSubmit={handleSearchSubmit}
+                    ref={dropdownRef}
+                    className="w-full md:flex-1 md:mx-10 order-3 md:order-2 mt-4 md:mt-0">
+
                     <div className="relative flex items-center bg-gray-50 rounded-2xl border border-transparent focus-within:border-pink-500 focus-within:bg-white focus-within:shadow-lg transition-all duration-300 group">
 
                         {/* Category Dropdown */}
@@ -234,25 +260,28 @@ function SearchBar() {
 
                             {isOpen && (
                                 <>
-                                    {/* when we click outside then drop down will close */}
                                     <div
                                         className="fixed inset-0 z-10"
                                         onClick={() => setIsOpen(false)}>
                                     </div>
 
-                                    <div className="absolute top-full left-0 mt-2 w-40 md:w-50 bg-white shadow-2xl rounded-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        {[
-                                            "Women's Clothing",
-                                            "Men's Clothing",
-                                            "Luggage & Bags"
-                                        ].map((cat) => (
-                                            <p
-                                                key={cat}
-                                                className="px-5 py-3 hover:bg-pink-50 hover:text-pink-600 cursor-pointer text-sm transition-colors border-b border-gray-50 last:border-none">
-                                                {cat}
-                                            </p>
-                                        ))}
-                                    </div>
+                                    {isLoading ? (
+                                        <p className="p-2 text-sm text-gray-400">Loading...</p>
+                                    ) : (
+                                        <div className="absolute top-full left-0 mt-2 w-40 md:w-50 bg-white shadow-2xl rounded-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            {catList.map((item, index) => (
+                                                <p
+                                                    key={item._id}
+                                                    onClick={() => {
+                                                        navigate(`/all_products/${item._id}/${item.catName}`);
+                                                        setIsOpen(false)
+                                                    }}
+                                                    className="px-5 py-3 hover:bg-pink-50 hover:text-pink-600 cursor-pointer text-sm transition-colors border-b border-gray-50 last:border-none">
+                                                    {item.catName}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -261,62 +290,87 @@ function SearchBar() {
                         <input
                             type="text"
                             placeholder="Search for products..."
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setShowDropdown(true);
+                            }}
+                            onFocus={() => searchQuery.trim().length >= 2 && setShowDropdown(true)}
                             className="w-full bg-transparent px-4 md:px-6 py-3 text-sm text-gray-700 outline-none placeholder:text-gray-400"
                         />
 
-                        {searchTerm && (
-                            <div className="absolute top-full w-full bg-white shadow-2xl rounded-xl mt-2 p-4 z-50 border border-gray-100">
-                                {/* Product Section */}
-                                {searchProducts.length > 0 && (
+                        {showDropdown && (suggestions.length > 0 || searchFaqs.length > 0) && (
+                            <div className="absolute top-full left-0 w-full bg-white shadow-2xl rounded-xl mt-2 p-4 z-50 border border-gray-100">
+
+                                {/* Dynamic Product Section from API Hook */}
+                                {suggestions.length > 0 && (
                                     <div className="mb-4">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Products</p>
-                                        {searchProducts.map(p => (
+                                        {suggestions.map(p => (
                                             <div
-                                                key={p.id}
-                                                onClick={() => handleRedirect(p, 'product')}
-                                                className="flex items-center gap-3 py-2 hover:bg-gray-50 cursor-pointer rounded-lg px-2">
+                                                key={p._id}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRedirect(p, 'product');
+                                                }}
+                                                className="flex items-center gap-3 py-2 hover:bg-gray-50 cursor-pointer rounded-lg px-2 group/item"
+                                            >
                                                 <img
-                                                    src={p.img}
-                                                    alt={p.name}
-                                                    className="w-10 h-10 rounded object-cover" />
+                                                    src={p.prodImage}
+                                                    alt={p.prodName}
+                                                    className="w-10 h-10 rounded object-cover"
+                                                />
                                                 <div>
-                                                    <h5 className="text-sm font-semibold text-gray-800">{p.name}</h5>
-                                                    <p className="text-xs text-pink-500">₹{p.price}</p>
+                                                    <h5 className="text-sm font-semibold text-gray-800 group-hover/item:text-pink-500 transition-colors">{p.prodName}</h5>
+                                                    <p className="text-xs text-pink-500 font-bold">
+                                                        ₹{p.price}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                {/* FAQ Section */}
-                                {searchFaqs.length > 0 && (
+                                {/* FAQ Section (Stays intact but reacts to hook queries) */}
+                                {searchQuery.trim().length >= 2 && searchFaqs.length > 0 && (
                                     <div>
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Help & Support</p>
                                         {searchFaqs.map((f, i) => (
                                             <div
                                                 key={i}
-                                                onClick={() => handleRedirect(f, 'faq')}
-                                                className="py-2 px-2 hover:bg-gray-50 cursor-pointer rounded-lg text-sm text-gray-600 flex items-center gap-2">
-                                                <span className="text-pink-400 text-xs font-bold italic">Q:</span> {f.question}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRedirect(f, 'faq');
+                                                }}
+                                                className="py-2 px-2 hover:bg-gray-50 cursor-pointer rounded-lg text-sm text-gray-600 flex items-center gap-2 group/faq"
+                                            >
+                                                <span className="text-pink-400 text-xs font-bold italic">Q:</span>
+                                                <span className="group-hover/faq:text-pink-500 transition-colors">{f.question}</span>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
-                                {/* No results state */}
-                                {searchProducts.length === 0 && searchFaqs.length === 0 && (
-                                    <p className="text-center text-gray-400 py-4 text-sm">No match found. Try another keyword!</p>
+                                {/* No results fallback condition */}
+                                {suggestions.length === 0 && searchFaqs.length === 0 && searchQuery.trim().length >= 2 && (
+                                    <p className="text-center text-gray-400 py-4 text-sm">
+                                        No match found. Try another keyword!
+                                    </p>
                                 )}
                             </div>
                         )}
 
-                        {/* Search Icon */}
-                        <button className="mr-1 md:mr-2 bg-pink-500 hover:bg-pink-600 text-white p-2 md:p-2.5 rounded-xl transition-all shadow-md active:scale-95 group-hover:rotate-6">
+                        {/* Search Icon / Submit Button */}
+                        <button
+                            type="submit"
+                            className="mr-1 md:mr-2 bg-pink-500 hover:bg-pink-600 text-white p-2 md:p-2.5 rounded-xl transition-all shadow-md active:scale-95 group-hover:rotate-6 cursor-pointer"
+                        >
                             <IoIosSearch className="text-xl" />
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
         </section>
     );
