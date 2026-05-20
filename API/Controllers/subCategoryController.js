@@ -249,7 +249,7 @@ export const updateSubCategory = async (req, res) => {
                 let parsedData;
 
                 if (typeof allowedAttributes === 'string') {
-                    // Agar string "[object Object]" aa rahi hai toh ye handle karega
+                    
                     if (allowedAttributes.includes("[object Object]")) {
                         throw new Error("Received garbled object string");
                     }
@@ -402,35 +402,3 @@ export const searchCategoryAndSubCategory = async (req, res) => {
         });
     }
 };
-
-// export const updateSubCategoryAttributes = async (req, res) => {
-//     try {
-//         const { subCat_id } = req.params;
-//         const { allowedAttributes } = req.body;
-
-//         const updatedSubCat = await SubCategory.findByIdAndUpdate(
-//             subCatId,
-//             { $set: { allowedAttributes } },
-//             { new: true }
-//         );
-
-//         if (!updatedSubCat) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "SubCategory not found"
-//             });
-//         }
-
-//         res.status(200).json({
-//             success: true,
-//             message: "Attributes updated successfully",
-//             data: updatedSubCat
-//         });
-
-//     } catch (err) {
-//         res.status(500).json({
-//             success: false,
-//             message: err.message
-//         });
-//     }
-// };

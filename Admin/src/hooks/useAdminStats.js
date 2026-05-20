@@ -30,7 +30,7 @@ export const useAdminDashboardStats = () => {
     });
 };
 
-// orders through tym
+// orders through time
 export const useOrdersOverTime = (days = 30) => {
     return useQuery({
         queryKey: ['ordersOverTime', days],
