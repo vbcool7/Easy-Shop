@@ -7,12 +7,14 @@ import { HiOutlineTrash } from "react-icons/hi";
 import { useWishList } from './WishListContext';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from './CartContext';
+import useAuthStore from '../store/useAuthStore';
 
 function WishList() {
 
-    const { wishListItems, removeFromWishList } = useWishList();
+    const { user } = useAuthStore();
     const { addToCart } = useCart();
     const navigate = useNavigate();
+    const { wishListItems, removeFromWishList } = useWishList();
 
     return (
         <section className="w-full min-h-[70vh] bg-white py-8 md:py-16 px-4 lg:px-6">
@@ -95,17 +97,31 @@ function WishList() {
                         <div className="w-18 h-18 md:w-24 md:h-24 bg-pink-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                             <HiOutlineHeart className="text-pink-300 text-3xl md:text-5xl" />
                         </div>
-                        <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
-                            Your wishlist is empty 🌸
-                        </h2>
-                        <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
-                            Save items that you like in your wishlist!
-                        </p>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="bg-pink-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all cursor-pointer">
-                            Explore Products
-                        </button>
+
+                        {user?.role !== 'user' ? (
+                            <>
+                                <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
+                                    Wishlist not available 🌸
+                                </h2>
+                                <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
+                                    Wishlist is only available for customer accounts.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
+                                    Your wishlist is empty 🌸
+                                </h2>
+                                <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
+                                    Save items that you like in your wishlist!
+                                </p>
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="bg-pink-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all cursor-pointer">
+                                    Explore Products
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

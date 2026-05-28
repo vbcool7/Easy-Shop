@@ -12,11 +12,15 @@ import {
     orderInvoiceDownload,
     getVendorDashboardStats,
     getVendorSingleOrderDetail,
-    getOrderStats
+    getOrderStats,
+    createRazorpayOrder,
+    verifyRazorpayPayment
 } from '../Controllers/orderController.js';
 
 const router = express.Router();
 
+router.post('/create-razorpay-order', authMiddleware(['user']), createRazorpayOrder);
+router.post('/verify-payment', authMiddleware(['user']), verifyRazorpayPayment);
 router.post('/place-cart-order', authMiddleware(['user']), placeCartOrder);
 router.post('/place-direct-order/:prod_id', authMiddleware(['user']), placeDirectOrder);
 router.put('/cancel-order/:order_id', authMiddleware(['user']), cancelOrder);

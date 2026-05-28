@@ -154,7 +154,7 @@ const productSchema = new mongoose.Schema(
 );
 
 // Performance Optimization
-productSchema.index({ prodName: 'text', description: 'text' }); // Search bar ke liye text index
+productSchema.index({ prodName: 'text', description: 'text' }); 
 productSchema.index({ slug: 1 });
 
 // After your existing indexes, before export

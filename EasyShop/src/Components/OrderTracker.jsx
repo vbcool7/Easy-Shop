@@ -4,8 +4,9 @@ import { FaRegFileAlt } from "react-icons/fa";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiQuestionLine } from "react-icons/ri";
 import { useNavigate, useParams } from 'react-router-dom';
-import { useOrderDetail, useOrderInvoiceDownload } from '../hook/useOrders';
+import EasyShopLoader from '../Components/EasyShopLoader';
 import OrderProgressBar from './OrderProgressBar';
+import { useOrderDetail, useOrderInvoiceDownload } from '../hook/useOrders';
 
 function OrderTracker() {
 
@@ -23,7 +24,7 @@ function OrderTracker() {
         Shipped: 'text-purple-600',
     };
 
-    if (isLoading) return <div className="py-20 text-center text-slate-400">Loading order detail...</div>;
+    if (isLoading) return <EasyShopLoader />
     if (isError) return <div className="py-20 text-center text-red-400">Failed to load order detail</div>;
 
     return (
@@ -230,21 +231,27 @@ function OrderTracker() {
                     </div>
 
                     {/* Right: Action Buttons */}
-                    <div className="flex flex-wrap justify-center gap-3 w-full md:w-auto">
+                    <div className="flex flex-row md:flex-wrap items-center justify-center gap-3 w-full md:w-auto mt-6">
 
                         <button
                             onClick={() => downloadInvoice(orderId)}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border-2 border-pink-500 text-pink-500 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-pink-50 transition-all active:scale-95 cursor-pointer">
-                            <MdOutlineFileDownload className='text-xl' />
-                            {isDownloading ? "Downloading..." : "Download Invoice"}
+                            disabled={isDownloading}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border-2 border-pink-500 text-pink-500 px-3 sm:px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm hover:bg-pink-50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer truncate"
+                        >
+                            <MdOutlineFileDownload className="text-lg sm:text-xl shrink-0" />
+                            <span className="truncate">
+                                {isDownloading ? "Downloading..." : "Invoice"}
+                            </span>
                         </button>
 
                         <button
                             onClick={() => navigate("/contact_us")}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-pink-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-pink-200 hover:bg-pink-600 transition-all active:scale-95 cursor-pointer">
-                            <RiQuestionLine className='text-xl' />
-                            <p>Need Help?</p>
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-pink-500 text-white px-3 sm:px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-pink-100 dark:shadow-none hover:bg-pink-600 transition-all active:scale-95 cursor-pointer truncate"
+                        >
+                            <RiQuestionLine className="text-lg sm:text-xl shrink-0" />
+                            <span className="truncate">Need Help?</span>
                         </button>
+
                     </div>
                 </div>
 

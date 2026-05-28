@@ -20,6 +20,9 @@ import Transactions from "./Components/Transactions";
 import PayoutRequest from "./Components/PayoutRequest";
 import Blogs from "./Components/Blogs";
 import AddBlog from "./Components/AddBlog";
+import Banners from "./Components/Banners";
+import AddBanner from "./Components/AddBanner";
+import CmsEditor from "./Components/CmsEditor";
 
 function App() {
 
@@ -73,7 +76,7 @@ function App() {
                     <div className='flex-1 flex flex-col overflow-hidden'>
                         <Header
                             sidebarCollapsed={sideBarCollapsed}
-                            onToggleSideBar={() => setSideBarCollapsed(!sideBarCollapsed)} 
+                            onToggleSideBar={() => setSideBarCollapsed(!sideBarCollapsed)}
                             setCurrentPage={setCurrentPage} />
 
                         <main className='flex overflow-y-auto bg-transparent'>
@@ -100,18 +103,28 @@ function App() {
 
                                 {/* orders */}
                                 {currentPage === "platform-orders" && <Orders />}
-                                
+
                                 {/* transactions */}
-                                {currentPage === "transactions" && <Transactions/>}
+                                {currentPage === "transactions" && <Transactions />}
 
                                 {/* payout request */}
-                                {currentPage === "payout-request" && <PayoutRequest/>}
+                                {currentPage === "payout-request" && <PayoutRequest />}
 
                                 {/* customers */}
                                 {currentPage === "customers" && <UserList />}
 
                                 {/* reviews */}
                                 {currentPage === "review" && <Reviews />}
+
+                                {/* banner management */}
+                                {currentPage === "banners" && <Banners setCurrentPage={setCurrentPage} />}
+                                {currentPage === "add-banner" && <AddBanner setCurrentPage={setCurrentPage} />}
+
+                                {/* cms pages */}
+                                {currentPage === "terms-policy" && <CmsEditor cmsKey="terms_policy" title="Terms of Use" />}
+                                {currentPage === "privacy-policy" && <CmsEditor cmsKey="privacy_policy" title="Privacy Policy" />}
+                                {currentPage === "delivery-policy" && <CmsEditor cmsKey="delivery_policy" title="Delivery Policy" />}
+                                {currentPage === "exchange-policy" && <CmsEditor cmsKey="exchange_policy" title="Exchange & Return" />}
 
                             </div>
                         </main>

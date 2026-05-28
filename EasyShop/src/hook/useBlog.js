@@ -4,13 +4,16 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import toast from 'react-hot-toast';
 
 // blog list
-export const useVendorBlogList = () => {
+export const useVendorBlogList = ({ search = '', page = 1, status = '' } = {}) => {
     return useQuery({
-        queryKey: ['vendorBlogList'],
+        queryKey: ['vendorBlogList', search, page, status],
         queryFn: async () => {
-            const { data } = await API.get('/blog/get-vendor-blogs');
-            return data?.blogs || [];
-        }
+            const { data } = await API.get('/blog/get-vendor-blogs', {
+                params: { search, page, limit: 10, status }
+            });
+            return data;
+        },
+        keepPreviousData: true
     });
 };
 

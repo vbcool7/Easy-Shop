@@ -6,12 +6,27 @@ import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi
 
 import { useBlogList, useDeleteBlog, useUpdateBlogStatus } from '../hooks/useBlogs';
 import EditBlogDrawer from './EditBlogDrawer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getPaginationRange } from '../utils/getPaginationRange';
 
 function Blogs({ setCurrentPage }) {
 
-    const { data: blogResponse, isLoading, isError } = useBlogList();
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+
+    // debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data: blogResponse, isLoading, isError } = useBlogList({ search: debouncedSearch, page });
     const blogs = blogResponse?.data || [];
+    const totalPages = blogResponse?.totalPages || 1;
 
     const { mutate: toggleStatus, isPending: isUpdating } = useUpdateBlogStatus();
     const { mutate: deleteBlog, isPending: isDeleting } = useDeleteBlog();
@@ -19,7 +34,7 @@ function Blogs({ setCurrentPage }) {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeletedOpen, setIsDeletedOpen] = useState(false);
 
-    const [selectedBlog, setSelectedBlog] = useState("");
+    const [selectedBlog, setSelectedBlog] = useState(null);
 
     // status toggle
     const statusStyles = {
@@ -64,8 +79,9 @@ function Blogs({ setCurrentPage }) {
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
                             All Published Blogs
                         </h2>
+
                         <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-                            Total: {blogs.length}
+                            Total: {blogs?.length || 0}
                         </span>
                     </div>
 
@@ -78,6 +94,8 @@ function Blogs({ setCurrentPage }) {
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <input
                         type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search blogs..."
                         className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
                     />
@@ -223,13 +241,49 @@ function Blogs({ setCurrentPage }) {
                                                 </button>
                                             </div>
                                         </td>
-
                                     </tr>
                                 ))
                             )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                        ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* edit drawer */}

@@ -410,7 +410,7 @@ function ProductDetail() {
 
                         </div>
                         <p className='text-xs md:text-[14px] text-gray-500 font-medium'>
-                            22 Ratings
+                            {product?.totalReviews}
                         </p>
                     </div>
 

@@ -1,5 +1,8 @@
 
 import Category from '../Models/categoryModelSchema.js';
+import SubCategory from '../Models/subCategoryModelSchema.js';
+import Product from '../Models/productModelSchema.js';
+import Order from '../Models/orderModelSchema.js';
 import { deleteCloudinaryFiles } from '../utils/cloudinaryUtils.js'; // err
 import { deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js'; // update + dlt
 
@@ -68,50 +71,57 @@ export const addCategory = async (req, res) => {
 
 export const listCategory = async (req, res) => {
     try {
-        const list = await Category.aggregate([
-            {
-                $lookup: {
-                    from: "products", 
-                    localField: "_id",
-                    foreignField: "catId", 
-                    as: "products"
-                }
-            },
-            {
-                $project: {
-                    catName: 1,
-                    catImage: 1,
-                    department: 1,
-                    description: 1,
-                    slug:1,
-                    isActive: 1,
-                    createdAt: 1,
-                    requiresCertificate: 1,
-                    certificateLabel: 1,
-                    productCount: { $size: "$products" }
-                }
-            },
-        ]).sort({ createdAt: -1 });
+        const { search, page = 1, limit = 10 } = req.query;
 
-        if (!list || list.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No categories found"
-            });
-        };
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const matchStage = search
+            ? {
+                $match: {
+                    $or: [
+                        { catName: { $regex: search, $options: 'i' } },
+                        { department: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } },
+                    ]
+                }
+            }
+            : { $match: {} };
+
+        const [result, totalCount] = await Promise.all([
+            Category.aggregate([
+                matchStage,
+                { $lookup: { from: "products", localField: "_id", foreignField: "catId", as: "products" } },
+                {
+                    $project: {
+                        catName: 1, catImage: 1, department: 1, description: 1,
+                        slug: 1, isActive: 1, createdAt: 1, requiresCertificate: 1,
+                        certificateLabel: 1, productCount: { $size: "$products" }
+                    }
+                },
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: Number(limit) },
+            ]),
+            Category.countDocuments(search ? {
+                $or: [
+                    { catName: { $regex: search, $options: 'i' } },
+                    { department: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                ]
+            } : {})
+        ]);
 
         res.status(200).json({
             success: true,
-            message: "Here is category list",
-            count: list.length,
-            data: list
+            count: totalCount,
+            totalPages: Math.ceil(totalCount / Number(limit)),
+            currentPage: Number(page),
+            data: result
         });
+
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Server Error Occur"
-        });
-    };
+        return res.status(500).json({ success: false, message: "Server Error Occur" });
+    }
 };
 
 export const getCategory = async (req, res) => {
@@ -240,6 +250,62 @@ export const updateCategory = async (req, res) => {
 };
 
 // admin
+export const getCategoryDeleteInfo = async (req, res) => {
+    try {
+        const { cat_id } = req.params;
+
+        const category = await Category.findById(cat_id);
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: "Category not found"
+            });
+        };
+
+        const subCats = await SubCategory.find({ catId: cat_id }).select('_id');
+        const subCatIds = subCats.map(s => s._id);
+
+        const productCount = subCatIds.length > 0
+            ? await Product.countDocuments({ subCatId: { $in: subCatIds } })
+            : 0;
+
+        const productIds = subCatIds.length > 0
+            ? await Product.find({ subCatId: { $in: subCatIds } }).select('_id')
+            : [];
+        const productIdList = productIds.map(p => p._id);
+
+        const orderedProductCount = productIdList.length > 0
+            ? await Order.countDocuments({ "items.productId": { $in: productIdList } })
+            : 0;
+
+        let message = "";
+        let canDelete = false;
+
+        if (orderedProductCount > 0) {
+            message = `This category has ${subCats.length} subcategorie(s) and ${productCount} product(s), and some products have existing orders. Deletion is not allowed.`;
+        } else if (subCats.length > 0 || productCount > 0) {
+            message = `This category has ${subCats.length} subcategorie(s) and ${productCount} product(s). Deleting it will remove all of them.`;
+        } else {
+            canDelete = true;
+            message = `Are you sure you want to delete this category?`;
+        }
+
+        return res.status(200).json({
+            success: true,
+            canDelete,
+            message
+        });
+
+    } catch (err) {
+        console.log("Error :", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    };
+};
+
+// admin
 export const deleteCategory = async (req, res) => {
     try {
         const { cat_id } = req.params;
@@ -305,14 +371,14 @@ export const toggleCategoryStatus = async (req, res) => {
 export const getCategoryTree = async (req, res) => {
     try {
         const tree = await Category.aggregate([
-             
+
             // 1. only active cat
             { $match: { isActive: true } },
 
             // 2. SubCategories ke saath join karo
             {
                 $lookup: {
-                    from: "subcategories",      
+                    from: "subcategories",
                     localField: "_id",          // Category ID
                     foreignField: "catId",      // catId stored in sub cat
                     as: "subcategories"         // Is naam se array banega

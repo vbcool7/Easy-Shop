@@ -10,6 +10,7 @@ import { MdOutlineSettings } from "react-icons/md";
 import { TiStarOutline } from "react-icons/ti";
 import { AiOutlineTransaction } from "react-icons/ai";
 import { HiOutlineBanknotes } from "react-icons/hi2";
+import { MdOutlineImage, MdOutlineArticle } from 'react-icons/md';
 
 import { ChevronDown, User, BadgePercent } from 'lucide-react';
 import { BookOpen } from 'lucide-react';
@@ -44,7 +45,7 @@ const menuItems = [
     {
         id: "all-products",
         icon: <MdOutlineShoppingBag className='w-6 h-6' />,
-        label: "All Products", 
+        label: "All Products",
         active: false,
     },
     {
@@ -68,7 +69,7 @@ const menuItems = [
         label: "Transactions",
         active: false,
     },
-     {
+    {
         id: "payout-request",
         icon: <HiOutlineBanknotes className='w-6 h-6' />,
         label: "Payout Request",
@@ -86,6 +87,26 @@ const menuItems = [
         label: "Review And Rating",
         active: true,
         Badge: "New"
+    },
+    {
+        id: "banner-management",
+        icon: <MdOutlineImage className='w-6 h-6' />,
+        label: "Banner Management",
+        submenu: [
+            { id: "banners", label: "All Banners" },
+            { id: "add-banner", label: "Add Banner" },
+        ]
+    },
+    {
+        id: "cms",
+        icon: <MdOutlineArticle className='w-6 h-6' />,
+        label: "CMS Pages",
+        submenu: [
+            { id: "terms-policy", label: "Terms of Use" },
+            { id: "privacy-policy", label: "Privacy Policy" },
+            { id: "delivery-policy", label: "Delivery Policy" },
+            { id: "exchange-policy", label: "Exchange & Return" },
+        ]
     },
     // {
     //     id: "promotions",

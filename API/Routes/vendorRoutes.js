@@ -19,6 +19,7 @@ import {
     vendorOrdersOverTime,
     vendorOrderStatus,
     vendorTopProducts,
+    vendorSearch
 } from '../Controllers/vendorController.js';
 
 const router = express.Router();
@@ -40,6 +41,7 @@ router.post("/vendor-reset-password/:vendor_id/:token", resetPassword);
 router.get("/vendor-count", countVendor);
 
 //protected
+router.get("/search", authMiddleware(['vendor']), vendorSearch);
 router.put("/change-password", authMiddleware(['vendor']), changePassword);
 router.get("/vendor-profile", authMiddleware(['vendor', 'admin']), getVendor);
 router.get("/vendor-get/:vendorId", authMiddleware(['vendor', 'admin']), getVendor);

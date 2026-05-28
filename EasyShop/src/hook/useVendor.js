@@ -4,11 +4,11 @@ import API from '../api/axiosConfig.js';
 import useAuthStore from '../store/useAuthStore.js';
 
 // list cat for vendor signup
-export const useCatList = () =>{
+export const useCatList = () => {
     return useQuery({
         queryKey: ['catList'],
-        queryFn: async() => {
-            const {data} = await API.get('/category/category-list');
+        queryFn: async () => {
+            const { data } = await API.get('/category/category-list');
             return data.data;
         },
         staleTime: 0,
@@ -17,15 +17,15 @@ export const useCatList = () =>{
 
 // vendor profile
 export const useGetVendor = () => {
-    const token = useAuthStore((state) => state.token); 
+    const token = useAuthStore((state) => state.token);
 
     return useQuery({
         queryKey: ['getVendor'],
         queryFn: async () => {
-            const { data } = await API.get(`/vendor/vendor-profile`); 
+            const { data } = await API.get(`/vendor/vendor-profile`);
             return data.data;
         },
-        enabled: !!token, 
+        enabled: !!token,
     });
 };
 
@@ -49,7 +49,7 @@ export const useVendorOrdersOverTime = (period = 30) => {
         },
     });
 };
- 
+
 export const useVendorOrderStatus = () => {
     return useQuery({
         queryKey: ["vendorOrderStatus"],
@@ -59,7 +59,7 @@ export const useVendorOrderStatus = () => {
         },
     });
 };
- 
+
 export const useVendorTopProducts = (limit = 5) => {
     return useQuery({
         queryKey: ["vendorTopProducts", limit],
@@ -67,5 +67,19 @@ export const useVendorTopProducts = (limit = 5) => {
             const { data } = await API.get(`/vendor/top-products?limit=${limit}`);
             return data.data;
         },
+    });
+};
+
+// dashboard - search
+export const useVendorSearch = (query) => {
+    return useQuery({
+        queryKey: ['vendorSearch', query],
+        queryFn: async () => {
+            const { data } = await API.get(`/vendor/search?q=${query}`);
+            return data;
+        },
+        enabled: !!query && query.trim().length >= 2,
+        staleTime: 0,
+        gcTime: 0,
     });
 };

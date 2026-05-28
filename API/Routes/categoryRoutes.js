@@ -7,6 +7,7 @@ import {
     listCategory,
     updateCategory,
     deleteCategory,
+    getCategoryDeleteInfo,
     getCategory,
     toggleCategoryStatus,
     getCategoryTree
@@ -20,6 +21,7 @@ router.get('/category-tree-get', getCategoryTree);
 
 router.post('/category-add', authMiddleware(['admin']), upload.single('catImage'), addCategory);
 router.put('/category-update/:cat_id', authMiddleware(['admin']), upload.single('catImage'), updateCategory);
+router.get('/category-delete-info/:cat_id', authMiddleware(['admin']), getCategoryDeleteInfo);
 router.delete('/category-delete/:cat_id', authMiddleware(['admin']), deleteCategory);
 router.patch('/category-toggle-status/:cat_id', authMiddleware(['admin']), toggleCategoryStatus);
 

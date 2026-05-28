@@ -4,13 +4,16 @@ import API from '../api/axiosConfig.js';
 import toast from 'react-hot-toast';
 
 // Get Vendor Orders 
-export const useVendorOrders = () => {
+export const useVendorOrders = ({ search = '', page = 1, orderStatus = '' } = {}) => {
     return useQuery({
-        queryKey: ['vendorOrders'],
+        queryKey: ['vendorOrders', search, page, orderStatus],
         queryFn: async () => {
-            const { data } = await API.get('/order/get-vendor-orders');
-            return data.data;
+            const { data } = await API.get('/order/get-vendor-orders', {
+                params: { search, page, limit: 10, orderStatus }
+            });
+            return data;
         },
+        keepPreviousData: true
     });
 };
 
@@ -88,6 +91,33 @@ export const useOrderStats = () => {
 
 // ======= USER =======
 
+// create
+export const useCreateRazorpayOrder = () => {
+    return useMutation({
+        mutationFn: async (amount) => {
+            const { data } = await API.post('/order/create-razorpay-order', { amount });
+            return data;
+        }
+    });
+};
+
+// verify
+export const useVerifyPayment = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload) => {
+            const { data } = await API.post('/order/verify-payment', payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['orders']);
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || "Payment verification failed");
+        }
+    });
+};
+
 // place cart order
 export const usePlaceCartOrder = () => {
     const queryClient = useQueryClient();
@@ -110,9 +140,10 @@ export const usePlaceCartOrder = () => {
     });
 };
 
+// place direct order
 export const usePlaceDirectOrder = () => {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: async ({ prod_id, quantity, shippingAddress, paymentMethod, selectedColor, selectedSize }) => {
             const { data } = await API.post(`/order/place-direct-order/${prod_id}`, {
@@ -136,12 +167,14 @@ export const usePlaceDirectOrder = () => {
 };
 
 // user order history 
-export const useUserOrderHistory = () => {
+export const useUserOrderHistory = ({ page = 1, search = '', orderStatus = '' } = {}) => {
     return useQuery({
-        queryKey: ['userOrders'],
+        queryKey: ['userOrders', { page, search, orderStatus }],
         queryFn: async () => {
-            const { data } = await API.get('/order/user-order-history');
-            return data.data;
+            const { data } = await API.get('/order/user-order-history', {
+                params: { page, limit: 10, search, orderStatus }
+            });
+            return data;
         },
         staleTime: 0,
     });

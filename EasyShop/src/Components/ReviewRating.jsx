@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 function ReviewRating() {
 
     const navigate = useNavigate();
-    const { orderId } = useParams();
+    const { orderId, productId } = useParams();
 
     const { data: orderDetail, isLoading, isError } = useOrderDetail(orderId);
     const { mutate: addReview, isPending } = useAddReview();
@@ -25,9 +25,7 @@ function ReviewRating() {
 
     const handleSubmitReview = () => {
 
-        const prod_id = orderDetail?.items[0]?.productId?._id;
-
-        if (!prod_id) {
+        if (!productId) {
             toast.error("Product not found");
             return;
         }
@@ -43,7 +41,7 @@ function ReviewRating() {
         }
 
         addReview({
-            prod_id,
+            prod_id: productId,
             rating: clickIndex,
             review: reviewText.trim(),
         }, {
@@ -81,7 +79,7 @@ function ReviewRating() {
                     </div>
 
                     {/* Top - product detail section */}
-                    {orderDetail?.items?.map((item, index) => (
+                    {orderDetail?.items?.filter(item => item.productId?._id === productId).map((item, index) => (
                         <div
                             key={index}
                             className="flex items-center gap-4 bg-gray-50/50 p-2 md:p-3 rounded-xl md:rounded-3xl border border-dashed border-gray-200 w-full md:w-auto justify-center md:justify-end">

@@ -38,7 +38,7 @@ function ProductDetailSimilarProd({ prodId }) {
                     <div
                         key={product._id}
                         onClick={() => {
-                            navigate(`/product_detail/${product.id}/${product?.catId?.catName}/${product.prodName}`);
+                            navigate(`/product_detail/${product.id}/${product.prodName}`);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         className='group cursor-pointer bg-white border border-gray-100 p-2 md:p-3 rounded-2xl hover:shadow-xl transition-all duration-300'

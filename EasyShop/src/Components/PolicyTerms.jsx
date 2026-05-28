@@ -1,62 +1,39 @@
 
-//updated
-import React from 'react'
+import React from 'react';
+import { useGetCmsContent } from '../hook/useCms';
 
 function PolicyTerms() {
-  return (
-    <div className="bg-white min-h-[70vh] px-4 lg:px-6 py-10 md:py-12">
-      <div className="max-w-6xl mx-auto"> 
-        
-        {/* Header Section */}
-        <div className="mb-10 md:mb-12 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">Terms of Use</h1>
-            <p className="text-slate-400 text-sm italic">Last Updated: March 2026</p>
+
+    const { data, isLoading, isError } =useGetCmsContent('terms_policy');
+
+    if (isLoading) return (
+        <div className="max-w-3xl mx-auto px-4 py-10 animate-pulse space-y-4">
+            <div className="h-7 bg-slate-200 rounded w-1/3" />
+            <div className="h-4 bg-slate-100 rounded w-full" />
+            <div className="h-4 bg-slate-100 rounded w-5/6" />
+            <div className="h-4 bg-slate-100 rounded w-4/6" />
         </div>
+    );
 
-        <div className="space-y-10 md:space-y-12 text-slate-700 leading-relaxed">
-          {/* Section 1 */}
-          <section className="group">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
-              <span className="text-pink-500">01.</span>
-              <span className="underline decoration-pink-500/30 group-hover:decoration-pink-500 transition-all">Acceptance of Terms</span>
-            </h2>
-            <p className="text-sm md:text-base pl-0 md:pl-10">
-              By accessing and using <span className="font-semibold text-slate-900">Easy Shop</span>, you accept and agree to be bound by the terms and provision of this agreement.
-            </p>
-          </section>
-
-          {/* Section 2 */}
-          <section className="group">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
-              <span className="text-pink-500">02.</span>
-              <span className="underline decoration-pink-500/30 group-hover:decoration-pink-500 transition-all">User Accounts</span>
-            </h2>
-            <p className="text-sm md:text-base pl-0 md:pl-10">
-              To use certain features, you must register for an account. You are responsible for maintaining the <span className="italic">confidentiality</span> of your account credentials and all activities under your account.
-            </p>
-          </section>
-
-          {/* Section 3 */}
-          <section className="group">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
-              <span className="text-pink-500">03.</span>
-              <span className="underline decoration-pink-500/30 group-hover:decoration-pink-500 transition-all">Intellectual Property</span>
-            </h2>
-            <p className="text-sm md:text-base pl-0 md:pl-10">
-              All content, including logos, images, and text, are the intellectual property of <span className="text-pink-500 font-medium">Easy Shop</span>. Unauthorized use, reproduction, or distribution is strictly prohibited.
-            </p>
-          </section>
+    if (isError || !data || data.status !== 'published') return (
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center text-slate-400 text-sm">
+            This page is not available yet.
         </div>
+    );
 
-        {/* Bottom Footer Note */}
-        <div className="mt-16 pt-8 border-t border-slate-100 text-center md:text-left">
-            <p className="text-xs text-slate-400">
-                If you have any questions regarding these terms, please contact our legal team at support@easyshop.com
-            </p>
+    return (
+        <div className="bg-white min-h-[70vh] px-4 lg:px-6 py-10 md:py-12">
+            <div className="max-w-5xl mx-auto">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-8">
+                    {data.title}
+                </h1>
+                <div
+                    className="prose prose-sm max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-lg prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 prose-blockquote:border-l-4 prose-blockquote:border-pink-400 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-500"
+                    dangerouslySetInnerHTML={{ __html: data.content }}
+                />
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    );
 }
 
 export default PolicyTerms;

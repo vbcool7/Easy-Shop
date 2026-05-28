@@ -7,7 +7,9 @@ import OrderDetailDrawer from './OrderDetailDrawer';
 
 function RecentOrderTable({ setCurrentPage }) {
 
-    const { data: orders, isLoading, isError, error } = useVendorOrders();
+    const { data: ordersResponse, isLoading, isError } = useVendorOrders();
+    const orders = ordersResponse?.data || [];
+    
     const { mutate: updateOrderStatus, isPending: isUpdating } = useUpdateOrderStatus();
 
     const [selectedOrderId, setIsSelectedOrderId] = useState(null);

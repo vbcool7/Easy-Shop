@@ -4,14 +4,15 @@ import API from '../api/axiosInstance.js';
 import toast from 'react-hot-toast';
 
 // prod list
-export const useGetProducts = (search = "") => {
+export const useGetProducts = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['productList', search],
+        queryKey: ['productList', search, page],
         queryFn: async () => {
-            const { data } = await API.get(`/admin/get-product-list?search=${search}`);
-            return data.data;
+            const { data } = await API.get(`/admin/get-product-list?search=${search}&page=${page}&limit=10`);
+            return data;
         },
         staleTime: 5 * 60 * 1000,
+        keepPreviousData: true,
     });
 };
 
@@ -68,6 +69,18 @@ export const useToggleProductArrival = () => {
     });
 };
 
+// delete info
+export const useGetProductDeleteInfo = (prod_id) => {
+    return useQuery({
+        queryKey: ['productDeleteInfo', prod_id],
+        queryFn: async () => {
+            const { data } = await API.get(`/product/product-delete-info/${prod_id}`);
+            return data;
+        },
+        enabled: !!prod_id,
+    });
+};
+
 // delete prod
 export const useDeleteProduct = () => {
     const queryClient = useQueryClient();
@@ -99,7 +112,7 @@ export const useToggleBestSeller = () => {
             return data;
         },
         onSuccess: (response) => {
-            queryClient.invalidateQueries(['productList']); 
+            queryClient.invalidateQueries(['productList']);
             toast.success("Best Seller Product");
         },
         onError: (error) => {

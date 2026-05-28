@@ -24,7 +24,7 @@ function HomeNewProducts() {
 
     const navigate = useNavigate();
     const { data: newProducts, isLoading } = useNewArrivalProducts();
-    
+
     // add to cart
     const handleAddToCart = (product) => {
 
@@ -164,7 +164,7 @@ function HomeNewProducts() {
 
                                         {/* Content Section */}
                                         <div
-                                            onClick={() => navigate(`/product_detail/${prod.id}/${prod.subCategory}/${prod.name}`)}
+                                            onClick={() => navigate(`/product_detail/${prod._id}/${prod.prodName}`)}
                                             className='flex flex-col items-center justify-center md:flex-1 p-4'>
 
                                             <p className='text-center text-gray-900 font-bold text-[12px] uppercase tracking-widest mb-1'>

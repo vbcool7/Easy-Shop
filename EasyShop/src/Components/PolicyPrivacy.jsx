@@ -1,59 +1,39 @@
 
-//updated
-import React from 'react'
+import React from 'react';
+import { useGetCmsContent } from '../hook/useCms';
 
 function PolicyPrivacy() {
+
+    const { data, isLoading, isError } = useGetCmsContent('privacy_policy');
+
+    if (isLoading) return (
+        <div className="max-w-3xl mx-auto px-4 py-10 animate-pulse space-y-4">
+            <div className="h-7 bg-slate-200 rounded w-1/3" />
+            <div className="h-4 bg-slate-100 rounded w-full" />
+            <div className="h-4 bg-slate-100 rounded w-5/6" />
+            <div className="h-4 bg-slate-100 rounded w-4/6" />
+        </div>
+    );
+
+    if (isError || !data || data.status !== 'published') return (
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center text-slate-400 text-sm">
+            This page is not available yet.
+        </div>
+    );
+
     return (
         <div className="bg-white min-h-[70vh] px-4 lg:px-6 py-10 md:py-12">
-            {/* Main Card: Mobile par p-6 aur desktop par p-12 */}
-            <div className="max-w-6xl mx-auto bg-white p-6 md:p-12 shadow-sm rounded-3xl md:rounded-2xl border border-slate-100">
-
-                {/* Header Section */}
-                <div className="text-center mb-8 md:mb-12">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3">Privacy Policy</h1>
-                    <div className="w-16 md:w-20 h-1.5 bg-pink-500 mx-auto rounded-full"></div>
-                </div>
-
-                <div className="space-y-8 md:space-y-10 text-slate-600">
-                    {/* Highlighted Note */}
-                    <div className="bg-slate-50 p-5 md:p-6 rounded-2xl border-l-4 border-pink-500 shadow-sm">
-                        <h2 className="text-lg font-bold text-slate-800 mb-2">Data We Collect</h2>
-                        <p className="text-sm md:text-base leading-relaxed">
-                            We collect your name, shipping address, and phone number solely for order fulfillment and customer support.
-                        </p>
-                    </div>
-
-                    {/* Info Sections */}
-                    <section className="px-1 md:px-2">
-                        <h2 className="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                            How We Protect You
-                        </h2>
-                        <p className="text-sm md:text-base leading-relaxed pl-4">
-                            We use <span className="text-slate-900 font-medium">SSL encryption</span> to ensure your personal data is safe. We never sell your data to third-party advertisers.
-                        </p>
-                    </section>
-
-                    <section className="px-1 md:px-2">
-                        <h2 className="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                            Cookies
-                        </h2>
-                        <p className="text-sm md:text-base leading-relaxed pl-4">
-                            We use cookies to remember your login and cart items. You can disable cookies in your browser settings if you prefer.
-                        </p>
-                    </section>
-
-                    {/* Additional Note for Trust */}
-                    <div className="mt-10 pt-8 border-t border-slate-100 text-center">
-                        <p className="text-xs text-slate-400">
-                            Last Updated: March 2026. For any queries, contact our legal team.
-                        </p>
-                    </div>
-                </div>
+            <div className="max-w-5xl mx-auto">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-8">
+                    {data.title}
+                </h1>
+                <div
+                    className="prose prose-sm max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-lg prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 prose-blockquote:border-l-4 prose-blockquote:border-pink-400 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-500"
+                    dangerouslySetInnerHTML={{ __html: data.content }}
+                />
             </div>
         </div>
-    )
+    );
 }
 
 export default PolicyPrivacy;

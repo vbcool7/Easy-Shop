@@ -38,10 +38,16 @@ export const WishListProvider = ({ children }) => {
     }, [user]);
 
     const addToWishList = (product) => {
+
         if (!user) {
             toast.error("Please login to add items to wishlist");
             navigate('/login');
             return;
+        }
+
+        if (user.role !== 'user') {
+            toast.error("Access Denied: vendor not allowed here");
+            return; 
         }
 
         const prodId = product._id || product.id;
@@ -80,7 +86,7 @@ export const WishListProvider = ({ children }) => {
                     },
                     selectedColor: product.selectedColor || null,
                     selectedSize: product.selectedSize || null,
-                    prodImage: product.prodImage || product.img, // selected color image
+                    prodImage: product.prodImage || product.img,
                 }];
             }
         });

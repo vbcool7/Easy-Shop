@@ -3,18 +3,35 @@ import React, { useState } from 'react';
 import { HiOutlineMail, HiOutlineDotsVertical, HiOutlineShieldCheck, HiOutlineTrash, HiOutlineX, HiOutlineExclamation } from "react-icons/hi";
 
 import { useDeleteUser, useToggleUserStatus, useUserList } from '../hooks/useUsers';
+import { getPaginationRange } from '../utils/getPaginationRange';
+import { useEffect } from 'react';
 
 function UserList() {
 
-    const { data: userList, isLoading, isError } = useUserList();
-    const { mutate: toggleStatus, isPending, variables } = useToggleUserStatus();
-    const { mutate: deleteUser } = useDeleteUser();
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [status, setStatus] = useState('');
+    const [page, setPage] = useState(1);
 
     const [isDeletedOpen, setIsDeletedOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState("");
 
-    if (isLoading) return <p className="p-10 text-center">Loading user list...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching user list!</p>;
+    // debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data, isLoading, isError } = useUserList({ search: debouncedSearch, status, page });
+    const { mutate: toggleStatus, isPending, variables } = useToggleUserStatus();
+    const { mutate: deleteUser } = useDeleteUser();
+
+    const userList = data?.data || [];
+    const totalPages = data?.totalPages || 1;
+    const totalCount = data?.count || 0;
 
     // toggle status
     const handleToggleStatus = (id) => {
@@ -35,24 +52,52 @@ function UserList() {
         });
     };
 
+    if (isLoading) return <p className="p-10 text-center">Loading user list...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error fetching user list!</p>;
+
     return (
         <div className="w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
             {/* Header */}
-            <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+            <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
                 <div>
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                        User Base
-                    </h3>
+                    <div className="flex items-center gap-2.5">
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                            User Base
+                        </h3>
+                        <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                            Total: {totalCount}
+                        </span>
+                    </div>
                     <p className="text-xs text-slate-400 font-medium">
                         Manage permissions and account status
                     </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search users..."
+                        className="w-full sm:w-56 text-sm px-4 py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs"
+                    />
+                    <select
+                        value={status}
+                        onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                        className="text-xs font-semibold px-3 py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:outline-pink-400 cursor-pointer"
+                    >
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                 </div>
             </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
+
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50">
                         <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th className="px-6 py-4">User Details</th>
@@ -62,8 +107,9 @@ function UserList() {
                             <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
+
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {userList.map((user, index) => {
+                        {userList.length > 0 ? userList.map((user, index) => {
 
                             const isThisRowLoading = isPending && variables === user._id;
 
@@ -143,9 +189,50 @@ function UserList() {
                                     </td>
                                 </tr>
                             )
-                        })}
+                        }) : (
+                            <tr>
+                                <td colSpan="5" className="text-center py-10 text-slate-400 text-sm">
+                                    No user found matching your search.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                        ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* delete popup */}

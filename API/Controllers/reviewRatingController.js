@@ -3,6 +3,7 @@ import ReviewRating from '../Models/reviewRatingModelSchema.js';
 import Order from '../Models/orderModelSchema.js';
 import Product from '../Models/productModelSchema.js';
 import mongoose from 'mongoose';
+import sendEmail from '../utils/sendEmail.js';
 
 // user
 export const addReview = async (req, res) => {
@@ -68,28 +69,71 @@ export const addReview = async (req, res) => {
     }
 };
 
-// user
+// user - my reviews
+// export const getUserReviews = async (req, res) => {
+//     try {
+//         const userId = req.user.id;
+
+//         const reviews = await ReviewRating.find({ userId })
+//             .populate('productId', 'prodName prodImage price attributes')
+//             .sort({ createdAt: -1 });
+
+//         if (reviews.length === 0) {
+//             return res.status(200).json({
+//                 success: true,
+//                 message: "You have not given a review to any product yet.",
+//                 data: []
+//             });
+//         }
+
+//         res.status(200).json({
+//             success: true,
+//             message: "User reviews",
+//             count: reviews.length,
+//             data: reviews
+//         });
+
+//     } catch (err) {
+//         console.log("Error: ", err);
+//         res.status(500).json({
+//             success: false,
+//             message: "Server Error Occur"
+//         });
+//     }
+// };
+
 export const getUserReviews = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const reviews = await ReviewRating.find({ userId })
-            .populate('productId', 'prodName prodImage price')
-            .sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-        if (reviews.length === 0) {
+        const total = await ReviewRating.countDocuments({ userId });
+
+        if (total === 0) {
             return res.status(200).json({
                 success: true,
                 message: "You have not given a review to any product yet.",
+                totalPages: 0,
+                count: 0,
                 data: []
             });
         }
 
+        const paginatedReviews = await ReviewRating.find({ userId })
+            .populate('productId', 'prodName prodImage price attributes')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
         res.status(200).json({
             success: true,
             message: "User reviews",
-            count: reviews.length,
-            data: reviews
+            count: total,
+            totalPages: Math.ceil(total / limit),
+            data: paginatedReviews
         });
 
     } catch (err) {
@@ -149,10 +193,10 @@ export const getProductReviews = async (req, res) => {
 export const getApprovedReviewsForHome = async (req, res) => {
     try {
         const reviews = await ReviewRating.find({ status: 'Approved' })
-            .populate('userId', 'name profilePhoto') 
-            .populate('productId', 'prodName prodImage') 
-            .sort({ createdAt: -1 }) 
-            .limit(10); 
+            .populate('userId', 'name profilePhoto')
+            .populate('productId', 'prodName prodImage')
+            .sort({ createdAt: -1 })
+            .limit(10);
 
         if (reviews.length === 0) {
             return res.status(200).json({
@@ -284,10 +328,13 @@ export const getVendorReviewStats = async (req, res) => {
 export const vendorReviewList = async (req, res) => {
     try {
         const vendorId = req.user.id;
-        const { status } = req.query;
+
+        const { status, page = 1, limit = 10 } = req.query;
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+        const skip = (pageNumber - 1) * limitNumber;
 
         let query = {};
-
         if (status) query.status = status;
 
         // 1. find prods
@@ -297,24 +344,33 @@ export const vendorReviewList = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 message: "No products found for this vendor",
+                totalPages: 1,
+                count: 0,
                 data: []
             });
         }
 
-        // 2. Product IDs ki ek array banayein
+        // 2. Product IDs ki array banayein
         const productIds = vendorProducts.map(p => p._id);
-
         query.productId = { $in: productIds };
 
+        // 3. Get Total Count for Pagination calculation
+        const totalReviews = await ReviewRating.countDocuments(query);
+        const totalPages = Math.ceil(totalReviews / limitNumber);
+
+        // 4. Fetch paginated slice data
         const reviews = await ReviewRating.find(query)
             .populate('userId', 'name email profilePhoto')
             .populate('productId', 'prodName')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limitNumber);
 
         res.status(200).json({
             success: true,
             message: "Vendor review list fetched successfully",
-            count: reviews.length,
+            totalPages: totalPages || 1,
+            count: totalReviews,
             data: reviews
         });
 
@@ -322,7 +378,137 @@ export const vendorReviewList = async (req, res) => {
         console.log("Error :", err);
         res.status(500).json({
             success: false,
-            message: "Server Error Occur"
+            message: "Server Error Occurred"
         });
+    }
+};
+
+// reply to customer
+// export const replyToReview = async (req, res) => {
+//     try {
+//         const vendorId = req.user.id || req.user._id;
+//         const { review_id } = req.params;
+//         const { replyText } = req.body;
+
+//         if (!replyText || replyText.trim() === "") {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Reply text cannot be empty"
+//             });
+//         }
+
+//         const review = await ReviewRating.findById(review_id).populate('productId');
+
+//         if (!review) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Review not found"
+//             });
+//         }
+
+//         if (review.productId.vendorId.toString() !== vendorId) {
+//             return res.status(403).json({
+//                 success: false,
+//                 message: "Unauthorized. This product is not yours."
+//             });
+//         }
+
+//         // Update with the reply data
+//         review.vendorReply = replyText;
+//         review.vendorRepliedAt = new Date();
+
+//         await review.save();
+
+//         res.status(200).json({
+//             success: true,
+//             message: "Reply submitted successfully",
+//             data: review
+//         });
+
+//     } catch (err) {
+//         console.error("Error in replyToReview:", err);
+//         res.status(500).json({
+//             success: false,
+//             message: "Server Error Occurred"
+//         });
+//     }
+// };
+
+export const replyToReview = async (req, res) => {
+    try {
+        const vendorId = req.user.id || req.user._id;
+        const { review_id } = req.params;
+        const { replyText } = req.body;
+
+        if (!replyText || replyText.trim() === "") {
+            return res.status(400).json({ success: false, message: "Reply text cannot be empty" });
+        }
+
+        // FIX: productId aur userId dono ko populate kiya, userId se email aur name select kiya
+        const review = await ReviewRating.findById(review_id)
+            .populate('productId')
+            .populate({ path: 'userId', select: 'email name' });
+
+        if (!review) {
+            return res.status(404).json({ success: false, message: "Review not found" });
+        }
+
+        if (!review.productId) {
+            return res.status(404).json({ success: false, message: "Associated product not found" });
+        }
+
+        if (review.productId.vendorId.toString() !== vendorId) {
+            return res.status(403).json({ success: false, message: "Unauthorized. This product is not yours." });
+        }
+
+        const isFirstTimeReply = !review.vendorReply || review.vendorReply.trim() === "";
+
+        review.vendorReply = replyText;
+        review.vendorRepliedAt = new Date();
+        await review.save();
+
+        // ----------- RESEND EMAIL INTEGRATION -----------
+        if (isFirstTimeReply && review.userId?.email) {
+            const customerEmail = review.userId.email;
+            const customerName = review.userId.name || "Customer";
+            const productName = review.productId.prodName;
+
+            const emailSubject = `New reply on your review for ${productName}! ✨`;
+            
+            // Ek clean HTML template aapke mail ke liye
+            const emailHtml = `
+                <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; padding: 20px; rounded: 12px;">
+                    <h2 style="color: #ec4899;">Hi ${customerName},</h2>
+                    <p>The vendor has replied to your product review on <strong>${productName}</strong>.</p>
+                    
+                    <div style="background-color: #f9fafb; border-left: 4px solid #e5e7eb; padding: 10px 15px; margin: 15px 0; font-style: italic;">
+                        "Your review: ${review.review}"
+                    </div>
+
+                    <div style="background-color: #fdf2f8; border-left: 4px solid #ec4899; padding: 10px 15px; margin: 15px 0; font-weight: bold;">
+                        "Vendor's Reply: ${replyText}"
+                    </div>
+
+                    <p style="margin-top: 25px; font-size: 13px; color: #666;">
+                        Thank you for being a valued customer!<br/>
+                        <strong>Team EasyShop</strong>
+                    </p>
+                </div>
+            `;
+
+            // Background mein email send karein taaki API response slow na ho
+            sendEmail(customerEmail, emailSubject, emailHtml)
+                .catch(emailErr => console.error("Background Email Error:", emailErr.message));
+        }
+
+        res.status(200).json({
+            success: true,
+            message: isFirstTimeReply ? "Reply submitted successfully" : "Reply updated successfully",
+            data: review
+        });
+
+    } catch (err) {
+        console.error("Error in replyToReview:", err);
+        res.status(500).json({ success: false, message: "Server Error Occurred" });
     }
 };

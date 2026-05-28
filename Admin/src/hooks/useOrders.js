@@ -4,16 +4,22 @@ import API from "../api/axiosInstance";
 import toast from 'react-hot-toast';
 
 // order list
-export const useOrderList = (filters = {}) => {
+export const useOrderList = ({ search = '', page = 1, status = '', vendorId = '' } = {}) => {
     return useQuery({
-        queryKey: ['orderList', filters], 
+        queryKey: ['orderList', { search, page, status, vendorId }],
         queryFn: async () => {
             const { data } = await API.get('/admin/get-all-orders', {
-                params: filters // vendorId, status, page etc. yahan se jayenge
+                params: {
+                    ...(search && { search }),
+                    ...(status && { status }),
+                    ...(vendorId && { vendorId }),
+                    page,
+                    limit: 10
+                }
             });
-            return data.data;
+            return data; 
         },
-        staleTime: 30 * 1000, 
+        staleTime: 30 * 1000,
     });
 };
 
@@ -28,8 +34,8 @@ export const useUpdateOrderStatus = () => {
             return data.data;
         },
         onSuccess: (data) => {
-           toast.success(`Order updated to ${data.orderStatus}`);
-            
+            toast.success(`Order updated to ${data.orderStatus}`);
+
             queryClient.invalidateQueries(['orderList']);
             queryClient.invalidateQueries({ queryKey: ['vendorOrders'] });
             queryClient.invalidateQueries(['orderDetail', data._id]);

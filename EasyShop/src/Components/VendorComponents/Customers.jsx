@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HiDotsVertical } from "react-icons/hi";
 import { HiOutlineSearch } from "react-icons/hi";
 import CustomerProfileDrawer from './CustomerProfileDrawer';
@@ -12,16 +12,32 @@ import { HiOutlineCurrencyRupee } from "react-icons/hi";
 import { FaEye } from "react-icons/fa";
 
 import { useVendorCustomers, useVendorCustomerStats } from '../../hook/useUser';
+import { getPaginationRange } from '../../utils/getPaginationRange';
 
 function Customers() {
 
-    const { data: customerStats } = useVendorCustomerStats();
-    const { data: customerList, isLoading, isError } = useVendorCustomers();
-
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [isSelectedCustomerId, setIsSelectedCustomerId] = useState(null);
 
-    if (isLoading) return <p>Loading your customers...</p>;
-    if (isError) return <p>Failed to load customer list.</p>;
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data: customerStats } = useVendorCustomerStats();
+    const { data: customerResponse, isLoading, isError } = useVendorCustomers({
+        search: debouncedSearch,
+        page
+    });
+
+    const customerList = customerResponse?.data || [];
+    const totalPages = customerResponse?.totalPages || 1;
+    const count = customerResponse?.count || 0;
 
     const cards = [
         {
@@ -34,7 +50,7 @@ function Customers() {
         },
         {
             label: 'Active Now',
-            value: customerStats?.activeNow,
+            value: customerStats?.activeNow || 0,
             growth: 'Live',
             icon: HiOutlineStatusOnline,
             color: 'text-emerald-500',
@@ -42,13 +58,18 @@ function Customers() {
         },
         {
             label: 'Avg. Spend',
-            value: customerStats?.avgSpend,
+            value: customerStats?.avgSpend
+                ? `₹${Number(customerStats.avgSpend).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+                : '₹0',
             growth: '-2.4%',
             icon: HiOutlineCurrencyRupee,
             color: 'text-pink-500',
             bg: 'bg-pink-50'
         },
     ];
+
+    if (isLoading) return <p className="p-10 text-center">Loading customers...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error fetching customers!</p>;
 
     return (
         <div className="space-y-6">
@@ -90,15 +111,22 @@ function Customers() {
                 {/* Header and Search */}
                 <div className="p-4 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-800/20">
 
-                    <h3 className="text-[11px] md:text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider pb-4 md:pb-0 md:pr-5">
-                        Customers
-                    </h3>
+                    <div className='flex gap-2 items-center'>
+                        <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+                            Customers
+                        </h2>
+                        <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                            Total : {count}
+                        </span>
+                    </div>
 
                     {/* Search Bar (Left Side) */}
                     <div className="relative w-full md:w-80 group">
                         <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" />
                         <input
                             type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search customer name, email..."
                             className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                         />
@@ -120,7 +148,7 @@ function Customers() {
                         </thead>
 
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {customerList?.map((customer, idx) => {
+                            {customerList.length > 0 ? customerList?.map((customer, idx) => {
                                 return (
                                     <tr
                                         key={customer._id}
@@ -199,17 +227,60 @@ function Customers() {
                                         </td>
                                     </tr>
                                 )
-                            })}
+                            }) : (
+                                <tr>
+                                    <td colSpan="7" className="text-center py-10 text-slate-400 text-sm">
+                                        No customers found matching your search.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                        ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* view profile */}
             <CustomerProfileDrawer
                 customerId={isSelectedCustomerId}
-                isOpen={!!isSelectedCustomerId} // Agar selectedCustomer hai toh khul jayega
-                onClose={() => setIsSelectedCustomerId(null)} // Close karne ke liye null kar do
+                isOpen={!!isSelectedCustomerId}
+                onClose={() => setIsSelectedCustomerId(null)}
             />
         </div>
     )

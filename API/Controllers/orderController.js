@@ -9,6 +9,14 @@ import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import sendEmail from '../utils/sendEmail.js';
 
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
 // helper function for both place orders
 const findMatchingVariant = (product, selectedColor, selectedSize) => {
     const hasColor = product.attributes?.get?.('Color')?.values?.length > 0;
@@ -25,6 +33,161 @@ const findMatchingVariant = (product, selectedColor, selectedSize) => {
 
         return colorMatch && sizeMatch;
     });
+};
+
+// Step 1: Create Razorpay order (just creates payment session, no DB order yet)
+export const createRazorpayOrder = async (req, res) => {
+    try {
+        const { amount } = req.body;
+
+        const options = {
+            amount: amount * 100,
+            currency: 'INR',
+            receipt: `receipt_${Date.now()}`
+        }
+
+        const razorpayOrder = await razorpay.orders.create(options);
+
+        res.status(200).json({
+            success: true,
+            orderId: razorpayOrder.id,
+            amount: razorpayOrder.amount,
+            currency: razorpayOrder.currency,
+            keyId: process.env.RAZORPAY_KEY_ID
+        });
+
+    } catch (err) {
+        console.log("Razorpay order creation error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Payment initiation failed"
+        });
+    }
+};
+
+// Step 2: Verify payment signature + save order to DB
+export const verifyRazorpayPayment = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            cartData,
+            orderType
+        } = req.body;
+
+        // 1. Verify signature
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(body)
+            .digest('hex');
+
+        if (expectedSignature !== razorpay_signature) {
+            return res.status(400).json({ success: false, message: "Payment verification failed" });
+        }
+
+        // 2. Build orderItems from DB, not frontend
+        let orderItems = [];
+        let totalAmount = 0;
+
+        if (orderType === 'cart') {
+            const cart = await Cart.findOne({ userId }).populate('items.productId');
+
+            if (!cart || cart.items.length === 0) {
+                return res.status(400).json({ success: false, message: "Cart is empty" });
+            }
+
+            for (const item of cart.items) {
+                const product = item.productId;
+
+                const variant = findMatchingVariant(
+                    product,
+                    item.selectedColor || null,
+                    item.selectedSize || null
+                );
+
+                if (!variant) {
+                    return res.status(400).json({ success: false, message: `Invalid variant for ${product.prodName}` });
+                }
+
+                orderItems.push({
+                    productId: product._id,
+                    vendorId: product.vendorId,
+                    quantity: item.quantity,
+                    price: product.price,
+                    selectedColor: item.selectedColor || null,
+                    selectedSize: item.selectedSize || null,
+                    variantId: variant._id
+                });
+
+                totalAmount += product.price * item.quantity;
+            }
+
+        } else {
+            // direct buy — get from cartData but fetch product for vendorId
+            const { productId, quantity, selectedColor, selectedSize } = cartData.orderItems[0];
+            const product = await Product.findById(productId);
+
+            const variant = findMatchingVariant(product, selectedColor || null, selectedSize || null);
+
+            orderItems.push({
+                productId: product._id,
+                vendorId: product.vendorId,
+                quantity,
+                price: product.price,
+                selectedColor: selectedColor || null,
+                selectedSize: selectedSize || null,
+                variantId: variant._id
+            });
+
+            totalAmount = product.price * quantity;
+        }
+
+        // 3. Save order
+        const newOrder = new Order({
+            userId,
+            items: orderItems,
+            totalAmount,
+            shippingAddress: cartData.shippingAddress,
+            paymentMethod: 'Online',
+            paymentStatus: 'Completed',
+            orderStatus: 'Processing',
+            transactionId: razorpay_payment_id
+        });
+
+        await newOrder.save();
+
+        // 4. Update stock
+        for (const item of orderItems) {
+            await Product.updateOne(
+                { _id: item.productId, "variants._id": item.variantId },
+                {
+                    $inc: {
+                        stock: -item.quantity,
+                        totalSold: item.quantity,
+                        "variants.$.stock": -item.quantity
+                    }
+                }
+            );
+        }
+
+        // 5. Clear cart
+        if (orderType === 'cart') {
+            await Cart.findOneAndDelete({ userId });
+        }
+
+        res.status(201).json({
+            success: true,
+            message: "Payment verified & order placed!",
+            orderId: newOrder._id
+        });
+
+    } catch (err) {
+        console.log("Payment verification error:", err);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
 };
 
 // check out
@@ -114,8 +277,9 @@ export const placeCartOrder = async (req, res) => {
             items: orderItems,
             totalAmount,
             shippingAddress,
-            paymentMethod,
-            paymentStatus: paymentMethod === "COD" ? "Pending" : "Completed"
+            paymentMethod: 'COD',        // only COD reaches here now
+            paymentStatus: 'Pending',    // COD is always pending
+            orderStatus: 'Processing'
         });
 
         await newOrder.save();
@@ -222,8 +386,9 @@ export const placeDirectOrder = async (req, res) => {
 
             totalAmount: product.price * quantity,
             shippingAddress,
-            paymentMethod,
-            paymentStatus: paymentMethod === "COD" ? "Pending" : "Completed"
+            paymentMethod: 'COD',        // only COD reaches here now
+            paymentStatus: 'Pending',    // COD is always pending
+            orderStatus: 'Processing'
         });
 
         await newOrder.save();
@@ -267,42 +432,42 @@ export const placeDirectOrder = async (req, res) => {
 export const userOrderHistory = async (req, res) => {
     try {
         const userId = req.user.id;
+        const { page = 1, limit = 10, search = '', orderStatus = '' } = req.query;
+        const skip = (page - 1) * limit;
 
-        const orders = await Order.find({ userId })
-            .populate("items.productId", "prodName prodImage price quantity images attributes variants prodImages")
+        const query = { userId };
+        if (orderStatus) query.orderStatus = orderStatus;
+
+        let orders = await Order.find(query)
+            .populate("items.productId", "prodName prodImage price attributes prodImages")
             .sort({ createdAt: -1 });
 
-        const data = orders.map(order => {
-            const o = order.toObject();
-            o.items = o.items.map(item => {
-                if (item.productId?.attributes) {
-                    const attrs = item.productId.attributes instanceof Map
-                        ? Object.fromEntries(item.productId.attributes)
-                        : item.productId.attributes;
+        if (search) {
+            const s = search.toLowerCase();
+            orders = orders.filter(order => {
+                const idMatch = order._id.toString().slice(-6).toLowerCase().includes(s);
+                const prodMatch = order.items.some(item =>
+                    item.productId?.prodName?.toLowerCase().includes(s)
+                );
+                const statusMatch = order.orderStatus?.toLowerCase().includes(s);
 
-                    const colorData = attrs?.Color instanceof Map
-                        ? Object.fromEntries(attrs.Color)
-                        : attrs?.Color;
-
-                    item.productId.colorImages = colorData?.images || {};
-                }
-                return item;
+                return idMatch || prodMatch || statusMatch;
             });
-            return o;
-        });
+        }
+
+        const total = orders.length;
+        const paginated = orders.slice(skip, Number(skip) + Number(limit));
 
         res.status(200).json({
             success: true,
-            totalOrders: orders.length,
-            data: orders
+            count: total,
+            totalPages: Math.ceil(total / limit),
+            data: paginated
         });
 
     } catch (err) {
         console.log("Error : ", err);
-        res.status(500).json({
-            success: false,
-            message: "Server Error Occur"
-        });
+        res.status(500).json({ success: false, message: "Server Error Occur" });
     }
 };
 
@@ -530,16 +695,36 @@ export const orderInvoiceDownload = async (req, res) => {
     }
 };
 
-// vendor
+// vendor - order list
 export const getVendorOrders = async (req, res) => {
     try {
         const vendorId = req.user.id;
+        const { search = '', page = 1, limit = 10, orderStatus = '' } = req.query;
 
-        const orders = await Order.aggregate([
-            // 1. Unwind items array taaki har product alag row ban jaye
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+
+        const matchStage = {
+            "productDetails.vendorId": new mongoose.Types.ObjectId(vendorId)
+        };
+
+        if (orderStatus.trim()) {
+            matchStage.orderStatus = orderStatus;
+        }
+
+        const searchStage = search.trim() ? {
+            $match: {
+                $or: [
+                    { "customerDetails.name": new RegExp(search.trim(), 'i') },
+                    { "productDetails.prodName": new RegExp(search.trim(), 'i') },
+                    { orderStatus: new RegExp(search.trim(), 'i') }
+                ]
+            }
+        } : null;
+
+        const basePipeline = [
             { $unwind: "$items" },
-
-            // 2. Sirf wo items dhoondein jo is vendor ke hain
             {
                 $lookup: {
                     from: "products",
@@ -548,15 +733,8 @@ export const getVendorOrders = async (req, res) => {
                     as: "productDetails"
                 }
             },
-
             { $unwind: "$productDetails" },
-
-            {
-                $match: {
-                    "productDetails.vendorId": new mongoose.Types.ObjectId(vendorId)
-                }
-            },
-
+            { $match: matchStage },
             {
                 $lookup: {
                     from: "users",
@@ -565,9 +743,8 @@ export const getVendorOrders = async (req, res) => {
                     as: "customerDetails"
                 }
             },
-
             { $unwind: "$customerDetails" },
-
+            ...(searchStage ? [searchStage] : []),
             {
                 $addFields: {
                     colorImageEntry: {
@@ -579,15 +756,12 @@ export const getVendorOrders = async (req, res) => {
                                     }
                                 },
                                 as: "img",
-                                cond: {
-                                    $eq: ["$$img.k", "$items.selectedColor"]
-                                }
+                                cond: { $eq: ["$$img.k", "$items.selectedColor"] }
                             }
                         }
                     }
                 }
             },
-
             {
                 $addFields: {
                     variantImage: {
@@ -598,8 +772,6 @@ export const getVendorOrders = async (req, res) => {
                     }
                 }
             },
-
-            // 5. Sirf wahi data select karein jo zaroori hai (Privacy ke liye)
             {
                 $project: {
                     _id: 1,
@@ -608,32 +780,34 @@ export const getVendorOrders = async (req, res) => {
                     totalAmount: 1,
                     paymentStatus: 1,
                     paymentMethod: 1,
-                    orderStatus: 1,
                     "items.quantity": 1,
                     "items.price": 1,
                     "items.selectedColor": 1,
                     "items.selectedSize": 1,
                     "items.variantId": 1,
-
                     variantImage: 1,
-
                     "productDetails.prodName": 1,
                     "productDetails.prodImage": 1,
                     "productDetails.price": 1,
-
                     "customerDetails.name": 1,
                     "customerDetails.email": 1,
                     "customerDetails.address": 1
                 }
             },
-
             { $sort: { createdAt: -1 } }
+        ];
+
+        const [orders, countResult] = await Promise.all([
+            Order.aggregate([...basePipeline, { $skip: skip }, { $limit: limitNum }]),
+            Order.aggregate([...basePipeline, { $count: "total" }])
         ]);
+
+        const total = countResult[0]?.total || 0;
 
         res.status(200).json({
             success: true,
-            message: "Here is Order list",
-            count: orders.length,
+            count: total,
+            totalPages: Math.ceil(total / limitNum),
             data: orders
         });
 

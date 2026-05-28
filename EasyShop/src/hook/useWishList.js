@@ -21,26 +21,7 @@ export const useGetWishList = () => {
     });
 };
 
-// add/remove wishlist
-// export const useToggleWishList = () => {
-//     const queryClient = useQueryClient();
-
-//     return useMutation({
-//         mutationFn: async (productId) => {
-//             const { data } = await API.post('/wishList/wishList-add', { productId });
-//             return data;
-//         },
-//         onSuccess: (response) => {
-//             queryClient.invalidateQueries(['wishlist']); 
-//             // toast.success(response.message);
-//         },
-//         onError: (error) => {
-//             const message = error.response?.data?.message || "Failed to update wishlist";
-//             toast.error(message);
-//         }
-//     });
-// };
-
+// toggle wishlist
 export const useToggleWishList = () => {
     const queryClient = useQueryClient();
 

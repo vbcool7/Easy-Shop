@@ -49,6 +49,11 @@ const subCategorySchema = new mongoose.Schema(
             }
         ],
 
+        showOnHome: { 
+            type: Boolean, 
+            default: false 
+        },
+
         isActive: {
             type: Boolean,
             default: true,

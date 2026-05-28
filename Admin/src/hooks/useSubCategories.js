@@ -4,14 +4,15 @@ import API from "../api/axiosInstance";
 import toast from "react-hot-toast";
 
 // sub cat list
-export const useSubCatList = () => {
+export const useSubCatList = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['subCatList'],
+        queryKey: ['subCatList', search, page],
         queryFn: async () => {
-            const { data } = await API.get('/subCategory/sub-category-list');
-            return data.data;
+            const { data } = await API.get(`/subCategory/sub-category-list?search=${search}&page=${page}&limit=10`);
+            return data;
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: 0,
+        keepPreviousData: true,
     });
 };
 
@@ -32,6 +33,27 @@ export const useToggleSubCatStatus = () => {
         onError: (err) => {
             toast.error(err.response?.data?.message || "Failed to update status");
         }
+    });
+};
+
+// toggle show on home
+export const useToggleShowOnHome = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id) => {
+            const { data } = await API.patch(`/subCategory/sub-category-toggle-show-on-home/${id}`);
+            return data;
+        },
+        onSuccess: (response) => {
+            queryClient.invalidateQueries({ queryKey: ['subCatList'] });
+            queryClient.invalidateQueries({ queryKey: ['activeSubCategories'] });
+            toast.success(response?.message || "Updated successfully");
+        },
+        onError: (error) => {
+            const message = error.response?.data?.message || "Something went wrong";
+            toast.error(message);
+        }
+
     });
 };
 
@@ -70,6 +92,20 @@ export const useUpdateSubCategory = () => {
         }
     });
 };
+
+// dlt info
+export const useDeleteInfoSubCategory = (subCat_id) => {
+    return useQuery({
+        queryKey: ['subCatDeleteInfo', subCat_id],
+        queryFn: async () => {
+            const { data } = await API.get(`/subCategory/sub-category-delete-info/${subCat_id}`);
+            return data;
+        },
+        enabled: !!subCat_id,
+        refetchOnMount: true,
+    });
+};
+
 
 // dlt sub-cat
 export const useDeleteSubCategory = () => {

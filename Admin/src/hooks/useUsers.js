@@ -4,12 +4,19 @@ import API from '../api/axiosInstance.js';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // user list
-export const useUserList = () => {
+export const useUserList = ({ search = '', status = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['userList'],
+        queryKey: ['userList', { search, status, page }],
         queryFn: async () => {
-            const { data } = await API.get('/admin/get-user-list');
-            return data.data;
+            const { data } = await API.get('/admin/get-user-list', {
+                params: {
+                    ...(search && { search }),
+                    ...(status && { status }),
+                    page,
+                    limit: 10
+                }
+            });
+            return data;
         },
         staleTime: 0,
     });

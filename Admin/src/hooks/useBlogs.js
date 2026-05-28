@@ -4,14 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from 'react-hot-toast';
 
 // list 
-export const useBlogList = () => {
+export const useBlogList = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['blogList'],
-        queryFn: async() => {
-            const {data} = await API.get('/admin/list-blog');
+        queryKey: ['blogList', search, page],
+        queryFn: async () => {
+            const { data } = await API.get(`/admin/list-blog?search=${search}&page=${page}&limit=10`);
             return data;
         },
-    })
+        staleTime: 0,
+        keepPreviousData: true,
+    });
 };
 
 // add blog 
@@ -20,8 +22,8 @@ export const useAddBlog = () => {
 
     return useMutation({
         mutationKey: ['addBlog'],
-        mutationFn: async(formData) => {
-            const {data} = await API.post('/blog/create-blog', formData);
+        mutationFn: async (formData) => {
+            const { data } = await API.post('/blog/create-blog', formData);
             return data;
         },
         onSuccess: () => {

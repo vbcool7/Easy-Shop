@@ -20,6 +20,7 @@ function CartItem() {
     const total = subtotal;
 
     const handleCheckout = () => {
+
         if (cartItems.length === 0) {
             alert("cart empty");
             return;
@@ -34,7 +35,7 @@ function CartItem() {
         navigate("/place_order", {
             state: {
                 items: cartItems,
-                total: subtotal // Hum Subtotal bhej rahe hain kyunki final page par tax calculation humne wahan likha hai
+                total: subtotal
             }
         });
     };
@@ -54,7 +55,7 @@ function CartItem() {
                 {cartItems.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-                        {/* LEFT: Product List (2 Columns on Large screens) */}
+                        {/* LEFT: Product List */}
                         <div className="lg:col-span-2 space-y-4">
 
                             {/* clear cart btn */}
@@ -200,26 +201,35 @@ function CartItem() {
                         </div>
                     </div>
                 ) : (
-                    /* Empty State with Icon */
                     <div className="flex flex-col items-center justify-center text-center py-20 px-4 min-h-100">
                         <div className="w-18 h-18 md:w-24 md:h-24 bg-pink-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                             <HiOutlineHeart className="text-pink-300 text-3xl md:text-5xl" />
                         </div>
 
-                        <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
-                            Oh no! Your cart feels so light 🌸
-                        </h2>
-
-                        <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
-                            Don't let the best deals slip away. Start adding now!
-                        </p>
-
-                        <button
-                            onClick={() => navigate('/')}
-                            className="w-full sm:w-auto bg-pink-500 text-white px-10 py-4 rounded-2xl font-black text-sm md:text-base shadow-xl shadow-pink-100 hover:bg-pink-600 transition-all active:scale-95 cursor-pointer uppercase tracking-widest"
-                        >
-                            Explore Products
-                        </button>
+                        {user?.role !== 'user' ? (
+                            <>
+                                <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
+                                    Cart not available 🌸
+                                </h2>
+                                <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
+                                    Cart is only available for customer accounts.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
+                                    Oh no! Your cart feels so light 🌸
+                                </h2>
+                                <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-alpha leading-relaxed">
+                                    Don't let the best deals slip away. Start adding now!
+                                </p>
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="bg-pink-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all cursor-pointer">
+                                    Explore Products
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

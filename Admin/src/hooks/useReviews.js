@@ -4,14 +4,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 // review list
-export const useReviewList = (status = '', vendorId = '') => {
+export const useReviewList = ({ status = '', vendorId = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['reviewList', status, vendorId],
+        queryKey: ['reviewList', { status, vendorId, page }],
         queryFn: async () => {
             const { data } = await API.get('/admin/review-list', {
                 params: {
-                    status: status || undefined,
-                    vendorId: vendorId || undefined
+                    ...(status && { status }),
+                    ...(vendorId && { vendorId }),
+                    page,
+                    limit: 10
                 }
             });
             return data;

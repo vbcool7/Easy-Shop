@@ -4,15 +4,30 @@ import { HiOutlineStar, HiOutlineChatAlt2 } from "react-icons/hi";
 import { HiOutlineCheckCircle } from "react-icons/hi";
 import { HiOutlineXCircle } from "react-icons/hi";
 
-import { useVendorReviewList, useVendorReviewStats } from '../../hook/useReview';
+import { useSubmitVendorReply, useVendorReviewList, useVendorReviewStats } from '../../hook/useReview';
+import { getPaginationRange } from '../../utils/getPaginationRange';
+import ReviewReplyModal from './ReviewReplyModal';
+import toast from 'react-hot-toast';
 
 function ReviewRating() {
 
   const { data: stats } = useVendorReviewStats();
   const [statusFilter, setStatusFilter] = useState('');
-  const { data, isLoading, isError } = useVendorReviewList(statusFilter);
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data, isLoading, isError } = useVendorReviewList({
+    status: statusFilter,
+    page,
+    limit
+  });
 
   const reviews = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const totalCount = data?.count || 0;
+
+  const [activeReviewForReply, setActiveReviewForReply] = useState(null);
+  const { mutate: submitReply, isLoading: isReplying } = useSubmitVendorReply();
 
   const statusStyles = {
     Approved: 'bg-emerald-50 text-emerald-600 border-emerald-100',
@@ -63,6 +78,45 @@ function ReviewRating() {
     }
   ];
 
+  // status handler
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  };
+
+  const handleOpenReplyModal = (review) => {
+    setActiveReviewForReply(review);
+  };
+
+  // reply handler
+  const handleSaveReply = (text) => {
+    if (!activeReviewForReply?._id) {
+      toast.error("Something went wrong. Review not found!");
+      return;
+    }
+
+    const isEditing = Boolean(activeReviewForReply.vendorReply && activeReviewForReply.vendorReply.trim() !== "");
+
+    submitReply({
+      review_id: activeReviewForReply._id,
+      replyText: text
+    }, {
+      onSuccess: (response) => {
+        if (isEditing) {
+          toast.success("Reply updated successfully!");
+        } else {
+          toast.success("Reply submitted successfully!");
+        }
+
+        setActiveReviewForReply(null);
+      },
+      onError: (error) => {
+        const errorMsg = error?.response?.data?.message || "Failed to save vendor reply.";
+        toast.error(errorMsg);
+      }
+    });
+  };
+
   if (isLoading) return <div className="p-10 text-center font-bold text-pink-500 italic animate-pulse">Loading Reviews...</div>;
   if (isError) return <div className="p-10 text-center text-red-500 font-bold">Failed to load vendor reviews.</div>;
 
@@ -103,16 +157,25 @@ function ReviewRating() {
 
         {/* Header & Filter */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight">Customer Feedback</h2>
-            <p className="text-[11px] text-slate-400 font-medium">Reviews for your listed products</p>
+            <div className="flex gap-2 items-center">
+              <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+                Customer Feedback
+              </h2>
+              <span className="hidden lg:flex bg-pink-100 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                Total : {totalCount}
+              </span>
+            </div>
+            <p className="text-[11px] md:text-xs text-slate-500 mt-1">
+              Reviews for your listed products
+            </p>
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-pink-500/20 transition-all"
+            // FIX: Uses safe state reset function
+            onChange={handleStatusChange}
+            className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-pink-500/20 transition-all cursor-pointer"
           >
             <option value="">All Status</option>
             <option value="Pending">Pending</option>
@@ -124,7 +187,6 @@ function ReviewRating() {
         {/* Table */}
         <div className="w-full overflow-x-auto scrollbar-hide">
           <table className="w-full text-left border-collapse min-w-212">
-
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <th className="pb-4 pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[25%]">Customer</th>
@@ -136,77 +198,80 @@ function ReviewRating() {
             </thead>
 
             <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
-              {reviews.length > 0 ? reviews.map((review) => (
-                <tr
-                  key={review._id}
-                  className="group hover:bg-slate-50/40 dark:hover:bg-slate-900/40 transition-all duration-200">
+              {reviews.length > 0 ? reviews.map((review) => {
+                return (
+                  <tr
+                    key={review._id}
+                    className="group hover:bg-slate-50/40 dark:hover:bg-slate-900/40 transition-all duration-200">
 
-                  {/* 1. Customer Info */}
-                  <td className="py-4 pl-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={review.userId?.profilePhoto || 'https://via.placeholder.com/40'}
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
-                        alt=""
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
-                          {review.userId?.name || 'Unknown User'}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-medium truncate italic">
-                          {review.userId?.email}
+                    {/* 1. Customer Info */}
+                    <td className="py-4 pl-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={review.userId?.profilePhoto || 'https://via.placeholder.com/40'}
+                          className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
+                          alt=""
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                            {review.userId?.name || 'Unknown User'}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-medium truncate italic">
+                            {review.userId?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* 2. Product Info */}
+                    <td className="py-4">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 line-clamp-1 max-w-45">
+                        {review.productId?.prodName}
+                      </span>
+                      <span className="text-[9px] text-pink-500 font-black uppercase tracking-tighter">
+                        In Stock
+                      </span>
+                    </td>
+
+                    {/* 3. Rating & Comment */}
+                    <td className="py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <HiOutlineStar
+                              key={i}
+                              size={10}
+                              className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200 dark:text-slate-800"}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic pr-4">
+                          "{review.review || review.comment}"
                         </p>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* 2. Product Info */}
-                  <td className="py-4">
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 line-clamp-1 max-w-45">
-                      {review.productId?.prodName}
-                    </span>
-                    <span className="text-[9px] text-pink-500 font-black uppercase tracking-tighter">
-                      In Stock
-                    </span>
-                  </td>
-
-                  {/* 3. Rating & Comment */}
-                  <td className="py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <HiOutlineStar
-                            key={i}
-                            size={10}
-                            className={i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic pr-4">
-                        "{review.review || review.comment}"
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* 4. Status Badge (Static for Vendor) */}
-                  <td className="py-4 text-center">
-                    <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border inline-block min-w-22
+                    {/* 4. Status Badge */}
+                    <td className="py-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border inline-block min-w-22
                        ${statusStyles[review.status] || statusStyles.Pending}`}>
-                      {review.status || 'Pending'}
-                    </span>
-                  </td>
+                        {review.status || 'Pending'}
+                      </span>
+                    </td>
 
-                  {/* 5. Action (Reply instead of Delete) */}
-                  <td className="py-4 pr-4 text-right">
-                    <button
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-pink-500 bg-pink-50 dark:bg-pink-500/10 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-500/20 transition-all"
-                    >
-                      <HiOutlineChatAlt2 size={14} />
-                      REPLY
-                    </button>
-                  </td>
-                </tr>
-              )) : (
+                    {/* 5. Action */}
+                    <td className="py-4 pr-4 text-right">
+                      <button
+                        onClick={() => handleOpenReplyModal(review)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-pink-500 bg-pink-50 dark:bg-pink-500/10 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-500/20 transition-all cursor-pointer"
+                      >
+                        <HiOutlineChatAlt2 size={14} />
+                        {review.vendorReply ? 'EDIT REPLY' : 'REPLY'}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              }) : (
                 <tr>
                   <td colSpan="5" className="py-20 text-center text-slate-400 font-medium italic">
                     No reviews found for your products.
@@ -216,7 +281,53 @@ function ReviewRating() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+            <button
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Prev
+            </button>
+
+            {getPaginationRange(page, totalPages).map((num, idx) =>
+              num === '...'
+                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                : <button
+                  key={num}
+                  onClick={() => setPage(num)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                ${page === num
+                      ? 'bg-pink-500 text-white border-pink-500'
+                      : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                    }`}
+                >
+                  {num}
+                </button>
+            )}
+
+            <button
+              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* reply modal */}
+      <ReviewReplyModal
+        isOpen={!!activeReviewForReply}
+        review={activeReviewForReply}
+        onClose={() => setActiveReviewForReply(null)}
+        onSubmit={handleSaveReply}
+        isSubmitting={isReplying}
+      />
     </div>
 
   );

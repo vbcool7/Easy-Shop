@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@plugin "@tailwindcss/typography";
 
 /* Swiper Pagination Dots Custom Styling */
 .swiper-pagination-bullet {

@@ -16,14 +16,15 @@ export const useVendorStats = () => {
 };
 
 // list
-export const useVendorList = () => {
+export const useVendorList = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['vendorList'],
+        queryKey: ['vendorList', search, page],
         queryFn: async () => {
-            const { data } = await API.get('/admin/get-vendor-list');
-            return data.data;
+            const { data } = await API.get(`/admin/get-vendor-list?search=${search}&page=${page}&limit=10`);
+            return data;
         },
         staleTime: 0,
+        keepPreviousData: true,
     });
 };
 

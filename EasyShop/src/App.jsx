@@ -74,7 +74,7 @@ function App() {
           <Route path="/place_order" element={<PlaceOrderForm />} />
           <Route path="/my_orders" element={<MyOrders />} />
           <Route path="/order_track/:orderId" element={<OrderTracker />} />
-          <Route path="/review_rating/:orderId" element={<ReviewRating />} />
+          <Route path="/review_rating/:orderId/:productId" element={<ReviewRating />} />
           <Route path="/shop/:vendorId" element={<VendorShop/>} />
           <Route path="/search" element={<SearchResults/>} />
           

@@ -15,8 +15,6 @@ function OrdersOverTimeChart() {
         revenue: item.revenue || 0
     })) || [];
 
-    console.log("chart prepared data:", chartData);
-
     if (isError) {
         return (
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 h-80 flex items-center justify-center text-red-500 text-sm border border-red-100">

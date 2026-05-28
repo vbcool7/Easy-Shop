@@ -8,7 +8,8 @@ import {
     getUserReviews,
     getVendorReviewStats,
     vendorReviewList,
-    getApprovedReviewsForHome
+    getApprovedReviewsForHome,
+    replyToReview
 } from '../Controllers/reviewRatingController.js';
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.get('/get-user-reviews', authMiddleware(['user']), getUserReviews);
 
 router.get('/review-stats-vendor', authMiddleware(['vendor']), getVendorReviewStats);
 router.get('/review-list-vendor', authMiddleware(['vendor']), vendorReviewList);
+router.post('/review-reply/:review_id', authMiddleware(['vendor']), replyToReview);
 
 router.delete('/review-delete/:review_id', authMiddleware(['user', 'admin']), deleteReview);
 

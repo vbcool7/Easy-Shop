@@ -374,7 +374,7 @@ function FAQs() {
                             Help / <span className='text-pink-500'>FAQs</span>
                         </h1>
                         <p className='text-gray-500 text-sm md:text-lg lg:text-xl leading-relaxed font-light mt-2'>
-                            Stuck somewhere and can’t find solutions?
+                            Stuck somewhere and can't find solutions?
                         </p>
                     </div>
 

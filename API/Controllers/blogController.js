@@ -214,20 +214,38 @@ export const updateBlog = async (req, res) => {
 export const vendorBlogList = async (req, res) => {
     try {
         const vendorId = req.user._id || req.user.id;
+        const { search = '', page = 1, limit = 10, status = '' } = req.query;
 
-        const blogs = await Blog.find({ authorId: vendorId }).sort({ createdAt: -1 });
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
 
-        if (!blogs) {
-            return res.status(404).json({
-                success: false,
-                message: "Blogs not found"
-            });
+        const query = { authorId: vendorId };
+
+        if (search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            query.$or = [
+                { title: regex },
+                { category: regex },
+                { readTime: regex },
+                { status: regex }
+            ];
         }
+
+        if (status.trim()) {
+            query.status = status;
+        }
+
+        const [blogs, total] = await Promise.all([
+            Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+            Blog.countDocuments(query)
+        ]);
 
         return res.status(200).json({
             success: true,
-            count: blogs.length,
-            blogs
+            count: total,
+            totalPages: Math.ceil(total / limitNum),
+            data: blogs
         });
 
     } catch (err) {

@@ -1,74 +1,42 @@
 
-//updated
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
+import { useGetCmsContent } from '../hook/useCms';
 
 function PolicyExchange() {
 
     const navigate = useNavigate();
 
+    const { data, isLoading, isError } = useGetCmsContent('exchange_policy');
+
+    if (isLoading) return (
+        <div className="max-w-3xl mx-auto px-4 py-10 animate-pulse space-y-4">
+            <div className="h-7 bg-slate-200 rounded w-1/3" />
+            <div className="h-4 bg-slate-100 rounded w-full" />
+            <div className="h-4 bg-slate-100 rounded w-5/6" />
+            <div className="h-4 bg-slate-100 rounded w-4/6" />
+        </div>
+    );
+
+    if (isError || !data || data.status !== 'published') return (
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center text-slate-400 text-sm">
+            This page is not available yet.
+        </div>
+    );
+
     return (
-        <div className="bg-white min-h-[70vh] px-4 lg:px-6 py-10 md:py-16">
-            <div className="max-w-6xl mx-auto">
-
-                {/* Heading: Responsive font and alignment */}
-                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-10 text-center md:text-left">
-                    Exchange & <span className="text-pink-500">Return</span>
+        <div className="bg-white min-h-[70vh] px-4 lg:px-6 py-10 md:py-12">
+            <div className="max-w-5xl mx-auto">
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-8">
+                    {data.title}
                 </h1>
-
-                <div className="space-y-8 md:space-y-10">
-                    {/* Step 1 */}
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start text-center sm:text-left group">
-                        <div className="bg-pink-100 text-pink-600 w-12 h-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-all duration-300">
-                            1
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-1">7-Day Window</h3>
-                            <p className="text-slate-600 text-sm md:text-base leading-relaxed">
-                                You must initiate a return request within <span className="font-semibold text-slate-900">7 days</span> of receiving the item.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Step 2 */}
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start text-center sm:text-left group">
-                        <div className="bg-pink-100 text-pink-600 w-12 h-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-all duration-300">
-                            2
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-1">Condition Check</h3>
-                            <p className="text-slate-600 text-sm md:text-base leading-relaxed">
-                                Items must be <span className="font-semibold text-slate-900">unwashed, unused</span>, and have all original tags attached.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Step 3 */}
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start text-center sm:text-left group">
-                        <div className="bg-pink-100 text-pink-600 w-12 h-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-sm group-hover:bg-pink-500 group-hover:text-white transition-all duration-300">
-                            3
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-1">Refund Processing</h3>
-                            <p className="text-slate-600 text-sm md:text-base leading-relaxed">
-                                Refunds are processed within <span className="font-semibold text-slate-900">5-7 business days</span> to your original bank account.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Optional: Return Button or Contact Info */}
-                <div className="mt-16 p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                    <p className="text-slate-500 text-sm mb-4">Have more questions about returns?</p>
-                    <button
-                        onClick={() => navigate("/contact_us")}
-                        className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-500 transition-all cursor-pointer">
-                        Contact Support
-                    </button>
-                </div>
+                <div
+                    className="prose prose-sm max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-lg prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 prose-blockquote:border-l-4 prose-blockquote:border-pink-400 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-500"
+                    dangerouslySetInnerHTML={{ __html: data.content }}
+                />
             </div>
         </div>
-    )
+    );
 }
 
 export default PolicyExchange;

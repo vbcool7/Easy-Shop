@@ -10,6 +10,7 @@ import Withdraw from '../Models/withdrawModelSchema.js';
 import Blog from '../Models/blogModelSchema.js';
 
 import { deleteCloudinaryFiles, deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js';
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -307,10 +308,10 @@ export const getRevenueByPaymentMethod = async (req, res) => {
 export const getTopProducts = async (req, res) => {
     try {
         const topProducts = await Order.aggregate([
-            
+
             // not include cancel order
             { $match: { orderStatus: { $ne: "Cancelled" } } },
-              
+
             { $unwind: "$items" },
 
             {
@@ -327,7 +328,7 @@ export const getTopProducts = async (req, res) => {
 
             {
                 $lookup: {
-                    from: "products", 
+                    from: "products",
                     localField: "_id",
                     foreignField: "_id",
                     as: "productDetails"
@@ -338,21 +339,21 @@ export const getTopProducts = async (req, res) => {
         ]);
 
         const formattedData = topProducts.map(item => ({
-            name: item.productDetails.prodName || "Unknown Product", 
+            name: item.productDetails.prodName || "Unknown Product",
             sales: item.totalSold,
             revenue: item.totalRevenue
         }));
 
-        res.status(200).json({ 
-            success: true, 
-            data: formattedData 
+        res.status(200).json({
+            success: true,
+            data: formattedData
         });
 
     } catch (err) {
         console.error("Error :", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server Error Occur" 
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
         });
     }
 };
@@ -360,10 +361,28 @@ export const getTopProducts = async (req, res) => {
 // vendors list
 export const getVendorList = async (req, res) => {
     try {
-        const vendor = await Vendor.find()
+        const { search, page = 1, limit = 10 } = req.query;
+        let query = {};
+
+        if (search) {
+            query = {
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                    { storeName: { $regex: search, $options: 'i' } }
+                ]
+            };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const total = await Vendor.countDocuments(query);
+
+        const vendor = await Vendor.find(query)
             .select('-password')
             .populate('profilePhoto name email storeName contact category createdAt')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
 
         if (!vendor || vendor.length === 0) {
             return res.status(200).json({
@@ -377,7 +396,9 @@ export const getVendorList = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Vendor list fetched successfully!",
-            count: vendor.length,
+            count: total,
+            totalPages: Math.ceil(total / Number(limit)),
+            currentPage: Number(page),
             data: vendor
         });
 
@@ -452,25 +473,29 @@ export const getVendorStats = async (req, res) => {
 // all prod
 export const getAdminProductList = async (req, res) => {
     try {
-        const { search } = req.query;
+        const { search, page = 1, limit = 10 } = req.query;
+        const skip = (Number(page) - 1) * Number(limit);
 
         let query = {};
-
         if (search) {
-            query.name = { $regex: search, $options: "i" };
+            query.prodName = { $regex: search, $options: "i" };
         }
 
-        const products = await Product.find(query)
-            .populate("catId", "catName")
-            .populate("subCatId", "subCatName")
-            .populate("vendorId", "storeName name")
-            .sort({ createdAt: -1 });
-
-        const totalCount = await Product.countDocuments(query);
+        const [products, totalCount] = await Promise.all([
+            Product.find(query)
+                .populate("catId", "catName")
+                .populate("subCatId", "subCatName")
+                .populate("vendorId", "storeName name")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            Product.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
-            total: totalCount,
+            count: totalCount,
+            totalPages: Math.ceil(totalCount / Number(limit)),
             data: products
         });
 
@@ -597,78 +622,128 @@ export const toggleBestSeller = async (req, res) => {
 // all orders
 export const getAllOrders = async (req, res) => {
     try {
-        const { vendorId, status } = req.query;
+        const { vendorId, status, search, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        let query = {};
-
-        // 1. Agar specific Vendor ke orders dekhne hain
+        // Stage 1: base match (status + vendorId scope)
+        const baseMatch = {};
+        if (status) baseMatch.orderStatus = status;
         if (vendorId) {
             const vendorProducts = await Product.find({ vendorId }).distinct('_id');
-            query["items.productId"] = { $in: vendorProducts };
+            baseMatch['items.productId'] = { $in: vendorProducts };
         }
 
-        // 2. Agar specific status filter karna ho (optional)
-        if (status) {
-            query.orderStatus = status;
-        }
+        const searchRegex = search ? new RegExp(search, 'i') : null;
 
-        const orders = await Order.find(query)
-            .populate('userId', 'name email profilePhoto')
-            .populate({
-                path: 'items.productId',
-                select: 'prodName price prodImage vendorId catId attributes variants',
-                populate: [
-                    { path: "vendorId", select: "storeName" },
-                    { path: "catId", select: "catName" }
-                ]
-            })
-            .sort({ createdAt: -1 });
+        const pipeline = [
+            { $match: baseMatch },
 
-        // Optional: Data transformation 
-        let finalOrders = orders.map(order => {
-            let items = order.items;
+            // Stage 2: lookup user (customer)
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'userInfo'
+                }
+            },
+            { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
 
-            if (vendorId) {
-                items = items.filter(item =>
-                    item.productId?.vendorId?._id?.toString() === vendorId
-                );
+            // Stage 3: unwind items to search by product
+            { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+
+            // Stage 4: lookup product
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'items.productId',
+                    foreignField: '_id',
+                    as: 'items.productInfo'
+                }
+            },
+            { $unwind: { path: '$items.productInfo', preserveNullAndEmptyArrays: true } },
+
+            // get cat name
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'items.productInfo.catId',
+                    foreignField: '_id',
+                    as: 'items.catInfo'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$items.catInfo',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Stage 5: search match
+            ...(searchRegex ? [{
+                $match: {
+                    $or: [
+                        { orderStatus: searchRegex },
+                        { 'userInfo.name': searchRegex },
+                        { 'items.productInfo.prodName': searchRegex }
+                    ]
+                }
+            }] : []),
+
+            // Stage 6: regroup items back per order
+            {
+                $group: {
+                    _id: '$_id',
+                    orderStatus: { $first: '$orderStatus' },
+                    paymentStatus: { $first: '$paymentStatus' },
+                    paymentMethod: { $first: '$paymentMethod' },
+                    totalAmount: { $first: '$totalAmount' },
+                    createdAt: { $first: '$createdAt' },
+                    userInfo: { $first: '$userInfo' },
+                    shippingAddress: { $first: '$shippingAddress' },
+                    transactionId: { $first: '$transactionId' },
+                    items: {
+                        $push: {
+                            productId: '$items.productId',
+                            productInfo: '$items.productInfo',
+                            catInfo: '$items.catInfo',
+                            selectedColor: '$items.selectedColor',
+                            selectedSize: '$items.selectedSize',
+                            variantId: '$items.variantId',
+                            quantity: '$items.quantity',
+                            price: '$items.price'
+                        }
+                    }
+                }
+            },
+
+            { $sort: { createdAt: -1 } },
+
+            // Stage 7: facet for count + paginated data
+            {
+                $facet: {
+                    total: [{ $count: 'count' }],
+                    data: [
+                        { $skip: skip },
+                        { $limit: parseInt(limit) }
+                    ]
+                }
             }
+        ];
 
-            const updatedItems = items.map(item => {
-                const product = item.productId;
+        const result = await Order.aggregate(pipeline);
 
-                const matchedVariant = product?.variants?.find(
-                    variant => variant._id.toString() === item.variantId?.toString()
-                );
+        const count = result[0]?.total[0]?.count || 0;
+        const totalPages = Math.ceil(count / parseInt(limit));
+        const orders = result[0]?.data || [];
 
-                const colorAttr = product?.attributes?.get?.("Color");
-                const colorImages = item.selectedColor
-                    ? colorAttr?.images?.[item.selectedColor]
-                    : null;
-
-                const variantImage = colorImages?.[0] || product?.prodImage;
-
-
-                return {
-                    ...item._doc,
-                    selectedColor: item.selectedColor || null,
-                    selectedSize: item.selectedSize || null,
-                    variantId: item.variantId || null,
-                    variantStock: matchedVariant?.stock ?? null,
-                    variantImage
-                };
-            });
-
-            return {
-                ...order._doc,
-                items: updatedItems
-            };
-        });
+        console.log("First order:", JSON.stringify(orders[0], null, 2));
 
         res.status(200).json({
             success: true,
-            count: finalOrders.length,
-            data: finalOrders
+            count,
+            totalPages,
+            data: orders
         });
 
     } catch (err) {
@@ -683,7 +758,22 @@ export const getAllOrders = async (req, res) => {
 // all users
 export const getUserList = async (req, res) => {
     try {
-        const users = await User.aggregate([
+        const { search, status, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const searchRegex = search ? new RegExp(search, 'i') : null;
+
+        const matchStage = {};
+        if (status === 'active') matchStage.isActive = true;
+        if (status === 'inactive') matchStage.isActive = false;
+        if (searchRegex) {
+            matchStage.$or = [
+                { name: searchRegex },
+                { email: searchRegex }
+            ];
+        }
+
+        const pipeline = [
+            { $match: matchStage },
             {
                 $lookup: {
                     from: "orders",
@@ -704,14 +794,25 @@ export const getUserList = async (req, res) => {
                     orderCount: { $size: "$userOrders" }
                 }
             },
-            { $sort: { createdAt: -1 } }
-        ]);
+            { $sort: { createdAt: -1 } },
+            {
+                $facet: {
+                    total: [{ $count: 'count' }],
+                    data: [
+                        { $skip: skip },
+                        { $limit: parseInt(limit) }
+                    ]
+                }
+            }
+        ];
+
+        const result = await User.aggregate(pipeline);
 
         res.status(200).json({
             success: true,
-            message: "User List fetched successfully",
-            count: users.length,
-            data: users
+            count: result[0]?.total[0]?.count || 0,
+            totalPages: Math.ceil((result[0]?.total[0]?.count || 0) / parseInt(limit)),
+            data: result[0]?.data || []
         });
 
     } catch (err) {
@@ -791,42 +892,45 @@ export const deleteUser = async (req, res) => {
 // review list
 export const adminReviewList = async (req, res) => {
     try {
-        const { status, vendorId } = req.query;
+        const { status, vendorId, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
         let query = {};
-
         if (status) query.status = status;
 
-        // find out vendor prods for filter
         if (vendorId) {
             const vendorProducts = await Product.find({ vendorId }).select('_id');
-
             const productIds = vendorProducts.map(p => p._id);
 
             if (productIds.length === 0) {
                 return res.status(200).json({
                     success: true,
-                    message: "No products found for this vendor",
+                    count: 0,
+                    totalPages: 0,
                     data: []
                 });
             }
-            // Filter reviews by those product IDs
             query.productId = { $in: productIds };
         }
 
-        const reviews = await ReviewRating.find(query)
-            .populate('userId', 'name email profilePhoto')
-            .populate({
-                path: 'productId',
-                select: 'prodName vendorId',
-                populate: { path: 'vendorId', select: 'name email profilePhoto' }
-            })
-            .sort({ createdAt: -1 });
+        const [reviews, count] = await Promise.all([
+            ReviewRating.find(query)
+                .populate('userId', 'name email profilePhoto')
+                .populate({
+                    path: 'productId',
+                    select: 'prodName vendorId',
+                    populate: { path: 'vendorId', select: 'name email profilePhoto' }
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            ReviewRating.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
-            message: reviews.length > 0 ? "Review List fetched successfully" : "No reviews found",
-            count: reviews.length,
+            count,
+            totalPages: Math.ceil(count / parseInt(limit)),
             data: reviews
         });
 
@@ -921,18 +1025,75 @@ export const deleteReview = async (req, res) => {
 // all transactions
 export const getAllTransactions = async (req, res) => {
     try {
-        // Hum 'populate' use karenge taaki humein Vendor ka naam aur Order ki details mil sakein
-        const transactions = await Transaction.find()
-            .populate('vendorId', 'name email') // Vendor ka sirf name aur email chahiye
-            .populate('orderId', 'orderStatus paymentStatus') // Order ka status dekhne ke liye
-            .sort({ createdAt: -1 }); // Latest transactions sabse upar
+        const { search, status, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const searchRegex = search ? new RegExp(search, 'i') : null;
+
+        const pipeline = [
+            // Stage 1: lookup vendor
+            {
+                $lookup: {
+                    from: 'vendors',
+                    localField: 'vendorId',
+                    foreignField: '_id',
+                    as: 'vendorInfo'
+                }
+            },
+            { $unwind: { path: '$vendorInfo', preserveNullAndEmptyArrays: true } },
+
+            // Stage 2: lookup order
+            {
+                $lookup: {
+                    from: 'orders',
+                    localField: 'orderId',
+                    foreignField: '_id',
+                    as: 'orderInfo'
+                }
+            },
+            { $unwind: { path: '$orderInfo', preserveNullAndEmptyArrays: true } },
+
+            // Stage 3: status filter
+            ...(status ? [{ $match: { status } }] : []),
+
+            // Stage 4: search
+            ...(searchRegex ? [{
+                $match: {
+                    $or: [
+                        { transactionId: searchRegex },
+                        { status: searchRegex },
+                        { 'vendorInfo.name': searchRegex }
+                    ]
+                }
+            }] : []),
+
+            { $sort: { createdAt: -1 } },
+
+            {
+                $facet: {
+                    total: [{ $count: 'count' }],
+                    data: [
+                        { $skip: skip },
+                        { $limit: parseInt(limit) }
+                    ]
+                }
+            }
+        ];
+
+        const result = await Transaction.aggregate(pipeline);
+
+        const count = result[0]?.total[0]?.count || 0;
+        const totalPages = Math.ceil(count / parseInt(limit));
+
+        console.log("First txn:", JSON.stringify(result[0]?.data[0], null, 2));
 
         res.status(200).json({
             success: true,
-            message: "Here is transaction list",
-            count: transactions.length,
-            data: transactions
+            count,
+            totalPages,
+            data: result[0]?.data || []
         });
+
     } catch (err) {
         console.log("Error :", err);
         res.status(500).json({
@@ -1003,13 +1164,25 @@ export const toggleTransactionStatus = async (req, res) => {
 // all withdrwal req
 export const getAllWithdrawRequests = async (req, res) => {
     try {
-        const requests = await Withdraw.find()
-            .populate('vendorId', 'name email storeName availableBalance')
-            .sort({ createdAt: -1 });
+        const { status, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const query = {};
+        if (status) query.status = status;
+
+        const [requests, count] = await Promise.all([
+            Withdraw.find(query)
+                .populate('vendorId', 'name email storeName availableBalance')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Withdraw.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
-            message: "Here is all payout requests of vendor",
+            count,
+            totalPages: Math.ceil(count / parseInt(limit)),
             data: requests
         });
 
@@ -1088,14 +1261,45 @@ export const toggleWithdrawStatus = async (req, res) => {
 // blog list 
 export const listBlog = async (req, res) => {
     try {
-        const blogList = await Blog.find()
+        const { search, page = 1, limit = 10 } = req.query;
+        let query = {};
+
+        if (search) {
+            query = {
+                $or: [
+                    { title: { $regex: search, $options: 'i' } },
+                    { category: { $regex: search, $options: 'i' } },
+                    { tags: { $regex: search, $options: 'i' } }
+                ]
+            };
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const total = await Blog.countDocuments(query);
+
+        const blogList = await Blog.find(query)
             .select("title category status createdAt bannerImage authorType authorCustomName readTime description content blockquote tags trendsList isActive")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit));
+
+        if (!blogList || blogList.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No blogs found",
+                count: 0,
+                totalPages: 0,
+                currentPage: Number(page),
+                data: []
+            });
+        }
 
         res.status(200).json({
             success: true,
-            count: blogList.length,
             message: "Blog list successfully fetched",
+            count: total,
+            totalPages: Math.ceil(total / Number(limit)),
+            currentPage: Number(page),
             data: blogList
         });
 
@@ -1190,6 +1394,60 @@ export const deleteBlog = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server Error Occurred"
+        });
+    }
+};
+
+// dashboard search
+export const adminSearch = async (req, res) => {
+    try {
+        const { q } = req.query;
+
+        if (!q || q.trim().length < 2) {
+            return res.status(400).json({
+                message: 'Query must be at least 2 characters'
+            });
+        }
+
+        const query = q.trim();
+        const isValidId = mongoose.Types.ObjectId.isValid(query);
+
+        const [products, orders] = await Promise.all([
+            Product.find({
+                $or: [
+                    { prodName: { $regex: query, $options: 'i' } },
+                    { status: { $regex: query, $options: 'i' } },
+                    { description: { $regex: query, $options: 'i' } },
+                ]
+            })
+                .select('prodName prodImage price originalPrice stock status description attributes variants isActive vendorId')
+                .limit(5)
+                .lean(),
+
+            Order.find({
+                $or: [
+                    { 'shippingAddress.name': { $regex: query, $options: 'i' } },
+                    { orderStatus: { $regex: query, $options: 'i' } },
+                    ...(isValidId ? [{ _id: new mongoose.Types.ObjectId(query) }] : []),
+                ]
+            })
+                .select('_id orderStatus shippingAddress paymentStatus paymentMethod items totalAmount createdAt isActive')
+                .populate('items.productId', 'prodName prodImage price')
+                .limit(5)
+                .lean(),
+        ]);
+
+        return res.status(200).json({
+            status: true,
+            products,
+            orders
+        });
+
+    } catch (error) {
+        console.error('Admin search error:', error);
+        return res.status(500).json({
+            status: false,
+            message: 'Server Error Occurred'
         });
     }
 };

@@ -38,7 +38,7 @@ function UserProfileWishList() {
 
                             {/* Image Container */}
                             <div
-                                onClick={() => navigate(`/product_detail/${product?._id}/${product?.slug}/${product?.prodName}`)}
+                                onClick={() => navigate(`/product_detail/${product?._id}/${product?.prodName}`)}
                                 className="aspect-square rounded-3xl overflow-hidden mb-4 bg-white cursor-pointer">
                                 <img
                                     src={product?.prodImage}

@@ -39,6 +39,7 @@ function VendorPage() {
                 {/* header call */}
                 <div className='flex-1 flex flex-col overflow-hidden'>
                     <Header
+                    setCurrentPage={setCurrentPage}
                         sidebarCollapsed={sideBarCollapsed}
                         onToggleSideBar={() => setSideBarCollapsed(!sideBarCollapsed)} />
 
@@ -73,15 +74,6 @@ function VendorPage() {
                             {/* review ratung */}
                             {currentPage === "Review" && <ReviewRating />}
 
-                            {/* discount and offer */}
-                            {currentPage === "Promotions" && <DiscountOffer setCurrentPage={setCurrentPage}/>}
-                            {currentPage === "Add Coupon" && <AddCoupon setCurrentPage={setCurrentPage}/>}
-
-                            {/* shop setting */}
-                            {currentPage === "Hero CMS" && <HomeBannerCMS />}
-                            {currentPage === "Footer CMS" && <FooterCMS />}
-                            {currentPage === "Shop Policy" && <ShopPolicyCMS />}
-                            
                         </div>
                     </main>
                 </div>

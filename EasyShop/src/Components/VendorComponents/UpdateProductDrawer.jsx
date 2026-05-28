@@ -380,62 +380,6 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             </div>
                         )}
 
-                        {/* color images */}
-                        {/* {hasColorVariant && (
-                            <div className="space-y-3">
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    Color Images
-                                </h4>
-
-                                {colors.map(color => {
-                                    const oldImages = formData.attributes?.[colorAttrName]?.images?.[color] || [];
-                                    const newImages = colorImageFiles[color] || [];
-
-                                    return (
-                                        <div
-                                            key={color}
-                                            className="p-3 bg-slate-50 border border-pink-100 rounded-xl">
-                                            <p className="text-xs font-black text-pink-600 mb-2">{color}</p>
-
-                                            <div className="flex gap-2 flex-wrap mb-2">
-                                                {oldImages.map((img, i) => (
-                                                    <img
-                                                        key={i}
-                                                        src={img}
-                                                        className="w-14 h-14 rounded-lg object-cover border" />
-                                                ))}
-
-                                                {newImages.map((file, i) => (
-                                                    <img
-                                                        key={`new-${i}`}
-                                                        src={URL.createObjectURL(file)}
-                                                        className="w-14 h-14 rounded-lg object-cover border border-pink-300" />
-                                                ))}
-                                            </div>
-
-                                            <p className="text-[10px] text-slate-500 mb-2">
-                                                Choose new images to replace current {color} images.
-                                            </p>
-
-                                            <input
-                                                type="file"
-                                                multiple
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    const files = Array.from(e.target.files);
-                                                    setColorImageFiles(prev => ({
-                                                        ...prev,
-                                                        [color]: files
-                                                    }));
-                                                }}
-                                                className="text-[10px]"
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )} */}
-
                         {/* Section 2: prod info  */}
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HiOutlineClock } from "react-icons/hi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { HiOutlineTruck } from "react-icons/hi";
@@ -11,15 +11,38 @@ import { HiOutlineSearch } from "react-icons/hi";
 
 import { useOrderInvoiceDownload, useOrderStats, useUpdateOrderStatus, useVendorOrders } from '../../hook/useOrders';
 import OrderDetailDrawer from './OrderDetailDrawer';
+import { useVendorUIStore } from '../../store/useAuthStore';
+import { getPaginationRange } from '../../utils/getPaginationRange';
 
 function Orders() {
 
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [orderStatus, setOrderStatus] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data: ordersResponse, isLoading, isError } = useVendorOrders({
+        search: debouncedSearch,
+        page,
+        orderStatus
+    });
+
+    const orders = ordersResponse?.data || [];
+    const totalPages = ordersResponse?.totalPages || 1;
+    const count = ordersResponse?.count || 0;
+
     const { data: getStats } = useOrderStats();
-    const { data: orders, isLoading, isError, error } = useVendorOrders();
     const { mutate: updateOrderStatus, isPending: isUpdating } = useUpdateOrderStatus();
     const { mutate: downloadInvoice, isPending, variables } = useOrderInvoiceDownload();
-
-    const [selectedOrderId, setIsSelectedOrderId] = useState(null);
+    const { selectedOrder, isOrderDrawerOpen, closeOrderDrawer, openOrderDrawer } = useVendorUIStore();
 
     const orderStatusStyles = {
         Processing: "bg-amber-50 text-amber-600 border-amber-100",
@@ -166,24 +189,50 @@ function Orders() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
                 {/* Header and Search */}
-                <div className="p-4 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-800/20">
+                <div className="p-4 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-3 bg-white dark:bg-slate-800/20">
 
-                    <h3 className="text-[11px] md:text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider pb-4 md:pb-0">
-                        Recent Orders
-                    </h3>
+                    <div className="flex items-center gap-2.5">
+                        <h3 className="text-[11px] md:text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                            Recent Orders
+                        </h3>
+                        {count > 0 && (
+                            <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 rounded-full text-[11px] md:text-xs font-bold">
+                                Total : {count}
+                            </span>
+                        )}
+                    </div>
 
-                    {/* Search Bar (Left Side) */}
-                    <div className="relative w-full md:w-80 group">
-                        <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search product, SKU..."
-                            className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
-                        />
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+
+                        {/* Search */}
+                        <div className="relative w-full md:w-80 group">
+                            <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search customer, product, status..."
+                                className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 dark:text-white focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
+                            />
+                        </div>
+
+                        {/* Status Filter */}
+                        <select
+                            value={orderStatus}
+                            onChange={(e) => { setOrderStatus(e.target.value); setPage(1); }}
+                            className="w-full sm:w-auto text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
+                        >
+                            <option value="">All Status</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
                     </div>
                 </div>
 
-                {orders && orders.length > 0 ? (
+                {orders.length > 0 ? (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
@@ -201,179 +250,201 @@ function Orders() {
                             </thead>
 
                             <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                {orders.map((order, index) => {
-                                    return (
-                                        <tr
-                                            key={index}
-                                            className="hover:bg-pink-50/30 dark:hover:bg-slate-800/50 transition-colors group">
+                                {orders.map((order) => (
+                                    <tr
+                                        key={order._id}
+                                        className="hover:bg-pink-50/30 dark:hover:bg-slate-800/50 transition-colors group">
 
-                                            {/* 1. Order ID & Date */}
-                                            <td className="px-6 py-4">
-                                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                                    #{order._id.slice(-6).toUpperCase()}
+                                        {/* 1. Order ID & Date */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                                #{order._id.slice(-6).toUpperCase()}
+                                            </span>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">
+                                                {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                                    day: '2-digit', month: 'short', year: 'numeric'
+                                                })}
+                                            </p>
+                                        </td>
+
+                                        {/* 2. Customer */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm text-slate-600 dark:text-slate-400 font-medium truncate max-w-25">
+                                                    {order.customerDetails?.name}
                                                 </span>
+                                                <span className="text-[10px] text-slate-400 leading-none">
+                                                    {order.customerDetails?.email}
+                                                </span>
+                                            </div>
+                                        </td>
 
-                                                <p className="text-[10px] text-slate-400 mt-0.5">
-                                                    {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                                        day: '2-digit', month: 'short', year: 'numeric'
-                                                    })}
-                                                </p>
-                                            </td>
-
-                                            {/* 2. Customer */}
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm text-slate-600 dark:text-slate-400 font-medium truncate max-w-25">
-                                                        {order.customerDetails?.name}
-                                                    </span>
-
-                                                    <span className="text-[10px] text-slate-400 leading-none">
-                                                        {order.customerDetails?.email}
-                                                    </span>
+                                        {/* 3. Product */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                                                    <img
+                                                        src={order.variantImage || order.productDetails?.prodImage}
+                                                        alt={order.productDetails?.prodName}
+                                                        className="w-full h-full object-cover" />
                                                 </div>
-                                            </td>
-
-                                            {/* 3. Product Thumbnail & Name */}
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                                                        <img
-                                                            src={order.variantImage || order.productDetails?.prodImage}
-                                                            alt={order.productDetails?.prodName}
-                                                            className="w-full h-full object-cover" />
-                                                    </div>
-
-                                                    {/* prod info color, size */}
-                                                    <div className="max-w-35">
-                                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                                                            {order.productDetails?.prodName}
-                                                        </p>
-
-                                                        <div className="flex flex-wrap gap-1 mt-1">
-                                                            {order.items?.selectedColor && (
-                                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                                                    {order.items.selectedColor}
-                                                                </span>
-                                                            )}
-
-                                                            {order.items?.selectedSize && (
-                                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                                                    Size: {order.items.selectedSize}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                            </td>
-
-                                            {/* 4. Quantity */}
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="text-xs font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                                                    {order.items?.quantity || 0}
-                                                </span>
-                                            </td>
-
-                                            {/* 5. Total Amount */}
-                                            <td className="px-6 py-4">
-                                                <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                    ₹{((order.items?.price || 0) * (order.items?.quantity || 0)).toLocaleString()}
-                                                </span>
-                                            </td>
-
-                                            {/* Payment method */}
-                                            <td className="px-6 py-4">
-                                                {(() => {
-                                                    const style = paymentMethodStyles[order.paymentMethod] || paymentMethodStyles.COD;
-
-                                                    return (
-                                                        <span className={`text-[10px] font-bold flex items-center gap-1.5 px-2 py-1 rounded-md 
-                                                        ${style.bg} ${style.text} ${style.border}`}>
-                                                            <span className={`w-1.5 h-1.5 rounded-full 
-                                                    ${style.text.replace('text')}`}>
+                                                <div className="max-w-35">
+                                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                                                        {order.productDetails?.prodName}
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        {order.items?.selectedColor && (
+                                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                                {order.items.selectedColor}
                                                             </span>
-                                                            {style.short}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </td>
-
-                                            {/* Payment Status */}
-                                            <td className="px-6 py-4">
-                                                {(() => {
-                                                    const pStyle = paymentStatusStyles[order.paymentStatus] || paymentStatusStyles.Pending;
-                                                    return (
-                                                        <span className={`text-[10px] font-bold flex items-center gap-1.5 px-4 py-1 ${pStyle.container}`}>
-                                                            <span className={`w-1.5 h-1.5 rounded-full ${pStyle.dot}`}></span>
-                                                            {pStyle.label}
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </td>
-
-                                            {/* Order Status */}
-                                            <td className="px-6 py-4 text-center">
-                                                {/* Condition: Agar status vendor ke control ke bahar hai (e.g., Pending or Delivered) */}
-                                                {!["Processing", "Shipped", "Cancelled"].includes(order.orderStatus) ? (
-                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold border 
-                                                    ${orderStatusStyles[order.orderStatus] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                                        {order.orderStatus}
-                                                    </span>
-                                                ) : (
-                                                    <select
-                                                        disabled={isLoading}
-                                                        value={order.orderStatus}
-                                                        onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
-                                                        className={`px-3 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition-all ${orderStatusStyles[order.orderStatus]}`}
-                                                    >
-                                                        <option value="Processing">Processing</option>
-                                                        <option value="Shipped">Shipped</option>
-                                                        <option value="Cancelled">Cancelled</option>
-                                                    </select>
-                                                )}
-                                            </td>
-
-                                            {/* 9. Actions */}
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        onClick={() => setIsSelectedOrderId(order._id)}
-                                                        className="p-1.5 bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
-                                                        <HiOutlineEye size={18} />
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => downloadInvoice(order._id)}
-                                                        disabled={isPending && variables === order._id}
-                                                        className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-500 shadow-sm border border-transparent hover:border-slate-100 transition-all disabled:opacity-50"
-                                                    >
-                                                        {isPending && variables === order._id ? (
-                                                            <span className="text-[10px] animate-pulse">Downloading...</span>
-                                                        ) : (
-                                                            <HiOutlineDownload size={18} />
                                                         )}
-                                                    </button>
+                                                        {order.items?.selectedSize && (
+                                                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                                                Size: {order.items.selectedSize}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
+                                            </div>
+                                        </td>
+
+                                        {/* 4. Quantity */}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="text-xs font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                                                {order.items?.quantity || 0}
+                                            </span>
+                                        </td>
+
+                                        {/* 5. Amount */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                ₹{((order.items?.price || 0) * (order.items?.quantity || 0)).toLocaleString()}
+                                            </span>
+                                        </td>
+
+                                        {/* 6. Payment Method */}
+                                        <td className="px-6 py-4">
+                                            {(() => {
+                                                const style = paymentMethodStyles[order.paymentMethod] || paymentMethodStyles.COD;
+                                                return (
+                                                    <span className={`text-[10px] font-bold flex items-center gap-1.5 px-2 py-1 rounded-md ${style.bg} ${style.text} ${style.border}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${style.text.replace('text')}`}></span>
+                                                        {style.short}
+                                                    </span>
+                                                );
+                                            })()}
+                                        </td>
+
+                                        {/* 7. Payment Status */}
+                                        <td className="px-6 py-4">
+                                            {(() => {
+                                                const pStyle = paymentStatusStyles[order.paymentStatus] || paymentStatusStyles.Pending;
+                                                return (
+                                                    <span className={`text-[10px] font-bold flex items-center gap-1.5 px-4 py-1 ${pStyle.container}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${pStyle.dot}`}></span>
+                                                        {pStyle.label}
+                                                    </span>
+                                                );
+                                            })()}
+                                        </td>
+
+                                        {/* 8. Order Status */}
+                                        <td className="px-6 py-4 text-center">
+                                            {!["Processing", "Shipped", "Cancelled"].includes(order.orderStatus) ? (
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${orderStatusStyles[order.orderStatus] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
+                                                    {order.orderStatus}
+                                                </span>
+                                            ) : (
+                                                <select
+                                                    disabled={isUpdating}
+                                                    value={order.orderStatus}
+                                                    onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition-all ${orderStatusStyles[order.orderStatus]}`}
+                                                >
+                                                    <option value="Processing">Processing</option>
+                                                    <option value="Shipped">Shipped</option>
+                                                    <option value="Cancelled">Cancelled</option>
+                                                </select>
+                                            )}
+                                        </td>
+
+                                        {/* 9. Actions */}
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => openOrderDrawer(order._id)}
+                                                    className="p-1.5 bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                                                    <HiOutlineEye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => downloadInvoice(order._id)}
+                                                    disabled={isPending && variables === order._id}
+                                                    className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-500 shadow-sm border border-transparent hover:border-slate-100 transition-all disabled:opacity-50"
+                                                >
+                                                    {isPending && variables === order._id ? (
+                                                        <span className="text-[10px] animate-pulse">Downloading...</span>
+                                                    ) : (
+                                                        <HiOutlineDownload size={18} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
                 ) : (
                     <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                        <p className="text-slate-400">No orders found yet.</p>
+                        <p className="text-slate-400">
+                            {search || orderStatus ? 'No orders match your search or filter.' : 'No orders found yet.'}
+                        </p>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                            ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
             </div>
 
             {/* detail model */}
             <OrderDetailDrawer
-                orderId={selectedOrderId}
-                isOpen={!!selectedOrderId}
-                onClose={() => setIsSelectedOrderId(null)}
+                orderId={selectedOrder}
+                isOpen={isOrderDrawerOpen}
+                onClose={closeOrderDrawer}
             />
         </div>
     )

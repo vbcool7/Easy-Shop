@@ -13,6 +13,7 @@ import { useCart } from './CartContext';
 import { useWishList } from './WishListContext';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useGetBanners } from '../hook/useBanner';
 
 function VendorShop() {
 
@@ -25,6 +26,10 @@ function VendorShop() {
     const { wishListItems, addToWishList } = useWishList();
 
     const { data, fetchNextPage, hasNextPage, isLoading, isError } = useVendorShopProducts(vendorId);
+    const { data: banners } = useGetBanners('vendor_top');
+    const banner = banners?.[0];
+
+    const imageUrl = banner?.image || ShopBannerImg1;
 
     const products = data?.pages.flatMap(page => page.data) || [];
 
@@ -76,7 +81,7 @@ function VendorShop() {
             {/* banner */}
             <div className="relative h-48 md:h-64 lg:h-80 w-full overflow-hidden">
                 <img
-                    src={ShopBannerImg1}
+                    src={imageUrl}
                     alt="Shop Banner"
                     className="w-full h-full object-cover"
                 />
@@ -143,7 +148,7 @@ function VendorShop() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {(products || []).map((product) => {
-                        
+
                         const isFavorite = wishListItems.some((wishItem) => {
                             const wishId = wishItem.productId?._id || wishItem._id || wishItem.id;
                             return wishId === product._id;

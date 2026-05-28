@@ -37,16 +37,24 @@ const reviewSchema = new mongoose.Schema(
             type: String,
             enum: ['Pending', 'Approved', 'Rejected'],
             default: 'Pending'
+        },
+
+        vendorReply: {
+            type: String,
+            default: ""
+        },
+
+        vendorRepliedAt: {
+            type: Date
         }
 
     },
     { timestamps: true }
 );
 
-// Ek user ek product par ek hi review de sake (Optional but recommended)
 reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 
-// ------------------ find average rating----------------
+// ------------------ find average rating ----------------
 reviewSchema.statics.calculateAvgRating = async function (productId) {
     const stats = await this.aggregate([
         { $match: { productId: productId } },
@@ -62,7 +70,7 @@ reviewSchema.statics.calculateAvgRating = async function (productId) {
     if (stats.length > 0) {
         await mongoose.model('Product').findByIdAndUpdate(productId, {
             totalReviews: stats[0].nRating,
-            averageRating: Math.round(stats[0].avgRating * 10) / 10 // Round to 1 decimal
+            averageRating: Math.round(stats[0].avgRating * 10) / 10
         });
     } else {
         await mongoose.model('Product').findByIdAndUpdate(productId, {
@@ -72,12 +80,12 @@ reviewSchema.statics.calculateAvgRating = async function (productId) {
     }
 };
 
-// Jab naya review save ho, tab ise call karein
+// for new review
 reviewSchema.post('save', function () {
     this.constructor.calculateAvgRating(this.productId);
 });
 
-// Jab review delete ho, tab bhi update karein
+// for review dlt
 reviewSchema.post('remove', function () {
     this.constructor.calculateAvgRating(this.productId);
 });

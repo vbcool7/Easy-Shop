@@ -285,6 +285,7 @@ const EditProductDrawer = ({ product, isOpen, onClose }) => {
                             </h4>
 
                             <div className="grid grid-cols-1 gap-6">
+                                
                                 {/* Main Image */}
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-16 h-16 shrink-0 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden bg-white">

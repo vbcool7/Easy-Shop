@@ -11,8 +11,24 @@ const getSafeJSON = (key) => {
     }
 };
 
+// search
+export const useAdminUIStore = create((set) => ({
+    selectedProductSearch: null,
+    isProductDrawerOpen: false,
+    selectedOrder: null,
+    isOrderDrawerOpen: false,
+    selectedUser: null,
+    isUserDrawerOpen: false,
+
+    openProductDrawer: (product) => set({ selectedProductSearch: product, isProductDrawerOpen: true }),
+    closeProductDrawer: () => set({ selectedProductSearch: null, isProductDrawerOpen: false }),
+
+    openOrderDrawer: (orderId) => set({ selectedOrder: orderId, isOrderDrawerOpen: true }),
+    closeOrderDrawer: () => set({ selectedOrder: null, isOrderDrawerOpen: false }),
+}));
+
 const useAdminAuthStore = create((set) => ({
-    admin: getSafeJSON("admin"), 
+    admin: getSafeJSON("admin"),
     token: localStorage.getItem("admin_token") || null,
 
     login: (adminData, token) => {

@@ -7,6 +7,7 @@ import { TiTick } from "react-icons/ti";
 import toast from 'react-hot-toast';
 
 import { useToggleWithdrawStatus, useWithdrawReqList } from '../hooks/useWithdraws';
+import { getPaginationRange } from '../utils/getPaginationRange';
 
 const statusMenu = [
   { id: 1, status: "Processing" },
@@ -16,29 +17,31 @@ const statusMenu = [
 
 function PayoutRequest() {
 
-  const { data: withdrawReqList, isLoading, isError } = useWithdrawReqList();
-  const { mutate: updateStatus, isPending: isUpdating } = useToggleWithdrawStatus();
-
+  const [page, setPage] = useState(1);
+  
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [selectedId, setIsSelectedId] = useState(null);
   const [formData, setFormData] = useState({
     status: "",
     utrNumber: "",
     adminNote: ""
   });
 
-  const [selectedId, setIsSelectedId] = useState(null);
+  const { data, isLoading, isError } = useWithdrawReqList({ status: selectedStatus?.status || '', page });
+  const { mutate: updateStatus, isPending: isUpdating } = useToggleWithdrawStatus();
 
-  if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching Requests...</p>;
-  if (isError) return <p className="p-10 text-center text-red-500">Error loading requests...</p>;
+  const withdrawReqList = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+  const totalCount = data?.count || 0;
 
   // top filter
   const handlestatus = (status) => {
     setSelectedStatus(status);
     setIsStatusOpen(false);
+    setPage(1);
   };
 
   // update status
@@ -79,18 +82,26 @@ function PayoutRequest() {
     });
   };
 
+  if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching Requests...</p>;
+  if (isError) return <p className="p-10 text-center text-red-500">Error loading requests...</p>;
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
 
       {/* heading */}
       <div className="p-4 md:p-6 border-b border-pink-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-            Payout Requests
-          </h2>
 
-          <p className="text-[11px] md:text-xs text-slate-500 mt-1">
-            Manage vendor earnings and platform commissions
+        <div>
+          <div className='flex items-center gap-2.5'>
+            <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+              Payout Requests
+            </h2>
+            <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
+              Total: {totalCount}
+            </span>
+          </div>
+          <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Manage vendor earnings and platform commissions.
           </p>
         </div>
 
@@ -116,6 +127,12 @@ function PayoutRequest() {
             <div className='absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 rounded-b-xl shadow-xl border border-pink-50 dark:border-slate-700 py-2 overflow-hidden animate-in fade-in zoom-in duration-200'>
 
               <div className='max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700'>
+                <div
+                  onClick={() => { setSelectedStatus(null); setIsStatusOpen(false); setPage(1); }}
+                  className='px-4 py-1.5 hover:bg-pink-50 cursor-pointer text-slate-400 font-medium transition-colors text-[11px] md:text-[13px] border-b border-slate-50'
+                >
+                  All Status
+                </div>
                 {statusMenu.map((item, index) => (
                   <div
                     key={index}
@@ -260,6 +277,41 @@ function PayoutRequest() {
             ))}
           </tbody>
         </table>
+
+        {/* pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+            <button
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Prev
+            </button>
+            {getPaginationRange(page, totalPages).map((num, idx) =>
+              num === '...'
+                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                : <button
+                  key={num}
+                  onClick={() => setPage(num)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                        ${page === num
+                      ? 'bg-pink-500 text-white border-pink-500'
+                      : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                    }`}
+                >
+                  {num}
+                </button>
+            )}
+            <button
+              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* for approved - modal */}

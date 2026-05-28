@@ -5,12 +5,13 @@ import { FaCheckCircle } from "react-icons/fa";
 import { FaTimes } from "react-icons/fa";
 import { FaCcVisa } from "react-icons/fa";
 import { FaCcMastercard } from "react-icons/fa";
-import UpiImg from '../assets/Images/UpiImg.png';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from './CartContext';
+import UpiImg from '../assets/Images/UpiImg.png';
 import confetti from 'canvas-confetti';
-import { usePlaceCartOrder, usePlaceDirectOrder } from '../hook/useOrders';
 import toast from 'react-hot-toast';
+
+import { useCreateRazorpayOrder, usePlaceCartOrder, usePlaceDirectOrder, useVerifyPayment } from '../hook/useOrders';
 
 function PlaceOrderForm() {
 
@@ -37,12 +38,15 @@ function PlaceOrderForm() {
         state: ""
     });
 
+    const { mutate: createRazorpayOrder, isPending: isRazorpayPending } = useCreateRazorpayOrder();
+    const { mutate: verifyPayment, isPending: isVerifyPending } = useVerifyPayment();
+
     const { mutate: placeCartOrder, isPending: isCartPending } = usePlaceCartOrder();
     const { mutate: placeDirectOrder, isPending: isDirectPending } = usePlaceDirectOrder();
 
-    const isPending = isCartPending || isDirectPending;
+    const isPending = isCartPending || isDirectPending || isRazorpayPending || isVerifyPending;
 
-    const displayItems = location.state?.items || cartItems;  // Agar 'Buy Now' se aaya hai toh wo data lo, warna Cart wala
+    const displayItems = location.state?.items || cartItems;  // if data coe from 'Buy Now' then take it, otherwise cart data take
     const subtotal = displayItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
     const totalQuantity = displayItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
     const finalTotal = subtotal;
@@ -55,8 +59,24 @@ function PlaceOrderForm() {
         }));
     };
 
+    // 1. helper fun for Script load
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true); // if already loaded then not load again
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     // order place
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async () => {
+
         const { name, contact, pincode, address, city, state } = shippingAddress;
 
         if (!name || !contact || !pincode || !address || !city || !state) {
@@ -64,7 +84,7 @@ function PlaceOrderForm() {
             return;
         }
 
-        if (contact.length < 10 || contact.length > 10) {
+        if (contact.length !== 10) {
             toast.error("Please enter valid phone number");
             return;
         }
@@ -74,64 +94,109 @@ function PlaceOrderForm() {
             return;
         }
 
-        if (isDirectBuy) {
-            placeDirectOrder({
-                prod_id: directProdId,
-                quantity: directQty,
-                shippingAddress,
-                paymentMethod: paymentMethod === "COD" ? "COD" : "Online",
-                selectedColor: directSelectedColor,
-                selectedSize: directSelectedSize
-            }, {
-                onSuccess: () => {
-                    setShippingAddress({
-                        name: "", contact: "", pincode: "",
-                        address: "", city: "", state: ""
-                    });
-                    if (paymentMethod === "COD") {
-                        confetti({
-                            particleCount: 150,
-                            spread: 70,
-                            origin: { y: 0.6 },
-                            colors: ['#ec4899', '#f472b6', '#db2777']
-                        });
+        // cod
+        if (paymentMethod === "COD") {
+            if (isDirectBuy) {
+                placeDirectOrder({
+                    prod_id: directProdId,
+                    quantity: directQty,
+                    shippingAddress,
+                    paymentMethod: "COD",
+                    selectedColor: directSelectedColor,
+                    selectedSize: directSelectedSize
+                }, {
+                    onSuccess: () => {
+                        setShippingAddress({ name: "", contact: "", pincode: "", address: "", city: "", state: "" });
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ec4899', '#f472b6', '#db2777'] });
                         setIsOpenCod(true);
-                    } else {
-                        setIsOpenOnline(true);
                     }
-                }
-            });
-        } else {
-            placeCartOrder({
-                shippingAddress,
-                paymentMethod: paymentMethod === "COD" ? "COD" : "Online"
-            }, {
-                onSuccess: (res) => {
-                    clearCart();
-
-                    setShippingAddress({
-                        name: "",
-                        contact: "",
-                        pincode: "",
-                        address: "",
-                        city: "",
-                        state: ""
-                    });
-
-                    if (paymentMethod === "COD") {
-                        confetti({
-                            particleCount: 150,
-                            spread: 70,
-                            origin: { y: 0.6 },
-                            colors: ['#ec4899', '#f472b6', '#db2777']
-                        });
+                });
+            } else {
+                placeCartOrder({ shippingAddress, paymentMethod: "COD" }, {
+                    onSuccess: () => {
+                        clearCart();
+                        setShippingAddress({ name: "", contact: "", pincode: "", address: "", city: "", state: "" });
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ec4899', '#f472b6', '#db2777'] });
                         setIsOpenCod(true);
-                    } else {
-                        setIsOpenOnline(true);
                     }
-                },
-            });
+                });
+            }
+            return;
         }
+
+        const isLoaded = await loadRazorpayScript();
+
+        if (!isLoaded) {
+            alert("Razorpay SDK failed to load");
+            return;
+        }
+
+        // online - razorpay
+        createRazorpayOrder(finalTotal, {
+            onSuccess: (razorpayData) => {
+                const options = {
+                    key: razorpayData.keyId,
+                    amount: razorpayData.amount,
+                    currency: razorpayData.currency,
+                    name: "EasyShop",
+                    description: "Order Payment",
+                    order_id: razorpayData.orderId,
+
+                    handler: function (response) {
+                        // payment success — now verify + save order
+                        const orderItems = isDirectBuy
+                            ? [{
+                                productId: directProdId,
+                                quantity: directQty,
+                                price: displayItems[0].price,
+                                selectedColor: directSelectedColor,
+                                selectedSize: directSelectedSize,
+                                variantId: displayItems[0].variantId,
+                                vendorId: displayItems[0].vendorId
+                            }]
+                            : cartItems.map(item => ({
+                                productId: item._id,
+                                quantity: item.quantity,
+                                price: item.price,
+                                selectedColor: item.selectedColor || null,
+                                selectedSize: item.selectedSize || null,
+                                variantId: item.variantId,
+                                vendorId: item.vendorId
+                            }));
+
+                        verifyPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            cartData: {
+                                shippingAddress,
+                                orderItems,
+                                totalAmount: finalTotal
+                            },
+                            orderType: isDirectBuy ? 'direct' : 'cart'
+                        }, {
+                            onSuccess: () => {
+                                if (!isDirectBuy) clearCart();
+                                setShippingAddress({ name: "", contact: "", pincode: "", address: "", city: "", state: "" });
+                                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ec4899', '#f472b6', '#db2777'] });
+                                setIsOpenCod(true); // reuse success modal
+                            }
+                        });
+                    },
+                    prefill: {
+                        name: shippingAddress.name,
+                        contact: shippingAddress.contact
+                    },
+                    theme: { color: "#ec4899" },
+                    modal: {
+                        ondismiss: () => toast.error("Payment cancelled")
+                    }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            }
+        });
     };
 
     return (
@@ -305,7 +370,7 @@ function PlaceOrderForm() {
                         <div className="max-h-52 md:max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar space-y-4">
                             {displayItems && displayItems.map((item) => (
                                 <div
-                                    key={item._id|| item.id || item.variantId}
+                                    key={item._id || item.id || item.variantId}
                                     className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
 
                                     {/* image */}
@@ -322,7 +387,7 @@ function PlaceOrderForm() {
                                         <h4 className="text-[13px] font-bold text-gray-800 truncate mb-1">
                                             {item.prodName || item.name}
                                         </h4>
-                                        
+
                                         {/* prod info */}
                                         <div className="flex flex-wrap gap-1">
                                             {item.selectedColor && (
@@ -433,53 +498,6 @@ function PlaceOrderForm() {
                                 className="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold hover:bg-pink-600 hadow-lg shadow-pink-200 cursor-pointer transition-all active:scale-95"
                             >
                                 Continue Shopping
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* online payment pop-up */}
-                {isopenOnline && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-100 p-4">
-                        <div className="bg-white p-6 rounded-[3rem] text-center max-w-sm w-full shadow-2xl animate-in zoom-in duration-300">
-
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-lg md:text-xl font-bold text-gray-900">
-                                    Select Payment App
-                                </h3>
-                                <button
-                                    onClick={() => setIsOpenOnline(false)}
-                                    className="text-gray-400 hover:text-black text-xl cursor-pointer">
-                                    <FaTimes />
-                                </button>
-                            </div>
-
-                            <div className="space-y-3">
-                                {/* UPI Options */}
-                                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-pink-500 transition-all cursor-pointer">
-                                    <span className="font-bold text-gray-700">
-                                        Google Pay / PhonePe
-                                    </span>
-
-                                    <img
-                                        src={UpiImg}
-                                        alt="UPI"
-                                        className="h-5" />
-                                </button>
-
-                                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-pink-500 transition-all cursor-pointer">
-                                    <span className="font-bold text-gray-700">
-                                        Debit / Credit Card
-                                    </span>
-
-                                    <div className="flex gap-1 text-xl text-gray-400">
-                                        <FaCcVisa /> <FaCcMastercard />
-                                    </div>
-                                </button>
-                            </div>
-
-                            <button className="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 md:py-4 rounded-2xl font-bold mt-6 shadow-lg shadow-pink-200 cursor-pointer">
-                                Pay ₹{finalTotal}
                             </button>
                         </div>
                     </div>

@@ -14,14 +14,17 @@ export const useVendorTransactionStats = () => {
 };
 
 // venodr trans list
-export const useVendorTransactionList = () => {
+export const useVendorTransactionList = ({ search = '', page = 1, status = '', paymentMethod = '' } = {}) => {
     return useQuery({
-        queryKey: ['transactionList'],
+        queryKey: ['transactionList', search, page, status, paymentMethod],
         queryFn: async () => {
-            const { data } = await API.get('/transaction/transaction-list');
-            return data.data;
+            const { data } = await API.get('/transaction/transaction-list', {
+                params: { search, page, limit: 10, status, paymentMethod }
+            });
+            return data;
         },
         staleTime: 0,
+        keepPreviousData: true
     });
 };
 
@@ -30,7 +33,7 @@ export const useDownloadTransactionInvoice = () => {
     return useMutation({
         mutationFn: async (transaction_id) => {
             if (!transaction_id) throw new Error("Transaction ID is required");
-            
+
             const response = await API.get(`/transaction/download-transaction-invoice/${transaction_id}`, {
                 responseType: 'blob',
             });

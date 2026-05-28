@@ -6,12 +6,12 @@ import useAuthStore from '../store/useAuthStore.js';
 import { useEffect, useRef, useState } from 'react';
 
 // prod list
-export const useProductList = () => {
+export const useProductList = ({ search = '', page = 1, isActive='' } = {}) => {
     return useQuery({
-        queryKey: ['productsList'],
+        queryKey: ['productsList', search, page, isActive],
         queryFn: async () => {
-            const { data } = await API.get('/product/product-get');
-            return data.data;
+            const { data } = await API.get(`/product/product-get?search=${search}&page=${page}&limit=10&isActive=${isActive}`);
+            return data;
         },
         staleTime: 0,
     });
@@ -207,7 +207,7 @@ export const useProductsByCategory = (catId, filters = {}) => {
 // updated hook — accepts both catId and subCatId
 export const useProductFilterOptions = (catId, subCatId) => {
     return useQuery({
-        queryKey: ['filterOptions', catId, subCatId], // refetches when subCatId changes
+        queryKey: ['filterOptions', catId, subCatId], 
         queryFn: async () => {
             const url = subCatId
                 ? `/product/filter-options/${catId}?subCatId=${subCatId}`
@@ -327,7 +327,6 @@ export const useSearchResults = (query) => {
             setError(null);
 
             try {
-                // Aapka product search suggestions wala backend endpoint
                 const response = await API.get(`/product/get-search-suggestions?query=${query}`);
                 setData(response.data);
             } catch (err) {

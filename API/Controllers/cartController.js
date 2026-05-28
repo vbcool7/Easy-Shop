@@ -116,7 +116,10 @@ export const addToCart = async (req, res) => {
 
     } catch (err) {
         console.error("Error:", err);
-        return res.status(500).json({ success: false, message: "Server Error" });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Server Error" 
+        });
     }
 };
 

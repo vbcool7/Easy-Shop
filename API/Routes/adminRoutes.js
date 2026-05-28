@@ -33,7 +33,8 @@ import {
     getOrdersOverTime,
     getOrderStatusBreakdown,
     getRevenueByPaymentMethod,
-    getTopProducts
+    getTopProducts,
+    adminSearch
 
 } from '../Controllers/adminController.js';
 
@@ -72,5 +73,6 @@ router.get('/orders-over-time', authMiddleware(['admin']), getOrdersOverTime);
 router.get('/order-status-breakdown', authMiddleware(['admin']), getOrderStatusBreakdown);
 router.get('/revenue-by-payment', authMiddleware(['admin']), getRevenueByPaymentMethod);
 router.get('/top-products', authMiddleware(['admin']), getTopProducts);
+router.get('/search', authMiddleware(['admin']), adminSearch);
 
 export default router;

@@ -5,11 +5,12 @@ import { upload } from '../Middlewares/imageStorage.js';
 import {
     addProduct,
     allProductList,
-    getAdminProducts,
+    getVendorProducts,
     updateProduct,
     getMyCategories,
     getSubCategoriesByCategories,
     deleteProduct,
+    getProductDeleteInfo,
     toggleProductActive,
     detailProduct,
     detailProductPublic,
@@ -48,8 +49,9 @@ router.put(
 
 router.get('/get-my-category', authMiddleware(['vendor', 'admin']), getMyCategories);
 router.get('/get-sub-category-by-category/:type', authMiddleware(['vendor', 'admin']), getSubCategoriesByCategories);
+router.get('/product-delete-info/:prod_id', authMiddleware(['vendor', 'admin']), getProductDeleteInfo);
 router.delete('/product-delete/:prod_id', authMiddleware(['vendor', 'admin']), deleteProduct);
-router.get('/product-get', authMiddleware(['vendor', 'admin']), getAdminProducts);
+router.get('/product-get', authMiddleware(['vendor', 'admin']), getVendorProducts);
 router.get('/product-detail/:prod_id', authMiddleware(['vendor', 'admin']), detailProduct);
 router.patch('/product-status-toggle/:prod_id', authMiddleware(['vendor', 'admin']), toggleProductActive);
 router.get('/product-count', authMiddleware(['vendor', 'admin']), countProducts);

@@ -247,9 +247,9 @@ export const allProductList = async (req, res) => {
         let sortQuery = { createdAt: -1 };
 
         // cat/subcat filter
-        if (catId) query.catId = catId;
-        if (subCatId) query.subCatId = subCatId;
-        if (vendorId) query.vendorId = vendorId;
+        if (catId && catId !== 'undefined') query.catId = catId;
+        if (subCatId && subCatId !== 'undefined') query.subCatId = subCatId;
+        if (vendorId && vendorId !== 'undefined') query.vendorId = vendorId;
 
         // price range
         if (minPrice || maxPrice) {
@@ -317,7 +317,7 @@ export const getProductFilterOptions = async (req, res) => {
         };
 
         // if subcat selected, filter by it
-        if (subCatId) query.subCatId = subCatId;
+        if (subCatId && subCatId !== 'undefined') query.subCatId = subCatId;
 
         const products = await Product.find(query).select('attributes');
 
@@ -515,38 +515,52 @@ export const getVendorShopProducts = async (req, res) => {
     }
 };
 
-// get vendor prods
-export const getAdminProducts = async (req, res) => {
+// vendor - prod list
+export const getVendorProducts = async (req, res) => {
     try {
+        const { search, page = 1, limit = 10, isActive } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
         let query = {};
 
-        // Role-based logic
         if (req.user.role === 'vendor') {
-            // Vendor ko sirf uske apne products dikhao (Pending/Rejected sab)
             query.addedBy = req.user.id;
         } else if (req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: "Access Denied"
-            });
+            return res.status(403).json({ success: false, message: "Access Denied" });
         }
 
-        const products = await Product.find(query)
-            .populate("catId", "catName")
-            .populate("subCatId", "subCatName")
-            .sort({ createdAt: -1 });
+        if (isActive !== undefined && isActive !== '') {
+            query.isActive = isActive === 'true';
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            const approvalStatuses = ['Approved', 'Pending', 'Rejected'].filter(s => searchRegex.test(s));
+
+            const orConditions = [{ prodName: searchRegex }];
+            if (approvalStatuses.length) orConditions.push({ status: { $in: approvalStatuses } });
+
+            query.$or = orConditions;
+        }
+
+        const [products, total] = await Promise.all([
+            Product.find(query)
+                .populate("catId", "catName")
+                .populate("subCatId", "subCatName")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Product.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
-            count: products.length,
-            message: "Here is products list",
+            count: total,
+            totalPages: Math.ceil(total / parseInt(limit)),
             data: products
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Server Error Occur"
-        });
+        res.status(500).json({ success: false, message: "Server Error Occur" });
     }
 };
 
@@ -835,6 +849,52 @@ export const getSubCategoriesByCategories = async (req, res) => {
         console.log("Error:", error);
         res.status(500).json({ success: false, message: "Server Error" });
     }
+};
+
+// dlt info
+export const getProductDeleteInfo = async (req, res) => {
+    try {
+        const { prod_id } = req.params;
+
+        const product = await Product.findById(prod_id);
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        };
+
+        // Ownership Check
+        const userId = req.user._id || req.user.id;
+        if (req.user.role !== 'admin' && product.vendorId.toString() !== userId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Access Denied! You can only delete your own products."
+            });
+        }
+
+        const orderedProductCount = await Order.countDocuments({
+            "items.productId": prod_id
+        });
+
+        const canDelete = orderedProductCount === 0;
+        const message = orderedProductCount > 0
+            ? "This product has existing orders. Deletion is not allowed."
+            : "Are you sure you want to delete this product?";
+
+        return res.status(200).json({
+            success: true,
+            canDelete,
+            message
+        });
+
+    } catch (err) {
+        console.log("Error : ", err);
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    };
 };
 
 // only admin dlt prod
@@ -1142,7 +1202,7 @@ export const getStockAlerts = async (req, res) => {
     }
 };
 
-// search bar
+// search bar - home
 export const getSearchSuggestions = async (req, res) => {
     try {
         const { query } = req.query;

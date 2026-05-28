@@ -89,17 +89,60 @@ export const getTransactionsStats = async (req, res) => {
 };
 
 // transaction list
+// export const transactionList = async (req, res) => {
+//     try {
+//         const vendorId = req.user.id;
+
+//         const transactions = await Transaction.find({ vendorId })
+//             .sort({ createdAt: -1 });
+
+//         res.status(200).json({
+//             success: true,
+//             message: "Here is transaction list of vendor",
+//             results: transactions.length,
+//             data: transactions
+//         });
+
+//     } catch (err) {
+//         console.log("Error :", err);
+//         res.status(500).json({
+//             success: false,
+//             message: "Server Error Occur"
+//         });
+//     }
+// };
+
 export const transactionList = async (req, res) => {
     try {
         const vendorId = req.user.id;
+        const { search = '', page = 1, limit = 10, status = '', paymentMethod = '' } = req.query;
 
-        const transactions = await Transaction.find({ vendorId })
-            .sort({ createdAt: -1 });
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+
+        const query = { vendorId };
+
+        if (search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            query.$or = [
+                { txnId: regex },
+                { orderDisplayId: regex }
+            ];
+        }
+
+        if (status.trim()) query.status = status;
+        if (paymentMethod.trim()) query.paymentMethod = paymentMethod;
+
+        const [transactions, total] = await Promise.all([
+            Transaction.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+            Transaction.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
-            message: "Here is transaction list of vendor",
-            results: transactions.length,
+            count: total,
+            totalPages: Math.ceil(total / limitNum),
             data: transactions
         });
 

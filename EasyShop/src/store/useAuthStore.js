@@ -11,6 +11,20 @@ const getSafeJSON = (key) => {
     }
 };
 
+// vendor search
+export const useVendorUIStore = create((set) => ({
+    selectedProduct: null,
+    isProductDrawerOpen: false,
+    selectedOrder: null,
+    isOrderDrawerOpen: false,
+
+    openProductDrawer: (product) => set({ selectedProduct: product, isProductDrawerOpen: true }), 
+    closeProductDrawer: () => set({ selectedProduct: null, isProductDrawerOpen: false }),
+
+    openOrderDrawer: (order) => set({ selectedOrder: order, isOrderDrawerOpen: true }),
+    closeOrderDrawer: () => set({ selectedOrder: null, isOrderDrawerOpen: false }),
+}));
+
 const useAuthStore = create((set) => ({
     user: getSafeJSON("user"),
     token: localStorage.getItem("token") || null,

@@ -19,27 +19,27 @@ const transactionSchema = new mongoose.Schema(
             type: String,
             unique: true,
             required: true
-        }, // Jaise TXN-98721
+        }, 
 
         orderDisplayId: {
             type: String,
             required: true
-        }, // Jaise #ORD-2026-A1
+        }, 
 
         totalAmount: {
             type: Number,
             required: true
-        }, // Customer ne jo pay kiya
+        }, 
 
         platformFee: {
             type: Number,
             required: true
-        }, // Aapka 10% commission
+        }, 
 
         netEarning: {
             type: Number,
             required: true
-        }, // totalAmount - platformFee
+        }, 
 
         paymentMethod: {
             type: String,

@@ -16,6 +16,8 @@ import adminRoutes from './adminRoutes.js';
 import messageRoutes from './messageRoutes.js';
 import contactRoutes from './contactRoutes.js';
 import blogRoutes from './blogRoutes.js';
+import cmsRoutes from './cmsRoutes.js';
+import bannerRoutes from './bannerRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -35,5 +37,7 @@ rootRouter.use("/admin", adminRoutes);
 rootRouter.use("/message", messageRoutes);
 rootRouter.use("/contact", contactRoutes);
 rootRouter.use("/blog", blogRoutes);
+rootRouter.use("/cms", cmsRoutes);
+rootRouter.use("/banner", bannerRoutes);
 
 export default rootRouter;

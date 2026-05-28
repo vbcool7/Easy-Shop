@@ -4,14 +4,15 @@ import API from "../api/axiosInstance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // list cate 
-export const useCatList = () => {
+export const useCatList = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['catList'],
+        queryKey: ['catList', search, page],
         queryFn: async () => {
-            const { data } = await API.get('/category/category-list');
-            return data.data;
+            const { data } = await API.get(`/category/category-list?search=${search}&page=${page}&limit=10`);
+            return data;
         },
-        staleTime: 5 * 60 * 1000, // 5 minute tak data "fresh" rahega
+        staleTime: 0,
+        keepPreviousData: true,
     });
 };
 
@@ -38,7 +39,6 @@ export const useToggleCatStatus = () => {
 
 // add cat
 export const useAddCategory = () => {
-
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -47,10 +47,7 @@ export const useAddCategory = () => {
             const { data } = await API.post('/category/category-add', formData);
             return data;
         },
-
         onSuccess: () => {
-
-            // Category list ko invalidate karein taaki nayi category turant dikhne lage
             queryClient.invalidateQueries({ queryKey: ['catList'] });
         }
     });
@@ -58,7 +55,6 @@ export const useAddCategory = () => {
 
 // edit cat
 export const useUpdateCategory = () => {
-
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -67,26 +63,37 @@ export const useUpdateCategory = () => {
             const { data } = await API.put(`/category/category-update/${catId}`, formData);
             return data;
         },
-
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['catList'] });
         }
     });
 };
 
-// delete cat
-export const useDeleteCategory =()=>{
+// delete info
+export const useDeleteInfoCategory = (cat_id) => {
+    return useQuery({
+        queryKey: ['catDeleteInfo', cat_id],
+        queryFn: async () => {
+            const { data } = await API.get(`/category/category-delete-info/${cat_id}`);
+            return data;
+        },
+        enabled: !!cat_id,
+        refetchOnMount: true,
+    });
+};
 
+// delete cat
+export const useDeleteCategory = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationKey: ['catDelete'],
-        mutationFn: async({catId}) => {
-            const {data} = await API.delete(`/category/category-delete/${catId}`);
+        mutationFn: async ({ catId }) => {
+            const { data } = await API.delete(`/category/category-delete/${catId}`);
             return data;
         },
-        onSuccess: () =>{
-            queryClient.invalidateQueries ({queryKey: ['catList']});
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['catList'] });
         }
     });
 };

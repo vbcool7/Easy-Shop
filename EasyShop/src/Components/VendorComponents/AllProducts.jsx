@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TbEdit } from "react-icons/tb";
 import { LiaTrashSolid } from "react-icons/lia";
 import { IoIosArrowDown } from "react-icons/io";
@@ -8,13 +8,32 @@ import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi
 
 import { useProductList, useToggleProductStatus } from '../../hook/uesProducts';
 import UpdateProductDrawer from './UpdateProductDrawer';
+import { useVendorUIStore } from '../../store/useAuthStore';
+import { getPaginationRange } from '../../utils/getPaginationRange';
 
 function AllProducts({ setCurrentPage }) {
 
-    const { data: productList, isLoading, isError } = useProductList();
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data, isLoading, isError } = useProductList({ search: debouncedSearch, page, isActive: statusFilter });
     const { mutate: toggleStatus, isPending, variables } = useToggleProductStatus();
 
-    const [isEditOpen, setIsEditOpen] = useState(false);
+    const { selectedProduct, isProductDrawerOpen, closeProductDrawer, openProductDrawer } = useVendorUIStore();
+
+    const productList = data?.data || [];
+    const totalPages = data?.totalPages || 1;
+    const totalCount = data?.count || 0;
 
     // stock status
     const stockStyles = {
@@ -28,11 +47,6 @@ function AllProducts({ setCurrentPage }) {
     // --------Toggle--------
     const handleToggleStatus = (product) => {
         toggleStatus(product);
-    };
-
-    // --------Edit--------
-    const handleEditProduct = (product) => {
-        setIsEditOpen(product)
     };
 
     if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
@@ -51,7 +65,7 @@ function AllProducts({ setCurrentPage }) {
                             Products Hub
                         </h2>
                         <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            {productList?.length || 0}
+                            Total : {totalCount || 0}
                         </span>
                     </div>
 
@@ -64,9 +78,22 @@ function AllProducts({ setCurrentPage }) {
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <input
                         type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search products..."
                         className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
+
+                    {/* Status Filter */}
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                        className="w-full sm:w-auto text-sm px-3 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 transition-all shadow-sm text-slate-600 dark:text-slate-300"
+                    >
+                        <option value="">All</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
 
                     {/* Add Button */}
                     <button
@@ -94,7 +121,7 @@ function AllProducts({ setCurrentPage }) {
                     </thead>
 
                     <tbody className="divide-y divide-pink-50 dark:divide-slate-800">
-                        {productList.map((product, index) => {
+                        {productList.length > 0 ? productList.map((product, index) => {
 
                             const isThisRowLoading = isPending && variables === product._id;
 
@@ -195,23 +222,66 @@ function AllProducts({ setCurrentPage }) {
                                     {/* Action Buttons */}
                                     <td className="px-6 py-4">
                                         <button
-                                            onClick={() => handleEditProduct(product)}
+                                            onClick={() => openProductDrawer(product)}
                                             className="p-2 rounded-lg bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-90 cursor-pointer">
                                             <TbEdit className="text-lg md:text-xl" />
                                         </button>
                                     </td>
                                 </tr>
                             )
-                        })}
+                        }) : (
+                            <tr>
+                                <td colSpan="8" className="text-center py-10 text-slate-400 text-sm">
+                                    No products found matching your search.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
+                
+                {/* pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                        ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* edit drawer */}
             <UpdateProductDrawer
-                product={isEditOpen}
-                isOpen={!!isEditOpen}
-                onClose={() => setIsEditOpen(null)}
+                product={selectedProduct}
+                isOpen={isProductDrawerOpen}
+                onClose={closeProductDrawer}
             />
         </div>
     )

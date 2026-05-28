@@ -483,6 +483,55 @@ export const vendorLogout = async (req, res) => {
     }
 };
 
+// dashboard search bar 
+export const vendorSearch = async (req, res) => {
+    try {
+        const vendorId = req.user._id || req.user.id;
+        const { q } = req.query;
+
+        if (!q || q.trim().length < 2) {
+            return res.status(400).json({
+                message: 'Query must be at least 2 characters'
+            });
+        }
+
+        const query = q.trim();
+
+        const products = await Product.find({
+            vendorId,
+            isActive: true,
+            $or: [
+                { prodName: { $regex: query, $options: 'i' } },
+                { status: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } },
+            ]
+        })
+            .select('prodName prodImage price originalPrice stock status description attributes variants isActive')
+            .limit(5)
+            .lean();
+
+        const isValidId = mongoose.Types.ObjectId.isValid(query);
+
+        const orders = await Order.find({
+            'items.vendorId': vendorId,
+            isActive: true,
+            $or: [
+                { 'shippingAddress.name': { $regex: query, $options: 'i' } },
+                { orderStatus: { $regex: query, $options: 'i' } },
+                ...(isValidId ? [{ _id: new mongoose.Types.ObjectId(query) }] : []),
+            ]
+        })
+
+        return res.status(200).json({ products, orders });
+
+    } catch (error) {
+        console.error('Vendor search error:', error);
+        return res.status(500).json({
+            message: 'Server Error Occur'
+        });
+    }
+};
+
 // dashboard stats
 export const vendorDashboardStats = async (req, res) => {
     try {
@@ -500,8 +549,6 @@ export const vendorDashboardStats = async (req, res) => {
                 $group: {
                     _id: null,
                     totalProducts: { $sum: 1 },
-                    // In your schema, status is 'Approved', 'Pending', etc.
-                    // and 'isActive' is a Boolean.
                     activeProducts: {
                         $sum: { $cond: [{ $eq: ["$status", "Approved"] }, 1, 0] }
                     },
@@ -631,7 +678,7 @@ export const vendorTopProducts = async (req, res) => {
     try {
         const vId = new mongoose.Types.ObjectId(req.user.id);
         const limit = parseInt(req.query.limit) || 5;
- 
+
         const data = await Order.aggregate([
             { $unwind: "$items" },
             {
@@ -649,7 +696,7 @@ export const vendorTopProducts = async (req, res) => {
             },
             { $sort: { unitsSold: -1 } },
             { $limit: limit },
-    
+
             {
                 $lookup: {
                     from: "products",
@@ -663,14 +710,14 @@ export const vendorTopProducts = async (req, res) => {
                 $project: {
                     _id: 0,
                     productId: "$_id",
-                    name: "$product.prodName",   
-                    image: "$product.prodImage", 
+                    name: "$product.prodName",
+                    image: "$product.prodImage",
                     unitsSold: 1,
                     revenue: 1
                 }
             }
         ]);
- 
+
         res.status(200).json({ success: true, data });
     } catch (err) {
         console.error("Error [vendorTopProducts]:", err);
@@ -682,17 +729,21 @@ export const vendorTopProducts = async (req, res) => {
 export const getVendorCustomers = async (req, res) => {
     try {
         const vendorId = req.user.id;
+        const { search = '', page = 1, limit = 10 } = req.query;
 
-        // Step 1: Un saare orders ko dhundo jisme is vendor ka product hai
-        // Step 2: Un orders se unique userId nikal lo
-        const customers = await Order.aggregate([
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skipNum = (pageNum - 1) * limitNum;
+
+        // Base matching stage to keep operations performance-focused
+        const initialPipeline = [
             { $unwind: "$items" },
             {
                 $match: { "items.vendorId": new mongoose.Types.ObjectId(vendorId) }
             },
             {
                 $group: {
-                    _id: "$userId", // Unique Customers ke liye group kiya
+                    _id: "$userId",
                     lastOrderDate: { $max: "$createdAt" },
                     totalSpend: {
                         $sum: { $multiply: ["$items.price", "$items.quantity"] }
@@ -702,19 +753,36 @@ export const getVendorCustomers = async (req, res) => {
             },
             {
                 $lookup: {
-                    from: "users", // User details fetch karne ke liye
+                    from: "users",
                     localField: "_id",
                     foreignField: "_id",
                     as: "userDetails"
                 }
             },
-            { $unwind: "$userDetails" },
+            { $unwind: "$userDetails" }
+        ];
+
+        // Search conditions (Runs after userDetails are combined)
+        if (search.trim()) {
+            initialPipeline.push({
+                $match: {
+                    $or: [
+                        { "userDetails.name": new RegExp(search.trim(), 'i') },
+                        { "userDetails.email": new RegExp(search.trim(), 'i') }
+                    ]
+                }
+            });
+        }
+
+        // Final Projection and Sorting criteria
+        initialPipeline.push(
             {
                 $project: {
                     _id: 1,
                     profilePhoto: "$userDetails.profilePhoto",
                     name: "$userDetails.name",
                     email: "$userDetails.email",
+                    contact: "$userDetails.contact",
                     state: "$userDetails.state",
                     isActive: "$userDetails.isActive",
                     lastOrderDate: 1,
@@ -722,18 +790,36 @@ export const getVendorCustomers = async (req, res) => {
                     totalOrders: 1
                 }
             },
+            { $sort: { lastOrderDate: -1 } }
+        );
+
+        // Execute concurrent tracking for counts and pagination using $facet
+        const aggregationResult = await Order.aggregate([
+            ...initialPipeline,
             {
-                $sort: { lastOrderDate: -1 }
+                $facet: {
+                    metadata: [{ $count: "total" }],
+                    data: [{ $skip: skipNum }, { $limit: limitNum }]
+                }
             }
         ]);
 
-        res.status(200).json({
+        const total = aggregationResult[0]?.metadata[0]?.total || 0;
+        const customers = aggregationResult[0]?.data || [];
+
+        return res.status(200).json({
             success: true,
-            count: customers.length,
+            count: total,
+            totalPages: Math.ceil(total / limitNum),
             data: customers
         });
+
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        console.error("Error: ", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error Occurred"
+        });
     }
 };
 
@@ -820,9 +906,9 @@ export const getCustomerDetailsForVendor = async (req, res) => {
         const { id } = req.params;
         const vendorId = req.user.id;
 
-        // 1. User ki basic details lein
+        // 1.user detail
         const user = await User.findById(id)
-            .select("name email profilePhoto city isActive createdAt");
+            .select("name email contact profilePhoto city isActive createdAt");
 
         if (!user) {
             return res.status(404).json({
@@ -831,7 +917,7 @@ export const getCustomerDetailsForVendor = async (req, res) => {
             });
         }
 
-        // 2. Is vendor ke liye us customer ki order history nikalein
+        // 2. customer order history
         const orders = await Order.find({
             userId: id,
             "items.vendorId": vendorId
@@ -839,7 +925,6 @@ export const getCustomerDetailsForVendor = async (req, res) => {
 
         // 3. Financial Metrics Calculation
         const totalSpend = orders.reduce((acc, order) => {
-            // Sirf is vendor ke items ka total sum
             const vendorItems = order.items.filter(item => item.vendorId.toString() === vendorId);
             const orderSum = vendorItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             return acc + orderSum;
@@ -860,7 +945,7 @@ export const getCustomerDetailsForVendor = async (req, res) => {
                     totalSpend: totalSpend,
                     avgOrderValue: avgOrderValue
                 },
-                orders: orders // Timeline ke liye
+                orders: orders
             }
         });
 
@@ -868,7 +953,7 @@ export const getCustomerDetailsForVendor = async (req, res) => {
         console.log("Error :", err);
         res.status(500).json({
             success: false,
-            message: err.message
+            message: "Server Error Occur"
         });
     }
 };

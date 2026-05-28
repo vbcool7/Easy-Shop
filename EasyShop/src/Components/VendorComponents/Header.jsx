@@ -1,23 +1,49 @@
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Menu, Search, Sun, Bell, ChevronDown, User, LogOut, UserRoundCog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useVendorLogout } from '../../hook/useAuth';
-import useAuthStore from '../../store/useAuthStore';
-import { useGetVendor } from '../../hook/useVendor';
 
-const VendorHeader = ({ onToggleSideBar }) => {
+import useAuthStore, { useVendorUIStore } from '../../store/useAuthStore';
+import { useVendorLogout } from '../../hook/useAuth';
+import { useGetVendor, useVendorSearch } from '../../hook/useVendor';
+
+const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
     const dropdownRef = useRef(null);
+    const searchRef = useRef(null);
     const navigate = useNavigate();
+
     const [open, setOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [searchOpen, setSearchOpen] = useState(false);
 
     const { data: getVendor, isLoading, isError } = useGetVendor();
+    const { data: searchData } = useVendorSearch(debouncedQuery);
     const { mutate: logoutVendor, isPending } = useVendorLogout();
+    const { openProductDrawer, openOrderDrawer } = useVendorUIStore();
 
-    const clearStore = useAuthStore((state) => state.logout); // Zustand wala logout
+    const clearStore = useAuthStore((state) => state.logout);
 
+    // Debounce
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Close on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setSearchOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // logout
     const handleLogout = () => {
         logoutVendor(null, {
             onSuccess: (res) => {
@@ -55,7 +81,7 @@ const VendorHeader = ({ onToggleSideBar }) => {
                 </div>
 
                 {/* Center: Search Bar */}
-                <div className='flex-1 max-w-md hidden sm:block'>
+                {/* <div className='flex-1 max-w-md hidden sm:block'>
                     <div className='relative group'>
                         <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
                         <input
@@ -63,6 +89,112 @@ const VendorHeader = ({ onToggleSideBar }) => {
                             placeholder='Search orders, products...'
                             className='w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400'
                         />
+                    </div>
+                </div> */}
+
+                {/* Center: Search Bar */}
+                <div className='flex-1 max-w-md hidden sm:block'>
+                    <div className='relative group' ref={searchRef}>
+                        <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
+                        <input
+                            type='text'
+                            placeholder='Search orders, products...'
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchOpen(true)}
+                            className='w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400'
+                        />
+
+                        {/* Dropdown */}
+                        {searchOpen && debouncedQuery.length >= 2 && (
+                            <div className='absolute top-full mt-2 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 overflow-hidden'>
+
+                                {isLoading && (
+                                    <p className='text-xs text-slate-400 px-4 py-3'>
+                                        Searching...
+                                    </p>
+                                )}
+
+                                {!isLoading && searchData?.products?.length === 0 && searchData?.orders?.length === 0 && (
+                                    <p className='text-xs text-slate-400 px-4 py-3'>No results found</p>
+                                )}
+
+                                {/* Products */}
+                                {searchData?.products?.length > 0 && (
+                                    <div>
+                                        <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
+                                            Products
+                                        </p>
+                                        {searchData.products.map((product) => (
+                                            <div
+                                                key={product._id}
+                                                onClick={() => {
+                                                    openProductDrawer(product);
+                                                    setCurrentPage('All Products');
+                                                    setSearchOpen(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className='flex items-center gap-3 px-4 py-2.5 hover:bg-pink-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors'
+                                            >
+                                                <img
+                                                    src={product.prodImage}
+                                                    className='w-8 h-8 rounded-lg object-cover border border-slate-100'
+                                                />
+                                                <div className='flex-1 min-w-0'>
+                                                    <p className='text-sm font-medium text-slate-700 dark:text-white truncate'>
+                                                        {product.prodName}
+                                                    </p>
+                                                    <p className='text-[11px] text-slate-400'>₹{product.price}</p>
+                                                </div>
+                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full
+                                                    ${product.status === 'Approved' ? 'bg-green-50 text-green-600' :
+                                                        product.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
+                                                            'bg-red-50 text-red-500'}`}>
+                                                    {product.status}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Orders */}
+                                {searchData?.orders?.length > 0 && (
+                                    <div>
+                                        <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
+                                            Orders
+                                        </p>
+                                        {searchData.orders.map((order) => (
+                                            <div
+                                                key={order._id}
+                                                onClick={() => {
+                                                    openOrderDrawer(order._id);
+                                                    setCurrentPage('Orders');
+                                                    setSearchOpen(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className='flex items-center gap-3 px-4 py-2.5 hover:bg-pink-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors'
+                                            >
+                                                <div className='flex-1 min-w-0'>
+                                                    <p className='text-sm font-medium text-slate-700 dark:text-white truncate'>
+                                                        {order.shippingAddress?.name}
+                                                    </p>
+                                                    <p className='text-[11px] text-slate-400'>₹{order.totalAmount}</p>
+                                                </div>
+                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full
+                                                    ${order.orderStatus === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                                        order.orderStatus === 'Shipped' ? 'bg-blue-50 text-blue-600' :
+                                                            order.orderStatus === 'Cancelled' ? 'bg-red-50 text-red-500' :
+                                                                'bg-yellow-50 text-yellow-600'}`}>
+                                                    {order.orderStatus}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className='h-3' />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -89,11 +221,11 @@ const VendorHeader = ({ onToggleSideBar }) => {
                             className='flex items-center space-x-3 p-1 pr-3 rounded-2xl border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all cursor-pointer'
                         >
 
-                           <div className='w-9 h-9 bg-linear-to-br from-pink-500 to-rose-400 rounded-xl flex justify-center items-center shadow-md shadow-pink-200'>
+                            <div className='w-9 h-9 bg-linear-to-br from-pink-500 to-rose-400 rounded-xl flex justify-center items-center shadow-md shadow-pink-200'>
                                 {getVendor?.profilePhoto ? (
-                                    <img 
-                                    src={getVendor.profilePhoto} 
-                                    className="w-full h-full rounded-xl object-cover" />
+                                    <img
+                                        src={getVendor.profilePhoto}
+                                        className="w-full h-full rounded-xl object-cover" />
                                 ) : (
                                     <User className='w-5 h-5 text-white' />
                                 )}

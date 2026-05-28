@@ -4,12 +4,18 @@ import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // withdraw req list
-export const useWithdrawReqList = () => {
+export const useWithdrawReqList = ({ status = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['withdrawReqList'],
+        queryKey: ['withdrawReqList', { status, page }],
         queryFn: async () => {
-            const { data } = await API.get('/admin/get-all-withdrawal-request');
-            return data.data;
+            const { data } = await API.get('/admin/get-all-withdrawal-request', {
+                params: {
+                    ...(status && { status }),
+                    page,
+                    limit: 10
+                }
+            });
+            return data;
         },
         staleTime: 0
     });

@@ -4,21 +4,42 @@ import { TbEdit } from "react-icons/tb";
 import { LiaTrashSolid } from "react-icons/lia";
 import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
 
-import { useDeleteProduct, useGetProducts, useToggleBestSeller, useToggleProductArrival, useUpdateProductStatus } from '../hooks/useProducts';
+import { useDeleteProduct, useGetProductDeleteInfo, useGetProducts, useToggleBestSeller, useToggleProductArrival, useUpdateProductStatus } from '../hooks/useProducts';
 import EditProductDrawer from './EditProductDrawer';
+import { useAdminUIStore } from '../store/useAdminAuthStore';
+import { getPaginationRange } from '../utils/getPaginationRange';
+import { useEffect } from 'react';
 
 function Products() {
 
-    const { data: allProds, isLoading, isError } = useGetProducts();
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+
+    // debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const { data, isLoading, isError } = useGetProducts({ search: debouncedSearch, page });
+    const allProds = data?.data;
+    const totalPages = data?.totalPages;
+
     const { mutate: toggleStatus, isPending: isUpdating } = useUpdateProductStatus();
     const { mutate: toggleBestSeller, isPending: isTogglingBestSeller } = useToggleBestSeller();
     const { mutate: toggleArrival, isPending: isToggling } = useToggleProductArrival();
     const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
-    const [isEditOpen, setIsEditOpen] = useState(false);
+    const { selectedProductSearch, isProductDrawerOpen, closeProductDrawer, openProductDrawer } = useAdminUIStore();
+    const [selectedProdId, setSelectedProdId] = useState(null);
     const [isDeletedOpen, setIsDeletedOpen] = useState(false);
-
     const [selectedProduct, setSelectedProduct] = useState("");
+
+    const { data: deleteInfo, isLoading: isInfoLoading } = useGetProductDeleteInfo(selectedProdId);
 
     // status toggle
     const statusStyles = {
@@ -46,14 +67,10 @@ function Products() {
         toggleBestSeller(productId);
     };
 
-    // edit
-    const handleEditProduct = (product) => {
-        setIsEditOpen(product)
-    };
-
     // delete
     const handleDeleteClick = (product) => {
         setSelectedProduct(product);
+        setSelectedProdId(product._id)
         setIsDeletedOpen(true);
     }
 
@@ -62,6 +79,7 @@ function Products() {
             onSuccess: () => {
                 setIsDeletedOpen(false);
                 setSelectedProduct(null);
+                setSelectedProdId(null);
             }
         });
     }
@@ -81,20 +99,22 @@ function Products() {
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
                             Products Hub
                         </h2>
+
                         <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            {allProds?.length || 0} counts
+                            Total: {data?.count || 0}
                         </span>
                     </div>
-
                     <p className="text-[11px] md:text-xs text-slate-500 mt-1">
                         Manage and organize your products
                     </p>
                 </div>
 
-                {/* Search & Button Group */}
+                {/* Search */}
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <input
                         type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search products..."
                         className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
@@ -104,6 +124,7 @@ function Products() {
             {/* table */}
             <div className="overflow-x-auto no-scrollbar">
                 <table className="w-full text-left">
+
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                         <tr>
                             <th className="px-6 py-4 whitespace-nowrap">Image</th>
@@ -120,7 +141,8 @@ function Products() {
                     </thead>
 
                     <tbody className="divide-y divide-pink-50 dark:divide-slate-800">
-                        {allProds?.map((product, index) => {
+                        {allProds.length > 0 ? allProds?.map((product, index) => {
+
                             return (
                                 <tr
                                     key={index}
@@ -257,7 +279,7 @@ function Products() {
                                     <td className="px-6 py-4">
                                         <div className="flex justify-center items-center gap-2">
                                             <button
-                                                onClick={() => handleEditProduct(product)}
+                                                onClick={() => openProductDrawer(product)}
                                                 className="p-2 rounded-lg bg-amber-50 text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-90 cursor-pointer">
                                                 <TbEdit className="text-lg md:text-xl" />
                                             </button>
@@ -277,25 +299,68 @@ function Products() {
                                     </td>
                                 </tr>
                             )
-                        })}
+                        }) : (
+                            <tr>
+                                <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
+                                    No products found matching your search.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                    <button
+                        onClick={() => setPage(p => Math.max(p - 1, 1))}
+                        disabled={page === 1}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                        Prev
+                    </button>
+
+                    {getPaginationRange(page, totalPages).map((num, idx) =>
+                        num === '...'
+                            ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                            : <button
+                                key={num}
+                                onClick={() => setPage(num)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                        ${page === num
+                                        ? 'bg-pink-500 text-white border-pink-500'
+                                        : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                    }`}
+                            >
+                                {num}
+                            </button>
+                    )}
+
+                    <button
+                        onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                        disabled={page === totalPages}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+
             {/* edit product drawer */}
             <EditProductDrawer
-                product={isEditOpen}
-                isOpen={!!isEditOpen}
-                onClose={() => setIsEditOpen(null)}
+                product={selectedProductSearch}
+                isOpen={isProductDrawerOpen}
+                onClose={closeProductDrawer}
             />
 
             {/* delete product popup */}
             <div
                 className={`fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-100 px-4 transition-all duration-300 
-                 ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+                ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
             >
                 <div
-                    onClick={() => setIsDeletedOpen(false)}
+                    onClick={() => { setIsDeletedOpen(false); setSelectedProdId(null); }}
                     className="absolute inset-0"
                 ></div>
 
@@ -305,7 +370,7 @@ function Products() {
                     ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
                 >
                     <button
-                        onClick={() => setIsDeletedOpen(false)}
+                        onClick={() => { setIsDeletedOpen(false); setSelectedProdId(null); }}
                         className="absolute top-6 right-6 text-slate-400 hover:text-pink-500 transition-colors"
                     >
                         <HiOutlineX size={20} />
@@ -320,34 +385,38 @@ function Products() {
                             Remove Product
                         </h3>
                         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            Are you sure you want to delete <span className="font-bold text-slate-700 dark:text-white">" {selectedProduct?.prodName || "this item"}"</span>?
-                            This action cannot be undone.
+                            {isInfoLoading
+                                ? "Checking product data..."
+                                : deleteInfo?.message
+                            }
                         </p>
                     </div>
 
                     <div className="mt-8 flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
-                            onClick={() => !isDeleting && setIsDeletedOpen(false)}
+                            onClick={() => { if (!isDeleting) { setIsDeletedOpen(false); setSelectedProdId(null); } }}
                             disabled={isDeleting}
                             className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95"
                         >
                             No, Keep it
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={handleDeleteProduct}
-                            disabled={isDeleting}
-                            className="w-full justify-center rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-100 hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isDeleting ? (
-                                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                            ) : (
-                                <HiOutlineTrash size={18} />
-                            )}
-                            {isDeleting ? "Deleting..." : "Yes, Delete"}
-                        </button>
+                        {deleteInfo?.canDelete && (
+                            <button
+                                type="button"
+                                onClick={handleDeleteProduct}
+                                disabled={isDeleting}
+                                className="w-full justify-center rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-100 hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? (
+                                    <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                ) : (
+                                    <HiOutlineTrash size={18} />
+                                )}
+                                {isDeleting ? "Deleting..." : "Yes, Delete"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

@@ -15,12 +15,12 @@ export const useVendorReviewStats = () => {
 };
 
 // vendor - review list
-export const useVendorReviewList = (status = '') => {
+export const useVendorReviewList = ({ status = '', page = 1, limit = 10 } = {}) => {
     return useQuery({
-        queryKey: ['vendorReviews', status],
+        queryKey: ['vendorReviews', { status, page, limit }],
         queryFn: async () => {
             const { data } = await API.get(`/review/review-list-vendor`, {
-                params: { status }
+                params: { status, page, limit }
             });
             return data;
         },
@@ -28,15 +28,31 @@ export const useVendorReviewList = (status = '') => {
     });
 };
 
+// reply review
+export const useSubmitVendorReply = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ review_id, replyText }) => {
+            const { data } = await API.post(`/review/review-reply/${review_id}`, { replyText });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['vendorReviews'] });
+            queryClient.invalidateQueries({ queryKey: ['vendorReviewStats'] });
+        }
+    });
+};
+
 // ======= USER =======
 
 // user reviews
-export const useUserReviews = () => {
+export const useUserReviews = ({ page = 1, limit = 10 } = {}) => {
     return useQuery({
-        queryKey: ['userReviews'],
+        queryKey: ['userReviews', page, limit],
         queryFn: async () => {
-            const { data } = await API.get('/review/get-user-reviews');
-            return data.data;
+            const { data } = await API.get(`/review/get-user-reviews?page=${page}&limit=${limit}`);
+            return data;
         }
     });
 };

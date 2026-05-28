@@ -63,6 +63,7 @@ export const CartProvider = ({ children }) => {
 
     // ===== Add =====
     const addToCart = (product) => {
+        
         const prodId = product._id || product.id;
         const requestedQty = product.quantity || 1;
         const variantId = product.variantId || null;

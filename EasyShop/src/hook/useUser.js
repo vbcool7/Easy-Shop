@@ -15,14 +15,17 @@ export const useVendorCustomerStats = () => {
 };
 
 // vendor - customer table
-export const useVendorCustomers = () => {
+export const useVendorCustomers = ({ search = '', page = 1 } = {}) => {
     return useQuery({
-        queryKey: ['vendorCustomers'],
+        queryKey: ['vendorCustomers', search, page],
         queryFn: async () => {
-            const { data } = await API.get('/vendor/vendor-customers');
-            return data.data;
+            const { data } = await API.get('/vendor/vendor-customers', {
+                params: { search, page, limit: 10 }
+            });
+            return data; 
         },
-        staleTime: 0
+        staleTime: 0,
+        keepPreviousData: true
     });
 };
 
@@ -37,5 +40,3 @@ export const useVendorCustomerDetail = (id) => {
         enabled: !!id
     });
 };
-
-// ====== USER ======

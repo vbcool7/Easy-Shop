@@ -1,8 +1,11 @@
 
 import Category from '../Models/categoryModelSchema.js';
 import SubCategory from '../Models/subCategoryModelSchema.js';
+import Product from '../Models/productModelSchema.js';
+import Order from '../Models/orderModelSchema.js';
 import { deleteCloudinaryFiles, deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js';
 
+// admin
 export const addSubCategory = async (req, res) => {
     try {
         const { cat_id } = req.params;
@@ -89,66 +92,88 @@ export const addSubCategory = async (req, res) => {
     };
 };
 
+// admin 
 export const listSubCategory = async (req, res) => {
     try {
-        const list = await SubCategory.aggregate([
-            {
-                // 1. Products ke saath link karo count nikalne ke liye
-                $lookup: {
-                    from: "products",
-                    localField: "_id",
-                    foreignField: "subCatId", // Product model mein jo field hai
-                    as: "products"
-                }
-            },
-            {
-                // 2. Category details lane ke liye (kyunki sub-category kisi category se judi hai)
-                $lookup: {
-                    from: "categories",
-                    localField: "catId",
-                    foreignField: "_id",
-                    as: "categoryDetails"
-                }
-            },
-            { $unwind: "$categoryDetails" }, // Array ko object mein badlo
-            {
-                $project: {
-                    subCatName: 1,
-                    subCatImage: 1,
-                    allowedAttributes: 1,
-                    description: 1,
-                    slug: 1,
-                    isActive: 1,
-                    createdAt: 1,
-                    // Ye wahi kaam kar raha hai jo populate karta:
-                    catId: "$categoryDetails._id", // Agar aapko ID bhi chahiye
-                    catName: "$categoryDetails.catName",
-                    department: "$categoryDetails.department",
-                    productCount: { $size: "$products" }
-                }
-            },
-        ]).sort({ createdAt: -1 });
+        const { search, page = 1, limit = 10 } = req.query;
 
-        if (!list || list.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No sub-categories found"
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const matchCondition = search ? {
+            $or: [
+                { subCatName: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+            ]
+        } : {};
+
+        const [result, totalCount] = await Promise.all([
+            SubCategory.aggregate([
+                { $match: matchCondition },
+                { $lookup: { from: "products", localField: "_id", foreignField: "subCatId", as: "products" } },
+                { $lookup: { from: "categories", localField: "catId", foreignField: "_id", as: "categoryDetails" } },
+                { $unwind: "$categoryDetails" },
+                {
+                    $project: {
+                        subCatName: 1,
+                        subCatImage: 1,
+                        allowedAttributes: 1,
+                        description: 1,
+                        slug: 1,
+                        showOnHome: 1,
+                        isActive: 1,
+                        createdAt: 1,
+                        catId: "$categoryDetails._id",
+                        catName: "$categoryDetails.catName",
+                        department: "$categoryDetails.department",
+                        productCount: { $size: "$products" }
+                    }
+                },
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: Number(limit) },
+            ]),
+            SubCategory.countDocuments(matchCondition)
+        ]);
+
+        if (!result || result.length === 0) {
+            return res.status(200).json({
+                success: true, count: 0, totalPages: 0,
+                currentPage: Number(page), data: []
             });
-        };
+        }
 
         res.status(200).json({
             success: true,
-            message: "Here is sub category list",
-            count: list.length,
-            data: list
+            count: totalCount,
+            totalPages: Math.ceil(totalCount / Number(limit)),
+            currentPage: Number(page),
+            data: result
         });
 
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Server Error Occur" });
+    }
+};
+
+// for home grid
+export const getActiveSubCategories = async (req, res) => {
+    try {
+        const subCategories = await SubCategory.find({ isActive: true, showOnHome: true })
+            .select('subCatName subCatImage slug catId')
+            .populate('catId', 'catName')
+            .sort({ order: 1 });
+
+        res.status(200).json({
+            success: true,
+            count: subCategories.length,
+            data: subCategories
+        });
     } catch (err) {
         return res.status(500).json({
             success: false,
             message: "Server Error Occur"
         });
-    };
+    }
 };
 
 export const listSubCatByCategory = async (req, res) => {
@@ -170,7 +195,7 @@ export const listSubCatByCategory = async (req, res) => {
             count: list.length,
             data: list
         });
-        
+
     } catch (err) {
         return res.status(500).json({
             success: false,
@@ -249,7 +274,7 @@ export const updateSubCategory = async (req, res) => {
                 let parsedData;
 
                 if (typeof allowedAttributes === 'string') {
-                    
+
                     if (allowedAttributes.includes("[object Object]")) {
                         throw new Error("Received garbled object string");
                     }
@@ -301,6 +326,55 @@ export const updateSubCategory = async (req, res) => {
     }
 };
 
+// admin - dlt info
+export const getSubCategoryDeleteInfo = async (req, res) => {
+    try {
+        const { subCat_id } = req.params;
+
+        const subCategory = await SubCategory.findById(subCat_id);
+        if (!subCategory) {
+            return res.status(404).json({
+                success: false,
+                message: "Sub-Category not found"
+            });
+        };
+
+        const productCount = await Product.countDocuments({ subCatId: subCat_id });
+
+        const productIds = await Product.find({ subCatId: subCat_id }).select('_id');
+        const productIdList = productIds.map(p => p._id);
+
+        const orderedProductCount = productIdList.length > 0
+            ? await Order.countDocuments({ "items.productId": { $in: productIdList } })
+            : 0;
+
+        let message = "";
+        let canDelete = false;
+
+        if (orderedProductCount > 0) {
+            message = `This subcategory has ${productCount} product(s) with existing orders. Deletion is not allowed.`;
+        } else if (productCount > 0) {
+            message = `This subcategory has ${productCount} product(s). Deleting it will remove all of them.`;
+        } else {
+            canDelete = true;
+            message = `Are you sure you want to delete this subcategory?`;
+        }
+
+        return res.status(200).json({
+            success: true,
+            canDelete,
+            message
+        });
+
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Server Error Occur"
+        });
+    };
+};
+
+// admin
 export const deleteSubCategory = async (req, res) => {
     try {
         const { subCat_id } = req.params;
@@ -331,6 +405,7 @@ export const deleteSubCategory = async (req, res) => {
     };
 };
 
+// admin
 export const toggleSubCategoryStatus = async (req, res) => {
     try {
         const { subCat_id } = req.params;
@@ -359,6 +434,38 @@ export const toggleSubCategoryStatus = async (req, res) => {
             message: "Server Error Occur"
         });
     };
+};
+
+// admin
+export const toggleShowOnHome = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const subCat = await SubCategory.findById(id);
+        if (!subCat) return res.status(404).json({ success: false, message: "SubCategory not found" });
+
+        // if trying to enable, check current count
+        if (!subCat.showOnHome) {
+            const currentCount = await SubCategory.countDocuments({ showOnHome: true });
+            if (currentCount >= 7) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum 7 subcategories allowed on home grid."
+                });
+            }
+        }
+
+        subCat.showOnHome = !subCat.showOnHome;
+        await subCat.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Updated successfully",
+            data: subCat
+        });
+
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Server Error Occur" });
+    }
 };
 
 export const searchCategoryAndSubCategory = async (req, res) => {

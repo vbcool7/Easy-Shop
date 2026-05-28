@@ -6,7 +6,6 @@ import Products from '../Components/Products'
 function ProductsPage() {
     return (
         <>
-            {/* <ProductsBanner /> */}
             <Products />
         </>
     )

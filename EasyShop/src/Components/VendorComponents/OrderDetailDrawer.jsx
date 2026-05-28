@@ -166,21 +166,13 @@ function OrderDetailDrawer({ orderId, isOpen, onClose }) {
                             </p>
 
                             <p className={`text-[10px] font-bold mt-1
-
                                 ${order.paymentStatus === 'Completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-
                                 ● {order.paymentStatus} - payment
-
                             </p>
 
-
-
                             <p className={`text-[10px] font-bold mt-1
-
                                 ${statusColors[order.orderStatus] || 'text-slate-500'}`}>
-
                                 ● {order.orderStatus} - order
-
                             </p>
 
                         </div>

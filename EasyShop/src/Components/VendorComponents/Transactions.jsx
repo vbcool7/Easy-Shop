@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HiOutlineDownload, HiOutlineSearch, HiOutlineCurrencyRupee, HiOutlineReceiptTax, HiOutlineCreditCard } from 'react-icons/hi';
 import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
@@ -7,6 +7,7 @@ import { HiOutlineClock } from "react-icons/hi";
 import { HiOutlineCash } from "react-icons/hi";
 
 import { useDownloadTransactionInvoice, useVendorTransactionList, useVendorTransactionStats } from '../../hook/useTransactions';
+import { getPaginationRange } from '../../utils/getPaginationRange';
 
 const statusMenu = [
     { id: 1, status: "Completed" },
@@ -15,18 +16,38 @@ const statusMenu = [
 
 function Transactions() {
 
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [status, setStatus] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+            setPage(1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
     const { data: res, isLoading } = useVendorTransactionStats();
-    const { data: transactionList, isError } = useVendorTransactionList();
+    const { data: transactionResponse, isError } = useVendorTransactionList({
+        search: debouncedSearch,
+        page,
+        status,
+        paymentMethod
+    });
+
+    const transactions = transactionResponse?.data || [];
+    const totalPages = transactionResponse?.totalPages || 1;
+    const count = transactionResponse?.count || 0;
+
     const { mutate: downloadInvoice, isPending, variables } = useDownloadTransactionInvoice();
 
-    // Backend se summary nikaal rahe hain
     const summary = res?.summary || { totalRevenue: 0, totalFees: 0, settledAmount: 0, pendingAmount: 0 };
 
     const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState(null);
-
-    if (isLoading) return <p>Loading Analytics...</p>;
-    if (isError) return <p>Error In Loading Analytics...</p>;
 
     // amt in format
     const formatCurrency = (amount) => {
@@ -74,12 +95,15 @@ function Transactions() {
             bg: "bg-orange-50"
         },
     ];
-    
+
     // top filter
     const handlestatus = (status) => {
         setSelectedStatus(status);
         setIsStatusOpen(false);
     };
+
+    if (isLoading) return <p className="p-10 text-center">Loading transactions...</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">Error fetching transactions!</p>;
 
     return (
         <div className="space-y-6">
@@ -115,57 +139,56 @@ function Transactions() {
                 {/* Header & Search/Filter */}
                 <div className="p-4 border-b border-slate-50 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center md:text-start bg-white dark:bg-slate-800/20">
 
-                    <h3 className="text-[11px] md:text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider pb-5 lg:pb-0">
-                        Transaction History
-                    </h3>
+                    <div>
+                        <div className='flex gap-2 items-center'>
+                            <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+                                Transaction History
+                            </h2>
+                            <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                Total: {count || 0}
+                            </span>
+                        </div>
+                        <p className="text-[11px] md:text-xs text-slate-500 mt-1">
+                            Manage and organize your transactions
+                        </p>
+                    </div>
 
-                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-5 lg:gap-3 w-full lg:w-auto">
+                    <div className="flex flex-col md:flex-row items-center gap-3 w-full lg:w-auto mt-3 lg:mt-0">
 
-                        {/* Search Bar */}
+                        {/* Search */}
                         <div className="relative w-full lg:w-80 group">
                             <HiOutlineSearch className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" />
                             <input
                                 type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search Txn ID, Order ID..."
-                                className="w-full pl-8 md:pl-11 pr-4 py-2 bg-slate-50 border border-pink-50 dark:bg-slate-800 focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
+                                className="w-full pl-8 md:pl-11 pr-4 py-2 bg-slate-50 border border-pink-50 dark:bg-slate-800 dark:text-white focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                             />
                         </div>
 
-                        {/* dropdown */}
-                        <div className='relative w-full md:w-48 lg:w-auto'>
+                        {/* Status Filter */}
+                        <select
+                            value={status}
+                            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+                            className="w-full md:w-auto text-sm px-4 py-2 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
+                        >
+                            <option value="">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
 
-                            <button
-                                onClick={() => setIsStatusOpen(!isStatusOpen)}
-                                className={`w-full bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl md:rounded-2xl flex justify-between items-center transition-all border cursor-pointer
-                                       ${isStatusOpen ? 'border-pink-400 ring-2 ring-pink-50' : 'border-transparent hover:border-pink-200'}`}
-                            >
-                                <span className={`${selectedStatus ? 'text-slate-800 dark:text-white font-medium' : 'text-slate-400'} text-[11px] md:text-[14px] truncate mr-3`}>
-                                    {selectedStatus ? selectedStatus.status : 'All Status'}
-                                </span>
-
-                                <div className="shrink-0">
-                                    {isStatusOpen ? <IoIosArrowUp className='text-pink-500' /> : <IoIosArrowDown className='text-slate-400' />}
-                                </div>
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {isStatusOpen && (
-                                <div className='absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 rounded-b-xl shadow-xl border border-pink-50 dark:border-slate-700 py-2 overflow-hidden animate-in fade-in zoom-in duration-200'>
-
-                                    <div className='max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700'>
-                                        {statusMenu.map((item, index) => (
-                                            <div
-                                                key={index}
-                                                onClick={() => handlestatus(item)}
-                                                className='px-4 py-1.5 hover:bg-pink-50 dark:hover:bg-slate-700 cursor-pointer text-slate-700 dark:text-slate-300 hover:text-pink-600 font-medium transition-colors text-[11px] md:text-[13px] border-b border-slate-50 dark:border-slate-700 last:border-none'
-                                            >
-                                                {item.status}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        {/* Payment Method Filter */}
+                        <select
+                            value={paymentMethod}
+                            onChange={(e) => { setPaymentMethod(e.target.value); setPage(1); }}
+                            className="w-full md:w-auto text-sm px-4 py-2 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
+                        >
+                            <option value="">All Methods</option>
+                            <option value="COD">COD</option>
+                            <option value="Online">Online</option>
+                        </select>
                     </div>
                 </div>
 
@@ -185,87 +208,130 @@ function Transactions() {
                         </thead>
 
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {transactionList.map((txn, idx) => (
-                                <tr key={idx}
-                                    className="hover:bg-pink-50/30 dark:hover:bg-slate-800/50 transition-colors group">
-
-                                    {/* trans id */}
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                            {txn.txnId}
-                                        </span>
-                                        <p className="text-[10px] text-slate-400">
-                                            {new Date(txn.createdAt).toLocaleDateString('en-IN', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
-                                        </p>
-                                    </td>
-
-                                    {/* order id + pay method */}
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs font-bold text-pink-500">
-                                            {txn.orderDisplayId}
-                                        </span>
-                                        <p className="text-[10px] text-slate-400 uppercase font-bold">
-                                            {txn.paymentMethod}
-                                        </p>
-                                    </td>
-
-                                    {/* amount */}
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm font-medium text-slate-400 line-through">
-                                            ₹{txn.totalAmount}
-                                        </span>
-                                    </td>
-
-                                    {/* platform fee */}
-                                    <td className="px-6 py-4 text-red-400 text-xs font-bold">
-                                        - ₹{txn.platformFee}
-                                    </td>
-
-                                    {/* earning */}
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm font-black text-slate-800 dark:text-white">
-                                            ₹{txn.netEarning}
-                                        </span>
-                                    </td>
-                                    
-                                    {/* status */}
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase
-                                         ${txn.status === 'Completed'
-                                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                : 'bg-orange-50 text-orange-600 border border-orange-100'
-                                            }`}>
-                                            {txn.status}
-                                        </span>
-                                    </td>
-
-                                    {/* invoice download */}
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => downloadInvoice(txn._id)}
-                                            disabled={isPending && variables === txn._id}
-                                            className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
-
-                                            {isPending && variables === txn._id ? (
-                                                <span className="text-[10px] animate-pulse">Downloading...</span>
-                                            ) : (
-                                                <HiOutlineDownload size={18} />
-                                            )}
-                                        </button>
+                            {transactions.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-16 text-center text-slate-400">
+                                        {search || status || paymentMethod
+                                            ? 'No transactions match your search or filter.'
+                                            : 'No transactions found.'
+                                        }
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                transactions.map((txn) => (
+                                    <tr key={txn._id}
+                                        className="hover:bg-pink-50/30 dark:hover:bg-slate-800/50 transition-colors group">
+
+                                        {/* Txn ID */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                                {txn.txnId}
+                                            </span>
+                                            <p className="text-[10px] text-slate-400">
+                                                {new Date(txn.createdAt).toLocaleDateString('en-IN', {
+                                                    day: '2-digit', month: 'short', year: 'numeric'
+                                                })}
+                                            </p>
+                                        </td>
+
+                                        {/* Order ID + Payment Method */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs font-bold text-pink-500">
+                                                {txn.orderDisplayId}
+                                            </span>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold">
+                                                {txn.paymentMethod}
+                                            </p>
+                                        </td>
+
+                                        {/* Total Amount */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-medium text-slate-400 line-through">
+                                                ₹{txn.totalAmount}
+                                            </span>
+                                        </td>
+
+                                        {/* Platform Fee */}
+                                        <td className="px-6 py-4 text-red-400 text-xs font-bold">
+                                            - ₹{txn.platformFee}
+                                        </td>
+
+                                        {/* Net Earning */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                ₹{txn.netEarning}
+                                            </span>
+                                        </td>
+
+                                        {/* Status */}
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase
+                                    ${txn.status === 'Completed'
+                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                    : txn.status === 'Cancelled'
+                                                        ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                        : 'bg-orange-50 text-orange-600 border border-orange-100'
+                                                }`}>
+                                                {txn.status}
+                                            </span>
+                                        </td>
+
+                                        {/* Invoice */}
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                onClick={() => downloadInvoice(txn._id)}
+                                                disabled={isPending && variables === txn._id}
+                                                className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                                                {isPending && variables === txn._id ? (
+                                                    <span className="text-[10px] animate-pulse">Downloading...</span>
+                                                ) : (
+                                                    <HiOutlineDownload size={18} />
+                                                )}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
-
-                    {transactionList?.length === 0 && (
-                        <div className="p-10 text-center text-slate-400">No transactions found.</div>
-                    )}
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage(p => Math.max(p - 1, 1))}
+                            disabled={page === 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Prev
+                        </button>
+
+                        {getPaginationRange(page, totalPages).map((num, idx) =>
+                            num === '...'
+                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                                : <button
+                                    key={num}
+                                    onClick={() => setPage(num)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                            ${page === num
+                                            ? 'bg-pink-500 text-white border-pink-500'
+                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                        }`}
+                                >
+                                    {num}
+                                </button>
+                        )}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                            disabled={page === totalPages}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     )

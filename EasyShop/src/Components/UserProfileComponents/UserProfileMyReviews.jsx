@@ -7,12 +7,17 @@ import { HiOutlineExclamation } from "react-icons/hi";
 import { HiOutlineTrash } from "react-icons/hi";
 
 import { useAddReview, useDeleteReview, useUserReviews } from '../../hook/useReview';
+import { getPaginationRange } from '../../utils/getPaginationRange';
 
 function UserProfileMyReviews() {
 
-    const { data: reviews, isLoading, isError } = useUserReviews();
+    const [page, setPage] = useState(1);
+    const { data: reviewResponse, isLoading, isError } = useUserReviews({ page });
     const { mutate: addReview, isPending } = useAddReview();
     const { mutate: deleteReview, isPending: isDeleting } = useDeleteReview();
+
+    const reviews = reviewResponse?.data || [];
+    const totalPages = reviewResponse?.totalPages || 0;
 
     // for edit
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -72,76 +77,115 @@ function UserProfileMyReviews() {
         <div>
             <div className="grid grid-cols-1 gap-6">
                 {reviews?.length > 0 ? (
-                    reviews.map((review, index) => (
-                        <div
-                            key={review._id}
-                            className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm hover:shadow-md transition-all group"
-                        >
-                            <div className="flex flex-col md:flex-row gap-6">
+                    reviews.map((review, index) => {
+                        return (
+                            <div
+                                key={review._id}
+                                className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm hover:shadow-md transition-all group"
+                            >
+                                <div className="flex flex-col md:flex-row gap-6">
 
-                                {/* Product Thumbnail */}
-                                <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shrink-0">
-                                    <img
-                                        src={review.productId?.prodImage}
-                                        alt={review.productId?.prodName}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                    />
-                                </div>
-
-                                {/* Review Content */}
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 text-base mb-1">
-                                                {review.productId?.prodName}
-                                            </h4>
-                                            <div className="flex items-center gap-1 mb-2">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <IoIosStar
-                                                        key={i}
-                                                        className={i < review.rating ? "text-pink-500" : "text-gray-200"}
-                                                    />
-                                                ))}
-                                                <span className="text-[10px] text-gray-400 font-bold ml-2 uppercase tracking-tight">
-                                                    {review.createdAt &&
-                                                        new Date(review.createdAt).toLocaleDateString("en-GB", {
-                                                            day: "2-digit",
-                                                            month: "short",
-                                                            year: "numeric",
-                                                        })}
-                                                </span>
-                                            </div>
-                                        </div>
+                                    {/* Product Thumbnail */}
+                                    <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shrink-0">
+                                        <img
+                                            src={review.productId?.prodImage}
+                                            alt={review.productId?.prodName}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
                                     </div>
 
-                                    <p className="line-clamp-2 text-gray-600 text-sm leading-relaxed italic">
-                                        "{review.review}"
-                                    </p>
+                                    {/* Review Content */}
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 text-base mb-1">
+                                                    {review.productId?.prodName}
+                                                </h4>
+                                                <div className="flex items-center gap-1 mb-2">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <IoIosStar
+                                                            key={i}
+                                                            className={i < review.rating ? "text-pink-500" : "text-gray-200"}
+                                                        />
+                                                    ))}
+                                                    <span className="text-[10px] text-gray-400 font-bold ml-2 uppercase tracking-tight">
+                                                        {review.createdAt &&
+                                                            new Date(review.createdAt).toLocaleDateString("en-GB", {
+                                                                day: "2-digit",
+                                                                month: "short",
+                                                                year: "numeric",
+                                                            })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                    {/* action */}
-                                    <div className="mt-4 flex gap-4">
-                                        <button
-                                            onClick={() => handleOpenEditModal(review)}
-                                            className="text-[11px] font-bold text-pink-500 uppercase tracking-wider hover:underline cursor-pointer">
-                                            Edit Review
-                                        </button>
+                                        <p className="line-clamp-2 text-gray-600 text-sm leading-relaxed italic">
+                                            "{review.review}"
+                                        </p>
 
-                                        <button
-                                            onClick={() => handleOpenDeleteModal(review)}
-                                            className="text-[11px] font-bold text-gray-400 uppercase tracking-wider hover:text-red-500 transition-colors cursor-pointer">
-                                            Delete
-                                        </button>
+                                        {/* action */}
+                                        <div className="mt-4 flex gap-4">
+                                            <button
+                                                onClick={() => handleOpenEditModal(review)}
+                                                className="text-[11px] font-bold text-pink-500 uppercase tracking-wider hover:underline cursor-pointer">
+                                                Edit Review
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleOpenDeleteModal(review)}
+                                                className="text-[11px] font-bold text-gray-400 uppercase tracking-wider hover:text-red-500 transition-colors cursor-pointer">
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 ) : (
                     <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                         <p className="text-gray-400 font-medium">You haven't written any reviews yet.</p>
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
+                    <button
+                        onClick={() => setPage(p => Math.max(p - 1, 1))}
+                        disabled={page === 1}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                        Prev
+                    </button>
+
+                    {getPaginationRange(page, totalPages).map((num, idx) =>
+                        num === '...'
+                            ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
+                            : <button
+                                key={num}
+                                onClick={() => setPage(num)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                                    ${page === num
+                                        ? 'bg-pink-500 text-white border-pink-500'
+                                        : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
+                                    }`}
+                            >
+                                {num}
+                            </button>
+                    )}
+
+                    <button
+                        onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                        disabled={page === totalPages}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
 
             {/* edit popup */}
             {isEditModalOpen && (

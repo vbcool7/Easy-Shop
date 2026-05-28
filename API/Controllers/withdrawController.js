@@ -53,14 +53,29 @@ export const getWithdrawStats = async (req, res) => {
 export const getWithdrawList = async (req, res) => {
     try {
         const vendorId = req.user.id;
+        const { search = '', page = 1, limit = 10, status = '' } = req.query;
 
-        const withdrawRequests = await Withdraw.find({ vendorId: vendorId })
-            .sort({ createdAt: -1 }); 
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+
+        const query = { vendorId };
+
+        if (search.trim()) {
+            query.requestId = new RegExp(search.trim(), 'i');
+        }
+
+        if (status.trim()) query.status = status;
+
+        const [withdrawRequests, total] = await Promise.all([
+            Withdraw.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+            Withdraw.countDocuments(query)
+        ]);
 
         return res.status(200).json({
             success: true,
-            message: "Your withdrawal history fetched successfully",
-            count: withdrawRequests.length,
+            count: total,
+            totalPages: Math.ceil(total / limitNum),
             data: withdrawRequests
         });
 

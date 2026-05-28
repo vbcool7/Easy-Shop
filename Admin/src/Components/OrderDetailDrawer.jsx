@@ -14,6 +14,14 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
         Pending: 'text-slate-500'
     };
 
+    // helper to get variant image
+    const getVariantImage = (item) => {
+        const color = item.selectedColor;
+        const images = item.productInfo?.attributes?.Color?.images;
+        if (color && images?.[color]?.[0]) return images[color][0];
+        return item.productInfo?.prodImage;
+    };
+
     return (
         <div
             onClick={onClose}
@@ -54,7 +62,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
 
                                     <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden shrink-0">
                                         <img
-                                            src={item.variantImage || item.productId?.prodImage}
+                                            src={getVariantImage(item) || item.productInfo?.prodImage}
                                             alt="product"
                                             className="w-full h-full object-cover" />
                                     </div>
@@ -63,7 +71,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
 
                                         {/* prod name */}
                                         <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 line-clamp-1">
-                                            {item.productId?.prodName}
+                                            {item.productInfo?.prodName}
                                         </h4>
 
                                         {/* color and size */}
@@ -108,7 +116,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                                 </span>
                             </div>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                                {order.userId?.name}
+                                {order.userInfo?.name || order.shippingAddress?.name || "Guest"}
                             </p>
 
                             <div className="text-[11px] text-slate-500 leading-relaxed mt-1">
