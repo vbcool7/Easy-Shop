@@ -8,9 +8,11 @@ import { useSubCatByCategory } from '../hook/useSubCategories';
 import { useProductFilterOptions } from '../hook/uesProducts';
 import { useCallback } from 'react';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCat }) {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [selectedSubCat, setSelectedSubCat] = useState(defaultSubCat || null);
@@ -73,7 +75,7 @@ function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCa
         <section className="w-full px-4">
 
             {/* cat name on top */}
-            <div className='text-pink-500 text-[25px] font-semibold'>
+            <div className='text-pink-500 text-[18px] md:text-[25px] font-semibold'>
                 {catName}
             </div>
 
@@ -101,21 +103,21 @@ function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCa
                     <button
                         onClick={() => { setSelectedSubCat(null); setSelectedAttrs({}); }}
                         className='text-xs text-pink-400 font-bold underline'>
-                        Clear All
+                        {t('filters.clearAll')}
                     </button>
                 )}
             </div>
 
             {/* Sort */}
             <div className='mb-4'>
-                <label className='text-sm font-bold text-slate-600'>Sort By</label>
+                <label className='text-sm font-bold text-slate-600'>{t('filters.sortBy')}</label>
                 <select
                     value={sort}
                     onChange={(e) => setSort(e.target.value)}
                     className='w-full mt-2 p-2 border border-slate-200 rounded-lg text-sm outline-none'>
-                    <option value=''>Default</option>
-                    <option value='priceLow'>Price: Low to High</option>
-                    <option value='priceHigh'>Price: High to Low</option>
+                    <option value=''>{t('filters.default')}</option>
+                    <option value='priceLow'>{t('filters.priceLow')}</option>
+                    <option value='priceHigh'>{t('filters.priceHigh')}</option>
                 </select>
             </div>
 
@@ -124,7 +126,7 @@ function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCa
                 <button
                     onClick={() => setIsSubCatOpen(!isSubCatOpen)}
                     className='w-full flex justify-between items-center text-sm font-bold text-slate-700 py-2'>
-                    Subcategory
+                    {t('filters.subcategory')}
                     <span>{isSubCatOpen ? '▲' : '▼'}</span>
                 </button>
                 {isSubCatOpen && (
@@ -152,7 +154,7 @@ function ProductsFilterPart({ activeCatId, catName, onFilterChange, defaultSubCa
                 <button
                     onClick={() => setIsPriceOpen(!isPriceOpen)}
                     className='w-full flex justify-between items-center text-sm font-bold text-slate-700 py-2'>
-                    Price
+                    {t('filters.price')}
                     <span>{isPriceOpen ? '▲' : '▼'}</span>
                 </button>
                 {isPriceOpen && (

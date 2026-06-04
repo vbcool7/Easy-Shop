@@ -4,9 +4,11 @@ import { HiOutlineExternalLink } from "react-icons/hi";
 
 import { useUpdateOrderStatus, useVendorOrders } from '../../hook/useOrders';
 import OrderDetailDrawer from './OrderDetailDrawer';
+import { useTranslation } from 'react-i18next';
 
 function RecentOrderTable({ setCurrentPage }) {
 
+    const {t} = useTranslation();
     const { data: ordersResponse, isLoading, isError } = useVendorOrders();
     const orders = ordersResponse?.data || [];
     
@@ -25,8 +27,8 @@ function RecentOrderTable({ setCurrentPage }) {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
+    if (isLoading) return <p className="p-10 text-center animate-pulse">{t('recentOrdersTable.fetching')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('recentOrdersTable.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -34,12 +36,12 @@ function RecentOrderTable({ setCurrentPage }) {
             {/* heading */}
             <div className="p-6 border-b border-pink-50 dark:border-slate-800 flex justify-between items-center">
                 <h2 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white">
-                    Recent Orders
+                    {t('recentOrdersTable.title')}
                 </h2>
                 <button
                     onClick={() => setCurrentPage("Orders")}
                     className="text-xs md:text-sm font-semibold text-pink-500 hover:text-pink-600 transition-colors cursor-pointer">
-                    View All Orders
+                    {t('recentOrdersTable.viewAll')}
                 </button>
             </div>
 
@@ -48,12 +50,12 @@ function RecentOrderTable({ setCurrentPage }) {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                         <tr>
-                            <th className="px-6 py-4">Order ID</th>
-                            <th className="px-6 py-4">Customer</th>
-                            <th className="px-6 py-4">Product</th>
-                            <th className="px-6 py-4">Amount</th>
-                            <th className="px-6 py-4 text-center">Status</th>
-                            <th className="px-6 py-4">Action</th>
+                            <th className="px-6 py-4">{t('recentOrdersTable.thOrderId')}</th>
+                            <th className="px-6 py-4">{t('recentOrdersTable.thCustomer')}</th>
+                            <th className="px-6 py-4">{t('recentOrdersTable.thProduct')}</th>
+                            <th className="px-6 py-4">{t('recentOrdersTable.thAmount')}</th>
+                            <th className="px-6 py-4 text-center">{t('recentOrdersTable.thStatus')}</th>
+                            <th className="px-6 py-4">{t('recentOrdersTable.thAction')}</th>
                         </tr>
                     </thead>
 
@@ -115,11 +117,11 @@ function RecentOrderTable({ setCurrentPage }) {
 
                                 {/* status */}
                                 <td className="px-6 py-4 text-center">
-                                    {/* Condition: Agar status vendor ke control ke bahar hai (e.g., Pending or Delivered) */}
                                     {!["Processing", "Shipped", "Cancelled"].includes(order.orderStatus) ? (
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold border 
                                         ${orderStatusStyles[order.orderStatus] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                            {order.orderStatus}
+                                            {order.orderStatus === 'Pending' ? t('recentOrdersTable.optPending') :
+                                             order.orderStatus === 'Delivered' ? t('recentOrdersTable.optDelivered') : order.orderStatus}
                                         </span>
                                     ) : (
                                         <select
@@ -128,9 +130,9 @@ function RecentOrderTable({ setCurrentPage }) {
                                             onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
                                             className={`px-3 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition-all ${orderStatusStyles[order.orderStatus]}`}
                                         >
-                                            <option value="Processing">Processing</option>
-                                            <option value="Shipped">Shipped</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Processing">{t('recentOrdersTable.optProcessing')}</option>
+                                            <option value="Shipped">{t('recentOrdersTable.optShipped')}</option>
+                                            <option value="Cancelled">{t('recentOrdersTable.optCancelled')}</option>
                                         </select>
                                     )}
                                 </td>

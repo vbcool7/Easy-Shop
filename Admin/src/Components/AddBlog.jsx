@@ -5,9 +5,11 @@ import { HiOutlinePhotograph, HiOutlineX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 import { useAddBlog } from '../hooks/useBlogs';
+import { useTranslation } from 'react-i18next';
 
 function AddBlog({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         title: '',
         category: '',
@@ -119,10 +121,10 @@ function AddBlog({ setCurrentPage }) {
 
                 <div className='relative z-10 text-center md:text-start'>
                     <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>
-                        New Article Portal
+                        {t('addBlog.title')}
                     </h1>
                     <p className='text-pink-50 text-xs font-medium opacity-90'>
-                        Draft and publish high-performance blogs and seasonal style trends.
+                        {t('addBlog.subtitle')}
                     </p>
                 </div>
             </div>
@@ -135,7 +137,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* blog title */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Blog Title
+                            {t('addBlog.blogTitle')}
                         </label>
                         <input
                             type="text"
@@ -143,7 +145,7 @@ function AddBlog({ setCurrentPage }) {
                             name='title'
                             value={formData.title}
                             onChange={handleInputChange}
-                            placeholder="e.g. The Ultimate Guide to Matte Lipsticks"
+                            placeholder={t('addBlog.blogTitlePlaceholder')}
                             className="p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]"
                         />
                     </div>
@@ -151,7 +153,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* category */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Category Tag
+                            {t('addBlog.categoryTag')}
                         </label>
                         <input
                             type="text"
@@ -159,7 +161,7 @@ function AddBlog({ setCurrentPage }) {
                             name='category'
                             value={formData.category}
                             onChange={handleInputChange}
-                            placeholder="e.g. Beauty & Skincare"
+                            placeholder={t('addBlog.categoryTagPlaceholder')}
                             className="p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]"
                         />
                     </div>
@@ -167,7 +169,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* card - short description */}
                     <div className='flex flex-col gap-1.5 md:gap-2 col-span-full'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Short Summary (Card View Description)
+                            {t('addBlog.shortSummary')}
                         </label>
                         <textarea
                             rows="2"
@@ -175,7 +177,7 @@ function AddBlog({ setCurrentPage }) {
                             name='description'
                             value={formData.description}
                             onChange={handleInputChange}
-                            placeholder="Brief summary to showcase on the home card list..."
+                            placeholder={t('addBlog.shortSummaryPlaceholder')}
                             className="p-3 md:p-4 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all resize-none placeholder:text-[11px] md:placeholder:text-[14px]"
                         />
                     </div>
@@ -183,7 +185,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* banner image */}
                     <div className="flex flex-col gap-3 col-span-full mt-1">
                         <label className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1">
-                            Blog Banner Image <span className="text-pink-500">(Required)</span>
+                            {t('addBlog.bannerImage')} <span className="text-pink-500">{t('addBlog.bannerRequired')}</span>
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
 
@@ -195,7 +197,9 @@ function AddBlog({ setCurrentPage }) {
                                     className="absolute inset-0 opacity-0 z-10 cursor-pointer"
                                 />
                                 <HiOutlinePhotograph className="text-3xl text-pink-400 mb-2" />
-                                <p className="text-xs text-pink-500 font-bold">Upload Cover Banner</p>
+                                <p className="text-xs text-pink-500 font-bold">
+                                    {t('addBlog.uploadBanner')}
+                                </p>
                             </div>
 
                             {/* preview box */}
@@ -220,7 +224,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* main content */}
                     <div className='flex flex-col gap-1.5 md:gap-2 col-span-full mt-1'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Full Article Content
+                            {t('addBlog.fullContent')}
                         </label>
                         <textarea
                             rows="6"
@@ -228,7 +232,7 @@ function AddBlog({ setCurrentPage }) {
                             name='content'
                             value={formData.content}
                             onChange={handleInputChange}
-                            placeholder="Write comprehensive story descriptions or instructions paragraphs..."
+                            placeholder={t('addBlog.fullContentPlaceholder')}
                             className="p-3 md:p-4 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]"
                         />
                     </div>
@@ -236,15 +240,17 @@ function AddBlog({ setCurrentPage }) {
                     {/* blockquote */}
                     <div className='flex flex-col gap-1.5 md:gap-2 col-span-full bg-pink-50/30 dark:bg-slate-800/50 p-4 rounded-2xl border border-pink-100/50 dark:border-slate-700'>
                         <label className='text-[13px] font-semibold text-slate-700 dark:text-slate-200 ml-1'>
-                            Highlight Blockquote Look
+                            {t('addBlog.blockquoteLabel')}
                         </label>
-                        <p className='text-[11px] text-slate-500 mb-1 ml-1'>Add a standalone premium quote block highlight layer inside the post grid.</p>
+                        <p className='text-[11px] text-slate-500 mb-1 ml-1'>
+                            {t('addBlog.blockquoteHint')}
+                        </p>
                         <input
                             type="text"
                             name='blockquote'
                             value={formData.blockquote}
                             onChange={handleInputChange}
-                            placeholder='e.g. "Put on some lipstick and pull yourself together."'
+                            placeholder={t('addBlog.blockquotePlaceholder')}
                             className="w-full mt-1.5 p-3 rounded-xl border border-pink-100 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all italic text-pink-700 placeholder:italic placeholder:text-slate-300"
                         />
                     </div>
@@ -252,7 +258,7 @@ function AddBlog({ setCurrentPage }) {
                     {/* time - read */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Estimated Read Time
+                            {t('addBlog.readTime')}
                         </label>
                         <input
                             type="text"
@@ -266,14 +272,14 @@ function AddBlog({ setCurrentPage }) {
                     {/* Tags Input Field */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Tags (Separated by commas)
+                            {t('addBlog.tags')}
                         </label>
                         <input
                             type="text"
                             name='tags'
                             value={formData.tags}
                             onChange={handleInputChange}
-                            placeholder="makeup, luxury, summer2026"
+                            placeholder={t('addBlog.tagsPlaceholder')}
                             className="p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]"
                         />
                     </div>
@@ -283,10 +289,10 @@ function AddBlog({ setCurrentPage }) {
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                                    Dynamic Trend Subsections
+                                    {t('addBlog.trendsTitle')}
                                 </h3>
                                 <p className="text-[11px] text-slate-500">
-                                    Append bullet points or standalone subheadings dynamically inside this story view.
+                                    {t('addBlog.trendsSubtitle')}
                                 </p>
                             </div>
 
@@ -295,7 +301,7 @@ function AddBlog({ setCurrentPage }) {
                                 onClick={addMoreTrend}
                                 className="px-3 py-1.5 text-xs bg-slate-900 text-white dark:bg-pink-600 dark:hover:bg-pink-700 rounded-xl font-bold uppercase hover:bg-slate-800 transition-all cursor-pointer"
                             >
-                                + Add Section
+                                {t('addBlog.addSection')}
                             </button>
                         </div>
 
@@ -310,7 +316,7 @@ function AddBlog({ setCurrentPage }) {
                                         name="title"
                                         value={trend.title}
                                         onChange={(e) => handleTrendChange(index, e)}
-                                        placeholder={`Sub-point Heading #${index + 1} (e.g. Trend 1: Matte Selection)`}
+                                        placeholder={t('addBlog.trendHeadingPlaceholder', { index: index + 1 })}
                                         className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-pink-400 dark:text-white"
                                     />
 
@@ -319,7 +325,7 @@ function AddBlog({ setCurrentPage }) {
                                         name="desc"
                                         value={trend.desc}
                                         onChange={(e) => handleTrendChange(index, e)}
-                                        placeholder="Detailed descriptions or bullet point explanations about this trend..."
+                                        placeholder={t('addBlog.trendDescPlaceholder')}
                                         className="w-full px-3 py-2 bg-slate-50/70 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-pink-400 dark:text-white"
                                     />
                                 </div>
@@ -330,7 +336,7 @@ function AddBlog({ setCurrentPage }) {
                                         onClick={() => removeTrend(index)}
                                         className="p-1.5 text-xs text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer mt-1"
                                     >
-                                        Remove
+                                        {t('addBlog.removeSection')}
                                     </button>
                                 )}
                             </div>
@@ -339,13 +345,13 @@ function AddBlog({ setCurrentPage }) {
 
                     {/* action */}
                     <div className='col-span-full flex flex-col sm:flex-row items-center justify-end gap-3 mt-4 md:mt-6 pt-6 border-t border-slate-50 dark:border-slate-800'>
-                        
+
                         <button
                             type="button"
                             disabled={isPending}
                             className='w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-pink-500 hover:bg-pink-100 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 disabled:hover:bg-transparent disabled:hover:text-slate-500'
                         >
-                            Cancel
+                            {t('addBlog.cancel')}
                         </button>
 
                         <button
@@ -353,7 +359,7 @@ function AddBlog({ setCurrentPage }) {
                             disabled={isPending}
                             className='w-full sm:w-auto md:px-10 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 dark:shadow-none hover:shadow-pink-200 transition-all cursor-pointer active:scale-95 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none'
                         >
-                            {isPending ? "Publishing..." : "Add Blog Post"}
+                            {isPending ? t('addBlog.submitting') : t('addBlog.submit')}
                         </button>
                     </div>
                 </form>

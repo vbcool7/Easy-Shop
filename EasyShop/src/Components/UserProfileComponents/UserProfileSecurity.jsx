@@ -5,9 +5,11 @@ import { useChangeUserPassword } from '../../hook/useAuth';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function UserProfileSecurity({ userData }) {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const logout = useAuthStore((state) => state.logout);
 
@@ -84,30 +86,30 @@ function UserProfileSecurity({ userData }) {
                 <button
                     onClick={() => setIsEditing(!isEditing)}
                     className='text-pink-500 hover:text-pink-600 font-medium text-[13px] md:text-[16px] cursor-pointer'>
-                    {!isEditing ? "Edit" : "Cancel"}
+                    {!isEditing ? t('userProfile.edit') : t('userProfile.cancel')}
                 </button>
             </div>
 
             {/* email */}
             <div className="mb-10">
                 <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                    Login Email
+                    {t('userProfile.secLabelEmail')}
                 </label>
                 <div className="mt-2 p-4 bg-slate-100 border border-slate-100 rounded-2xl flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-500">
                         {userData?.email || "—"}
                     </span>
                     <span className="text-[9px] bg-pink-50 px-2 py-1 rounded-lg text-pink-500 font-bold uppercase">
-                        Primary
+                        {t('userProfile.secBadgePrimary')}
                     </span>
                 </div>
             </div>
 
             {/* input fields */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-                {RenderField("Current Password", "oldPassword")}
-                {RenderField("New Password", "newPassword")}
-                {RenderField("Confirm Password", "confirmPassword")}
+                {RenderField(t('userProfile.secLabelOldPassword'), "oldPassword")}
+                {RenderField(t('userProfile.secLabelNewPassword'), "newPassword")}
+                {RenderField(t('userProfile.secLabelConfirmPassword'), "confirmPassword")}
             </div>
 
             {/* Save Button */}
@@ -115,10 +117,10 @@ function UserProfileSecurity({ userData }) {
                 <div className='mt-10 flex justify-center lg:justify-end'>
                     <button
                         onClick={handleSave}
-                        disabled={isPending} 
+                        disabled={isPending}
                         className={`px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-black rounded-2xl text-xs transition-all active:scale-95 shadow-xl shadow-pink-100 uppercase tracking-widest
                             ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                        {isPending ? "Saving..." : "Save Password"}
+                        {isPending ? t('userProfile.secBtnSaving') : t('userProfile.secBtnSave')}
                     </button>
                 </div>
             )}
@@ -129,7 +131,7 @@ function UserProfileSecurity({ userData }) {
                     <HiOutlineShieldCheck size={20} />
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-500 font-medium">
-                    We value your privacy. See our <span className="text-pink-500 cursor-pointer hover:underline">Privacy Policy</span>.
+                    {t('userProfile.privacyText')}{' '} <span className="text-pink-500 cursor-pointer hover:underline">{t('userProfile.privacyLink')}</span>.
                 </p>
             </div>
         </div>

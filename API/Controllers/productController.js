@@ -5,6 +5,7 @@ import SubCategory from '../Models/subCategoryModelSchema.js';
 import Vendor from '../Models/vendorModelSchema.js';
 import Order from '../Models/orderModelSchema.js';
 import { deleteOldFileFromCloudinary, cleanupUploadedFiles, deleteGalleryImages, deleteProductAssetsFromCloudinary } from '../utils/cloudinaryUtils.js';
+import { createAdminNotification } from '../utils/createAdminNotifications.js';
 import mongoose from 'mongoose';
 
 export const addProduct = async (req, res) => {
@@ -222,6 +223,16 @@ export const addProduct = async (req, res) => {
         });
 
         await newProduct.save();
+
+        if (role === 'vendor') {
+            await createAdminNotification({
+                type: "NEW_PRODUCT",
+                title: "New Product Added",
+                message: `Vendor submitted a new product "${prodName}" for approval.`,
+                relatedId: newProduct._id,
+            });
+        }
+
         res.status(201).json({
             success: true,
             message: "Product added successfully",
@@ -379,7 +390,7 @@ export const getProductFilterOptions = async (req, res) => {
     }
 };
 
-// user
+// user - prod detail
 export const detailProductPublic = async (req, res) => {
     try {
         const { prod_id } = req.params;
@@ -601,6 +612,7 @@ export const detailProduct = async (req, res) => {
     };
 };
 
+// edit prod - admin + vendor
 export const updateProduct = async (req, res) => {
     try {
         const { prod_id } = req.params;
@@ -778,6 +790,15 @@ export const updateProduct = async (req, res) => {
             { $set: updates },
             { returnDocument: 'after', runValidators: true }
         );
+
+        if (req.user.role === 'vendor') {
+            await createAdminNotification({
+                type: "NEW_PRODUCT",
+                title: "Product Updated — Pending Review",
+                message: `Vendor updated product "${updatedProduct.prodName}" — requires re-approval.`,
+                relatedId: updatedProduct._id,
+            });
+        }
 
         res.status(200).json({
             success: true,

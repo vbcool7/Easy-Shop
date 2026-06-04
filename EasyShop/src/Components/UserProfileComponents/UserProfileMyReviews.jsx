@@ -8,9 +8,11 @@ import { HiOutlineTrash } from "react-icons/hi";
 
 import { useAddReview, useDeleteReview, useUserReviews } from '../../hook/useReview';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function UserProfileMyReviews() {
 
+    const { t } = useTranslation();
     const [page, setPage] = useState(1);
     const { data: reviewResponse, isLoading, isError } = useUserReviews({ page });
     const { mutate: addReview, isPending } = useAddReview();
@@ -70,8 +72,8 @@ function UserProfileMyReviews() {
         });
     };
 
-    if (isLoading) return <div className="py-20 text-center text-slate-400">Loading review detail...</div>;
-    if (isError) return <div className="py-20 text-center text-red-400">Failed to load review detail</div>;
+    if (isLoading) return <div className="py-20 text-center text-slate-400">{t('userProfile.reviewsLoading')}</div>;
+    if (isError) return <div className="py-20 text-center text-red-400">{t('userProfile.reviewsError')}</div>;
 
     return (
         <div>
@@ -129,13 +131,13 @@ function UserProfileMyReviews() {
                                             <button
                                                 onClick={() => handleOpenEditModal(review)}
                                                 className="text-[11px] font-bold text-pink-500 uppercase tracking-wider hover:underline cursor-pointer">
-                                                Edit Review
+                                                {t('userProfile.reviewEditBtn')}
                                             </button>
 
                                             <button
                                                 onClick={() => handleOpenDeleteModal(review)}
                                                 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider hover:text-red-500 transition-colors cursor-pointer">
-                                                Delete
+                                                {t('userProfile.reviewDeleteBtn')}
                                             </button>
                                         </div>
                                     </div>
@@ -145,7 +147,9 @@ function UserProfileMyReviews() {
                     })
                 ) : (
                     <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                        <p className="text-gray-400 font-medium">You haven't written any reviews yet.</p>
+                        <p className="text-gray-400 font-medium">
+                            {t('userProfile.reviewsEmptyTitle')}
+                        </p>
                     </div>
                 )}
             </div>
@@ -158,7 +162,7 @@ function UserProfileMyReviews() {
                         disabled={page === 1}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Prev
+                        {t('userProfile.prev')}
                     </button>
 
                     {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -182,7 +186,7 @@ function UserProfileMyReviews() {
                         disabled={page === totalPages}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Next
+                        {t('userProfile.next')}
                     </button>
                 </div>
             )}
@@ -191,25 +195,25 @@ function UserProfileMyReviews() {
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-300">
                     <div
-                        className="bg-white w-full max-w-xl rounded-[40px] p-8 shadow-2xl relative animate-in zoom-in duration-300"
+                        className="bg-white w-full max-w-xl rounded-[30px] md:rounded-[40px] p-6 md:p-8 shadow-2xl relative animate-in zoom-in duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setIsEditModalOpen(false)}
-                            className="absolute right-6 top-6 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                            className="absolute right-4 top-4 md:right-6 md:top-6 p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                         >
                             <IoMdClose className="text-2xl text-gray-400" />
                         </button>
 
-                        <h2 className="text-2xl font-black text-gray-900 mb-2">
-                            Edit Review
+                        <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-2 max-w-[90%] wrap-break-words">
+                            {t('userProfile.editModalTitle')}
                         </h2>
-                        <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-6">
+                        <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-6 wrap-break-words">
                             {selectedReview?.productId?.prodName}
                         </p>
 
                         {/* Stars */}
-                        <div className="flex gap-2 text-4xl text-pink-500 mb-6">
+                        <div className="flex gap-2 text-3xl md:text-4xl text-pink-500 mb-6">
                             {[...Array(5)].map((_, i) => {
                                 const index = i + 1;
                                 return (
@@ -228,25 +232,25 @@ function UserProfileMyReviews() {
                         <textarea
                             value={tempReviewText}
                             onChange={(e) => setTempReviewText(e.target.value)}
-                            className="w-full h-36 p-5 bg-gray-50 border-2 border-gray-100 rounded-3xl outline-none focus:border-pink-500 transition-all resize-none text-gray-700 text-sm mb-6"
-                            placeholder="Write your experience..."
+                            className="w-full h-32 md:h-36 p-4 md:p-5 bg-gray-50 border-2 border-gray-100 rounded-2xl md:rounded-3xl outline-none focus:border-pink-500 transition-all resize-none text-gray-700 text-sm mb-6"
+                            placeholder={t('userProfile.editModalPlaceholder')}
                         />
 
                         {/* Actions */}
-                        <div className="flex gap-3">
+                        <div className="flex flex-col-reverse sm:flex-row gap-3">
                             <button
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-gray-200 cursor-pointer"
+                                className="flex-1 py-3 md:py-4 bg-gray-100 text-gray-500 rounded-xl md:rounded-2xl font-black uppercase text-[11px] tracking-wider hover:bg-gray-200 transition-all active:scale-98 cursor-pointer text-center whitespace-normal px-2"
                             >
-                                Cancel
+                                {t('userProfile.editModalCancel')}
                             </button>
 
                             <button
                                 onClick={handleEditReview}
                                 disabled={isPending}
-                                className="flex-1 py-4 bg-pink-500 text-white rounded-2xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-pink-100 hover:bg-pink-600 cursor-pointer"
+                                className="flex-1 py-3 md:py-4 bg-pink-500 text-white rounded-xl md:rounded-2xl font-black uppercase text-[11px] tracking-wider shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all active:scale-98 disabled:opacity-50 cursor-pointer text-center whitespace-normal px-2"
                             >
-                                {isPending ? "Saving.." : "Save Changes"}
+                                {isPending ? t('userProfile.editModalSaving') : t('userProfile.editModalSave')}
                             </button>
                         </div>
                     </div>
@@ -256,7 +260,7 @@ function UserProfileMyReviews() {
             {/* delete popup */}
             <div
                 className={`fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-100 px-4 transition-all duration-300 
-                    ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+        ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
             >
                 <div
                     onClick={() => setIsDeletedOpen(false)}
@@ -265,51 +269,51 @@ function UserProfileMyReviews() {
 
                 <div
                     onClick={(e) => e.stopPropagation()}
-                    className={`relative transform transition-all duration-300 rounded-[2.5rem] bg-white dark:bg-slate-900 p-8 shadow-2xl w-full max-w-md border border-pink-50 dark:border-slate-800
-                        ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
+                    className={`relative transform transition-all duration-300 rounded-4xl md:rounded-[2.5rem] bg-white dark:bg-slate-900 p-6 md:p-8 shadow-2xl w-full max-w-md border border-pink-50 dark:border-slate-800
+            ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
                 >
                     <button
                         onClick={() => setIsDeletedOpen(false)}
-                        className="absolute top-6 right-6 text-slate-400 hover:text-pink-500 transition-colors"
+                        className="absolute top-4 right-4 md:top-6 md:right-6 text-slate-400 hover:text-pink-500 transition-colors"
                     >
                         <HiOutlineX size={20} />
                     </button>
 
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20 mb-6">
-                        <HiOutlineExclamation className="h-8 w-8 text-red-500" />
+                    <div className="mx-auto flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20 mb-5 md:mb-6">
+                        <HiOutlineExclamation className="h-7 w-7 md:h-8 md:w-8 text-red-500" />
                     </div>
 
                     <div className="text-center">
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Remove Review
+                        <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-white tracking-tight">
+                            {t('userProfile.deleteModalTitle')}
                         </h3>
-                        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            Are you sure you want to delete <span className="font-bold text-slate-700 dark:text-white">"{"this review"}"</span>?
-                            This action cannot be undone.
+                        <p className="mt-3 text-[13px] md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1">
+
+                            {t('userProfile.deleteModalMessage', { item: t('userProfile.thisReviewText') })}
                         </p>
                     </div>
 
-                    <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"
                             onClick={() => setIsDeletedOpen(false)}
-                            className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95 cursor-pointer"
+                            className="w-full justify-center rounded-xl md:rounded-2xl bg-white px-3 py-3 md:py-3.5 text-xs md:text-sm font-black uppercase tracking-wider text-slate-600 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all sm:w-1/2 active:scale-95 cursor-pointer text-center whitespace-normal"
                         >
-                            No, Keep it
+                            {t('userProfile.deleteModalKeep')}
                         </button>
 
                         <button
                             type="button"
                             onClick={handleDeleteReview}
                             disabled={isDeleting}
-                            className="w-full justify-center rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-100 hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="w-full justify-center rounded-xl md:rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3 md:py-3.5 text-xs md:text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-red-100 dark:shadow-none hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-center whitespace-normal"
                         >
                             {isDeleting ? (
                                 <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
                             ) : (
-                                <HiOutlineTrash size={18} />
+                                <HiOutlineTrash size={16} />
                             )}
-                            {isDeleting ? "Deleting..." : "Yes, Delete"}
+                            {isDeleting ? t('userProfile.deleteModalDeleting') : t('userProfile.deleteModalConfirm')}
                         </button>
                     </div>
                 </div>

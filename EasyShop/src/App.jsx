@@ -43,7 +43,6 @@ function App() {
         position="top-center"
         reverseOrder={false}
         toastOptions={{
-          // Aap yahan se global styling bhi de sakti hain
           duration: 3000,
           style: {
             fontFamily: 'sans-serif',

@@ -5,6 +5,7 @@ import {
     Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 import { useVendorOrdersOverTime } from "../../../hook/useVendor";
+import { useTranslation } from 'react-i18next';
 
 const PERIODS = [
     { label: "7D", value: 7 },
@@ -27,6 +28,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 function VendorOrdersOverTimeChart() {
+
+    const { t } = useTranslation();
     const [period, setPeriod] = useState(30);
     const { data, isLoading, isError } = useVendorOrdersOverTime(period);
 
@@ -35,9 +38,12 @@ function VendorOrdersOverTimeChart() {
             <div className="flex items-center justify-between mb-5">
                 <div>
                     <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                        Orders Over Time
+                        {t('vendorChart.chartTitle')}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Revenue & order count trend</p>
+
+                    <p className="text-xs text-slate-400 mt-0.5">
+                        {t('vendorChart.chartSubTitle')}
+                        </p>
                 </div>
                 <div className="flex gap-1">
                     {PERIODS.map((opt) => (
@@ -58,17 +64,17 @@ function VendorOrdersOverTimeChart() {
 
             {isLoading && (
                 <div className="h-64 flex items-center justify-center text-sm text-slate-400">
-                    Loading chart...
+                    {t('vendorChart.loading')}
                 </div>
             )}
             {isError && (
                 <div className="h-64 flex items-center justify-center text-sm text-red-400">
-                    Failed to load data
+                    {t('vendorChart.error')}
                 </div>
             )}
             {data && data.length === 0 && (
                 <div className="h-64 flex items-center justify-center text-sm text-slate-400">
-                    No order data for this period
+                    {t('vendorChart.noData')}
                 </div>
             )}
             {data && data.length > 0 && (
@@ -104,7 +110,7 @@ function VendorOrdersOverTimeChart() {
                             yAxisId="left"
                             type="monotone"
                             dataKey="count"
-                            name="Orders"
+                            name={t('vendorChart.lineOrders')}
                             stroke="#ec4899"
                             strokeWidth={2.5}
                             dot={false}
@@ -114,7 +120,7 @@ function VendorOrdersOverTimeChart() {
                             yAxisId="right"
                             type="monotone"
                             dataKey="revenue"
-                            name="Revenue"
+                            name={t('vendorChart.lineRevenue')}
                             stroke="#8b5cf6"
                             strokeWidth={2.5}
                             dot={false}

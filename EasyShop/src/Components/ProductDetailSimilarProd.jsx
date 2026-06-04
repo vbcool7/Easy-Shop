@@ -4,16 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { IoBagHandleOutline } from "react-icons/io5";
 import { useCart } from './CartContext';
 import { useGetSimilarProducts } from '../hook/uesProducts';
+import { useTranslation } from 'react-i18next';
 
 function ProductDetailSimilarProd({ prodId }) {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { addToCart } = useCart();
 
     const { data: similarProducts, isLoading, isError } = useGetSimilarProducts(prodId);
 
-    if (isLoading) return <div className="p-20 text-center">Loading products.....</div>;
-    if (isError) return <div className="p-20 text-center">Product Not Found!</div>;
+    if (isLoading) return <div className="p-20 text-center">{t('similarProducts.loading')}</div>;
+    if (isError) return <div className="p-20 text-center">{t('similarProducts.notFound')}</div>;
 
     return (
         <div className="max-w-6xl mx-auto py-8 md:py-16">
@@ -21,13 +23,13 @@ function ProductDetailSimilarProd({ prodId }) {
             {/* heading */}
             <div className="flex flex-col items-center mb-8 md:mb-12">
                 <h2 className="text-2xl md:text-4xl font-bold text-gray-800 tracking-tight">
-                    You May Also Like
+                    {t('similarProducts.title')}
                 </h2>
 
                 <div className="w-20 h-1 md:h-1.5 bg-pink-500 rounded-full mt-2 md:mt-3"></div>
 
                 <p className="text-gray-500 mt-4 text-[12px] text-center md:text-sm uppercase tracking-widest">
-                    FRESH STYLES INSPIRED BY YOUR RECENT VIEW
+                    {t('similarProducts.subtitle')}
                 </p>
             </div>
 
@@ -61,7 +63,7 @@ function ProductDetailSimilarProd({ prodId }) {
                             >
                                 <IoBagHandleOutline className='text-lg' />
                                 <span className='text-[10px] md:text-xs font-bold uppercase'>
-                                    Add
+                                    {t('similarProducts.add')}
                                 </span>
                             </button>
                         </div>

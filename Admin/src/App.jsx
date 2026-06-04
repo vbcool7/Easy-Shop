@@ -23,16 +23,33 @@ import AddBlog from "./Components/AddBlog";
 import Banners from "./Components/Banners";
 import AddBanner from "./Components/AddBanner";
 import CmsEditor from "./Components/CmsEditor";
+import { useTranslation } from "react-i18next";
 
 function App() {
 
+    const { t } = useTranslation();
+
     const [sideBarCollapsed, setSideBarCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState("admin-dashboard");
 
     // Zustand store se token nikalna
     const token = useAdminAuthStore((state) => state.token);
 
-    // Global Toaster yahan rakhein taaki har jagah chale
+    const handleToggleSidebar = () => {
+        if (window.innerWidth < 1024) {
+            setMobileSidebarOpen((prev) => !prev);
+        } else {
+            setSideBarCollapsed((prev) => !prev);
+        }
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        setMobileSidebarOpen(false);
+    };
+
+    // Global Toaster y
     const globalToaster = (
         <Toaster
             position="top-center"
@@ -48,7 +65,7 @@ function App() {
         />
     );
 
-    // Agar token nahi hai, toh sirf Login page dikhao
+    // if not token show only login
     if (!token) {
         return (
             <>
@@ -64,20 +81,31 @@ function App() {
 
             <div className='min-h-screen bg-[#F5F5F5] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500'>
 
+                {mobileSidebarOpen && (
+                    <div
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                    />
+                )}
+
                 {/* sidebar call */}
                 <div className='flex h-screen overflow-hidden'>
                     <Sidebar
                         collapsed={sideBarCollapsed}
-                        onToggle={() => setSideBarCollapsed(!sideBarCollapsed)}
+                        mobileOpen={mobileSidebarOpen}
+                        onCloseMobile={() => setMobileSidebarOpen(false)}
+                        onToggle={handleToggleSidebar}
                         currentPage={currentPage}
-                        onPageChange={setCurrentPage} />
+                        onPageChange={handlePageChange}
+                    />
 
                     {/* header call */}
                     <div className='flex-1 flex flex-col overflow-hidden'>
                         <Header
+                            setCurrentPage={setCurrentPage}
                             sidebarCollapsed={sideBarCollapsed}
-                            onToggleSideBar={() => setSideBarCollapsed(!sideBarCollapsed)}
-                            setCurrentPage={setCurrentPage} />
+                            onToggleSideBar={handleToggleSidebar}
+                        />
 
                         <main className='flex overflow-y-auto bg-transparent'>
                             <div className='p-6 space-y-6 w-full'>
@@ -121,10 +149,10 @@ function App() {
                                 {currentPage === "add-banner" && <AddBanner setCurrentPage={setCurrentPage} />}
 
                                 {/* cms pages */}
-                                {currentPage === "terms-policy" && <CmsEditor cmsKey="terms_policy" title="Terms of Use" />}
-                                {currentPage === "privacy-policy" && <CmsEditor cmsKey="privacy_policy" title="Privacy Policy" />}
-                                {currentPage === "delivery-policy" && <CmsEditor cmsKey="delivery_policy" title="Delivery Policy" />}
-                                {currentPage === "exchange-policy" && <CmsEditor cmsKey="exchange_policy" title="Exchange & Return" />}
+                                {currentPage === "terms-policy" && <CmsEditor cmsKey="terms_policy" title={t('cmsEditor.termsTitle')} />}
+                                {currentPage === "privacy-policy" && <CmsEditor cmsKey="privacy_policy" title={t('cmsEditor.privacyTitle')} />}
+                                {currentPage === "delivery-policy" && <CmsEditor cmsKey="delivery_policy" title={t('cmsEditor.deliveryTitle')} />}
+                                {currentPage === "exchange-policy" && <CmsEditor cmsKey="exchange_policy" title={t('cmsEditor.exchangeTitle')} />}
 
                             </div>
                         </main>

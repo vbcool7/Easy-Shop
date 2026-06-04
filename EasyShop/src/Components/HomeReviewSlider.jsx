@@ -12,8 +12,11 @@ import "swiper/css/autoplay";
 import { Autoplay } from "swiper/modules";
 import { useApprovedReviews } from '../hook/useReview';
 
+import { useTranslation } from 'react-i18next';
+
 function HomeReviewSlider() {
 
+    const { t } = useTranslation();
     const { data: reviews = [], isLoading, isError } = useApprovedReviews();
 
     const SOCIAL_ICONS = [
@@ -35,112 +38,122 @@ function HomeReviewSlider() {
         return stars;
     };
 
-    if (isLoading) return <div className="p-20 text-center">Loading reviews...</div>;
-    if (isError) return <div className="p-20 text-center">Reviews Not Found!</div>;
+    if (isLoading) return <div className="p-20 text-center">{t('home.loadingReviews')}</div>;
+    if (isError) return <div className="p-20 text-center">{t('home.reviewsNotFound')}</div>;
 
     if (reviews.length === 0) return null;
 
     return (
-        <section className="w-full bg-pink-100/30 py-8 md:py-16 px-4 lg:px-6">
-            <div className="max-w-6xl mx-auto">
-
+        <section className="w-full bg-pink-100/30 px-4 sm:px-5 lg:px-6 py-8 md:py-16">
+            <div className="mx-auto max-w-6xl">
                 {/* heading */}
-                <div className="flex flex-col items-center mb-8 md:mb-12">
-                    <h2 className="text-2xl md:text-4xl text-center font-bold text-gray-800 tracking-tight">
-                        What Our Happy Customers Say
+                <div className="mb-8 flex flex-col items-center text-center md:mb-12">
+                    <h2 className="max-w-88 wrap-break-words text-center text-2xl font-bold leading-tight tracking-tight text-gray-800 sm:max-w-xl md:max-w-3xl md:text-4xl">
+                        {t('home.reviewsTitle')}
                     </h2>
 
-                    <div className="w-20 h-1 md:h-1.5 bg-pink-500 rounded-full mt-2 md:mt-3"></div>
+                    <div className="mt-3 h-1 w-20 rounded-full bg-pink-500 md:h-1.5"></div>
 
-                    <p className="text-gray-500 mt-4 text-[12px] text-center md:text-sm uppercase tracking-widest">
-                        Real stories from people who found their perfect style with us
+                    <p className="mt-4 max-w-84 wrap-break-words text-center text-[11px] uppercase leading-relaxed tracking-widest text-gray-500 sm:max-w-2xl sm:text-xs md:text-sm">
+                        {t('home.reviewsSubtitle')}
                     </p>
                 </div>
 
                 {/* Slider */}
                 <Swiper
                     modules={[Autoplay]}
-                    slidesPerView={4}
-                    spaceBetween={30}
+                    slidesPerView={1}
+                    spaceBetween={16}
                     loop={reviews.length > 4}
-                    autoplay={{ delay: 3000 }}
+                    autoplay={{ delay: 3000, disableOnInteraction: false }}
                     breakpoints={{
-                        0: { slidesPerView: 1 },
-                        640: { slidesPerView: 2 },
-                        1024: { slidesPerView: 3 },
-                        1280: { slidesPerView: 4 },
+                        480: {
+                            slidesPerView: 1,
+                            spaceBetween: 16,
+                        },
+                        640: {
+                            slidesPerView: 2,
+                            spaceBetween: 18,
+                        },
+                        1024: {
+                            slidesPerView: 3,
+                            spaceBetween: 24,
+                        },
+                        1280: {
+                            slidesPerView: 4,
+                            spaceBetween: 30,
+                        },
                     }}
-                    className="py-10 px-5"
+                    className="px-1 py-10 sm:px-2"
                 >
                     {reviews.map((item, index) => {
-
-                        const name = item.userId?.name || "Verified Customer";
-                        const reviewText = item.review ;
+                        const name = item.userId?.name || t('home.verifiedCustomer');
+                        const reviewText = item.review;
                         const avatarUrl = item.userId?.profilePhoto;
                         const ratingValue = item.rating || 5;
-
                         const socialBadge = SOCIAL_ICONS[index % SOCIAL_ICONS.length];
 
                         return (
-                            <SwiperSlide
-                                key={index}
-                                className="bg-white border border-gray-100 rounded-[2.5rem] p-8 flex flex-col items-center shadow-[0_10px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.08)] transition-all duration-300 group"
-                            >
-                                {/* Customer Image Circle */}
-                                <div className="relative">
-                                    <div className='w-24 h-24 bg-pink-50 rounded-full overflow-hidden flex justify-center items-center border-2 border-white ring-4 ring-pink-50/50'>
-                                        {avatarUrl ? (
-                                            <img
-                                                src={avatarUrl}
-                                                alt={name}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <span className='text-4xl group-hover:scale-110 transition-transform duration-300 text-gray-400'>
-                                                <FaRegUser />
-                                            </span>
-                                        )}
+                            <SwiperSlide key={index} className="h-auto">
+                                <div className="group flex h-full min-w-0 flex-col items-center rounded-3xl border border-gray-100 bg-white p-6 text-center shadow-[0_10px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_10px_40px_rgba(0,0,0,0.08)] sm:p-8 lg:rounded-[2.5rem]">
+
+                                    {/* Customer Image Circle */}
+                                    <div className="relative shrink-0">
+                                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-pink-50 ring-4 ring-pink-50/50 sm:h-24 sm:w-24">
+                                            {avatarUrl ? (
+                                                <img
+                                                    src={avatarUrl}
+                                                    alt={name}
+                                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <span className="text-3xl text-gray-400 transition-transform duration-300 group-hover:scale-110 sm:text-4xl">
+                                                    <FaRegUser />
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* quote icon */}
+                                        <div className="absolute -bottom-2 -right-2 rounded-full bg-pink-500 p-2 text-white shadow-lg">
+                                            <FaQuoteRight size={12} />
+                                        </div>
                                     </div>
 
-                                    {/* quote icon */}
-                                    <div className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2 rounded-full shadow-lg">
-                                        <FaQuoteRight size={12} />
+                                    {/* Name */}
+                                    <h3 className="mt-6 min-h-6 max-w-full wrap-break-words text-center text-lg font-bold leading-tight tracking-tight text-gray-900 sm:text-xl">
+                                        {name}
+                                    </h3>
+
+                                    {/* Rating Stars */}
+                                    <div className="my-3 flex shrink-0 justify-center gap-1">
+                                        {renderStars(ratingValue)}
                                     </div>
-                                </div>
 
-                                {/* Name */}
-                                <h3 className="mt-6 text-gray-900 font-bold text-xl tracking-tight">
-                                    {name}
-                                </h3>
+                                    {/* Review */}
+                                    <p className="line-clamp-5 max-w-full  wrap-break-words px-1 text-center text-[14px] italic leading-relaxed text-gray-500 sm:px-2">
+                                        "{reviewText}"
+                                    </p>
 
-                                {/* Rating Stars */}
-                                <div className="flex justify-center gap-1 my-3">
-                                    {renderStars(ratingValue)}
-                                </div>
-
-                                {/* Review */}
-                                <p className="text-[14px] text-gray-500 text-center leading-relaxed italic px-2">
-                                    "{reviewText}"
-                                </p>
-
-                                {/* Bottom Icon/Badge */}
-                                <div className="mt-6 pt-6 border-t border-gray-50 w-full flex justify-center">
-                                    <div className="flex items-center gap-2 text-pink-400 opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-[18px]">
-                                            {socialBadge.icon}
+                                    {/* Bottom Icon/Badge */}
+                                    <div className="mt-auto w-full border-t border-gray-50 pt-6">
+                                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-2 text-pink-400 opacity-70 transition-opacity group-hover:opacity-100">
+                                            <span className="shrink-0 text-[18px]">
+                                                {socialBadge.icon}
                                             </span>
-                                        <span className="text-[10px] uppercase tracking-widest font-bold">
-                                            {socialBadge.name} Review
+
+                                            <span className="max-w-full  wrap-break-words text-center text-[10px] font-bold uppercase leading-tight tracking-widest">
+                                                {socialBadge.name} {t('home.review')}
                                             </span>
+                                        </div>
                                     </div>
                                 </div>
                             </SwiperSlide>
-                        )
+                        );
                     })}
                 </Swiper>
             </div>
         </section>
-    )
+    );
 }
 
 export default HomeReviewSlider;

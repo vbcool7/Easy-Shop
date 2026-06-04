@@ -57,7 +57,7 @@ reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
 // ------------------ find average rating ----------------
 reviewSchema.statics.calculateAvgRating = async function (productId) {
     const stats = await this.aggregate([
-        { $match: { productId: productId } },
+        { $match: { productId: productId, status: 'Approved' } },
         {
             $group: {
                 _id: '$productId',
@@ -86,7 +86,7 @@ reviewSchema.post('save', function () {
 });
 
 // for review dlt
-reviewSchema.post('remove', function () {
+reviewSchema.post('deleteOne', { document: true, query: false }, function () {
     this.constructor.calculateAvgRating(this.productId);
 });
 

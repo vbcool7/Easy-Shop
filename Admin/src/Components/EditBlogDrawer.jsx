@@ -4,8 +4,11 @@ import { HiOutlineX, HiOutlineCloudUpload } from "react-icons/hi";
 import toast from 'react-hot-toast';
 
 import { useUpdateBlog } from '../hooks/useBlogs';
+import { useTranslation } from 'react-i18next';
 
 function EditBlogDrawer({ blog, isOpen, onClose }) {
+
+    const { t } = useTranslation();
     const { mutate: updateBlog, isPending: isUpdating } = useUpdateBlog();
 
     const [title, setTitle] = useState('');
@@ -137,7 +140,8 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                                Edit Blog <span className="text-pink-500 text-[10px] font-bold px-2 py-0.5 bg-pink-50 dark:bg-pink-950/50 rounded-full uppercase tracking-wider">Admin Mode</span>
+                                {t('editBlogDrawer.title')} <span className="text-pink-500 text-[10px] font-bold px-2 py-0.5 bg-pink-50 dark:bg-pink-950/50 rounded-full uppercase tracking-wider">
+                                    {t('editBlogDrawer.adminMode')}</span>
                             </h2>
                             <p className="text-[11px] text-slate-400 font-mono mt-1">
                                 ID: {blog?._id}
@@ -159,13 +163,13 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                         {/* Title Input */}
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                                Blog Title
+                                {t('editBlogDrawer.labelTitle')}
                             </label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Enter captivating title..."
+                                placeholder={t('editBlogDrawer.titlePlaceholder')}
                                 className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                             />
                         </div>
@@ -173,22 +177,22 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                         {/* cat and tym */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Category</label>
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelCategory')}</label>
                                 <input
                                     type="text"
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
-                                    placeholder="e.g., Beauty & Skincare"
+                                    placeholder={t('editBlogDrawer.categoryPlaceholder')}
                                     className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Read Time</label>
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelReadTime')}</label>
                                 <input
                                     type="text"
                                     value={readTime}
                                     onChange={(e) => setReadTime(e.target.value)}
-                                    placeholder="e.g., 5 min read"
+                                    placeholder={t('editBlogDrawer.readTimePlaceholder')}
                                     className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                                 />
                             </div>
@@ -197,7 +201,7 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                         {/* image upload */}
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                                Banner Image
+                                {t('editBlogDrawer.labelBannerImage')}
                             </label>
                             <div className="mt-2 flex flex-col sm:flex-row gap-4 items-center border border-dashed border-slate-200 dark:border-slate-800 p-4 rounded-xl">
                                 {imagePreview && (
@@ -212,10 +216,10 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                                         size={24}
                                         className="text-pink-500" />
                                     <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1">
-                                        Upload New Image
+                                        {t('editBlogDrawer.uploadImage')}
                                     </span>
                                     <span className="text-[10px] text-slate-400">
-                                        Leave empty to keep existing image
+                                        {t('editBlogDrawer.uploadHint')}
                                     </span>
                                     <input
                                         type="file"
@@ -229,36 +233,36 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
 
                         {/* short desc */}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Short Description</label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelShortDesc')}</label>
                             <textarea
                                 rows={2}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Write a brief overview snippet..."
+                                placeholder={t('editBlogDrawer.shortDescPlaceholder')}
                                 className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all resize-none"
                             />
                         </div>
 
                         {/* content area */}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Blog Content</label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelContent')}</label>
                             <textarea
                                 rows={6}
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder="Write your full article body here..."
+                                placeholder={t('editBlogDrawer.contentPlaceholder')}
                                 className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                             />
                         </div>
 
                         {/* blockquote */}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Highlight Quote (Blockquote)</label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelBlockquote')}</label>
                             <input
                                 type="text"
                                 value={blockquote}
                                 onChange={(e) => setBlockquote(e.target.value)}
-                                placeholder="e.g., Buy less, choose well."
+                                placeholder={t('editBlogDrawer.blockquotePlaceholder')}
                                 className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                             />
                         </div>
@@ -266,12 +270,12 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                         {/* tags and trend list */}
                         <div className="space-y-4">
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Tags (Comma Separated)</label>
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelTags')}</label>
                                 <input
                                     type="text"
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    placeholder="skincare, summer, fashion"
+                                    placeholder={t('editBlogDrawer.tagsPlaceholder')}
                                     className="mt-2 w-full text-sm px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                                 />
                             </div>
@@ -279,13 +283,13 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                             {/* Dynamic Trends List Section */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Trends List</label>
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{t('editBlogDrawer.labelTrends')}</label>
                                     <button
                                         type="button"
                                         onClick={addTrendField}
                                         className="text-xs font-bold text-pink-500 hover:text-pink-600 flex items-center gap-1 transition-all cursor-pointer"
                                     >
-                                        + Add Trend Point
+                                        {t('editBlogDrawer.addTrendBtn')}
                                     </button>
                                 </div>
 
@@ -299,7 +303,7 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                                                 type="text"
                                                 value={trend}
                                                 onChange={(e) => handleTrendChange(index, e.target.value)}
-                                                placeholder={`Enter trend point ${index + 1}...`}
+                                                placeholder={t('editBlogDrawer.trendPlaceholder', { index: index + 1 })}
                                                 className="flex-1 text-sm px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                                             />
                                             <button
@@ -307,7 +311,7 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                                                 onClick={() => removeTrendField(index)}
                                                 className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all cursor-pointer text-xs font-bold"
                                             >
-                                                Remove
+                                                {t('editBlogDrawer.removeTrend')}
                                             </button>
                                         </div>
                                     ))}
@@ -326,7 +330,7 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                             disabled={isUpdating}
                             className="px-5 py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                         >
-                            Cancel
+                            {t('editBlogDrawer.cancelBtn')}
                         </button>
 
                         <button
@@ -334,7 +338,7 @@ function EditBlogDrawer({ blog, isOpen, onClose }) {
                             disabled={isUpdating}
                             className="px-6 py-2.5 rounded-xl text-sm font-bold bg-linear-to-br from-pink-500 to-pink-600 text-white hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                         >
-                            {isUpdating ? 'Saving Changes...' : 'Save Changes'}
+                            {isUpdating ? t('editBlogDrawer.saving') : t('editBlogDrawer.saveBtn')}
                         </button>
                     </div>
 

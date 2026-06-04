@@ -7,9 +7,13 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore, { useVendorUIStore } from '../../store/useAuthStore';
 import { useVendorLogout } from '../../hook/useAuth';
 import { useGetVendor, useVendorSearch } from '../../hook/useVendor';
+import NotificationBellIcon from './NotificationBellIcon';
+import VendorLangSwitcher from './VendorLangSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
+    const { t } = useTranslation();
     const dropdownRef = useRef(null);
     const searchRef = useRef(null);
     const navigate = useNavigate();
@@ -72,33 +76,24 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
                     <div className='hidden lg:block'>
                         <h1 className='text-lg md:text-xl font-bold bg-linear-to-r from-pink-600 to-pink-400 bg-clip-text text-transparent'>
-                            Vendor
+                            {t('vendorHeader.vendor')}
                         </h1>
                         <p className='text-[11px] md:text-xs text-slate-400 font-medium tracking-wide uppercase'>
-                            EasyShop Seller Central
+                            {t('vendorHeader.sellerCentral')}
                         </p>
                     </div>
                 </div>
 
                 {/* Center: Search Bar */}
-                {/* <div className='flex-1 max-w-md hidden sm:block'>
-                    <div className='relative group'>
-                        <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
-                        <input
-                            type='text'
-                            placeholder='Search orders, products...'
-                            className='w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400'
-                        />
-                    </div>
-                </div> */}
-
-                {/* Center: Search Bar */}
                 <div className='flex-1 max-w-md hidden sm:block'>
-                    <div className='relative group' ref={searchRef}>
+                    <div
+                        className='relative group'
+                        ref={searchRef}>
                         <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
+
                         <input
                             type='text'
-                            placeholder='Search orders, products...'
+                            placeholder={t('vendorHeader.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setSearchOpen(true)}
@@ -111,19 +106,21 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
                                 {isLoading && (
                                     <p className='text-xs text-slate-400 px-4 py-3'>
-                                        Searching...
+                                        {t('vendorHeader.searching')}
                                     </p>
                                 )}
 
                                 {!isLoading && searchData?.products?.length === 0 && searchData?.orders?.length === 0 && (
-                                    <p className='text-xs text-slate-400 px-4 py-3'>No results found</p>
+                                    <p className='text-xs text-slate-400 px-4 py-3'>
+                                        {t('vendorHeader.noResults')}
+                                    </p>
                                 )}
 
                                 {/* Products */}
                                 {searchData?.products?.length > 0 && (
                                     <div>
                                         <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
-                                            Products
+                                            {t('vendorHeader.products')}
                                         </p>
                                         {searchData.products.map((product) => (
                                             <div
@@ -146,11 +143,14 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
                                                     </p>
                                                     <p className='text-[11px] text-slate-400'>₹{product.price}</p>
                                                 </div>
+
                                                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full
                                                     ${product.status === 'Approved' ? 'bg-green-50 text-green-600' :
                                                         product.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
                                                             'bg-red-50 text-red-500'}`}>
-                                                    {product.status}
+                                                    {product.status === 'Approved' ? t('vendorHeader.statusApproved') :
+                                                        product.status === 'Pending' ? t('vendorHeader.statusPending') :
+                                                            t('vendorHeader.statusRejected')}
                                                 </span>
                                             </div>
                                         ))}
@@ -161,7 +161,7 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
                                 {searchData?.orders?.length > 0 && (
                                     <div>
                                         <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
-                                            Orders
+                                            {t('vendorHeader.orders')}
                                         </p>
                                         {searchData.orders.map((order) => (
                                             <div
@@ -185,7 +185,10 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
                                                         order.orderStatus === 'Shipped' ? 'bg-blue-50 text-blue-600' :
                                                             order.orderStatus === 'Cancelled' ? 'bg-red-50 text-red-500' :
                                                                 'bg-yellow-50 text-yellow-600'}`}>
-                                                    {order.orderStatus}
+                                                    {order.orderStatus === 'Delivered' ? t('vendorHeader.statusDelivered') :
+                                                        order.orderStatus === 'Shipped' ? t('vendorHeader.statusShipped') :
+                                                            order.orderStatus === 'Cancelled' ? t('vendorHeader.statusCancelled') :
+                                                                t('vendorHeader.statusProcessing')}
                                                 </span>
                                             </div>
                                         ))}
@@ -206,12 +209,11 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
                         <Sun className='w-5 h-5 hover:rotate-45 transition-transform' />
                     </button>
 
-                    {/* Notification */}
+                    <VendorLangSwitcher />
+
+                    {/* notification */}
                     <div className='relative'>
-                        <button className='p-2.5 rounded-xl text-slate-500 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all'>
-                            <Bell className='w-5 h-5' />
-                            <span className='absolute top-2 right-2 w-2 h-2 bg-pink-500 rounded-full border-2 border-white shadow-sm'></span>
-                        </button>
+                        <NotificationBellIcon setCurrentPage={setCurrentPage} />
                     </div>
 
                     {/* User Profile */}
@@ -233,10 +235,10 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
                             <div className='hidden md:block text-left'>
                                 <h4 className='text-xs font-bold text-slate-800 dark:text-white leading-tight'>
-                                    {getVendor?.name || "Loading..."}
+                                    {getVendor?.name || t('vendorHeader.loading')}
                                 </h4>
                                 <span className='text-[10px] font-semibold text-pink-500 bg-pink-50 px-1.5 py-0.5 rounded-md'>
-                                    VERIFIED
+                                    {t('vendorHeader.verified')}
                                 </span>
                             </div>
                             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 
@@ -245,12 +247,15 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
 
                         {/* Enhanced Dropdown */}
                         {open && (
-                            <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="absolute right-0 mt-3 w-35 md:w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 py-1 md:py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
                                 <button
-                                    onClick={() => { navigate("/vendor_profile"); setOpen(false); }}
+                                    onClick={() => {
+                                        navigate("/vendor_profile");
+                                        setOpen(false);
+                                    }}
                                     className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 hover:bg-pink-50 dark:hover:bg-slate-700/50 hover:text-pink-600 transition-colors cursor-pointer">
                                     <UserRoundCog className="w-4 h-4" />
-                                    <span>Profile</span>
+                                    <span>{t('vendorHeader.profile')}</span>
                                 </button>
 
                                 <div className='h-px bg-slate-100 dark:bg-slate-700 mx-2 my-1'></div>
@@ -259,7 +264,7 @@ const VendorHeader = ({ onToggleSideBar, setCurrentPage }) => {
                                     onClick={handleLogout}
                                     className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
                                     <LogOut className="w-4 h-4" />
-                                    <span className='font-semibold'>Logout</span>
+                                    <span className='font-semibold'>{t('vendorHeader.logout')}</span>
                                 </button>
                             </div>
                         )}

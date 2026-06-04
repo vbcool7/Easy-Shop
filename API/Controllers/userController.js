@@ -4,6 +4,8 @@ import OTP from '../Models/otpModel.js';
 import sendEmail from '../utils/sendEmail.js';
 import { deleteCloudinaryFiles } from '../utils/cloudinaryUtils.js'; // err
 import { deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js'; // update
+import { createAdminNotification } from '../utils/createAdminNotifications.js';
+
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -46,6 +48,13 @@ export const userSignUp = async (req, res) => {
 
         await user.save();
         await OTP.deleteMany({ email, role: 'user' });
+
+        await createAdminNotification({
+            type: "NEW_USER",
+            title: "New User Registration",
+            message: `New user registered: ${user.name} (${user.email})`,
+            relatedId: user._id,
+        });
 
         res.status(201).json({
             success: true,
@@ -314,8 +323,8 @@ export const countUser = async (req, res) => {
 
 export const getUser = async (req, res) => {
     try {
-        const { user_id } = req.params; 
-        const loggedInUser = req.user;  
+        const { user_id } = req.params;
+        const loggedInUser = req.user;
 
         if (loggedInUser.id !== user_id && loggedInUser.role !== 'admin') {
             return res.status(403).json({
@@ -324,7 +333,7 @@ export const getUser = async (req, res) => {
             });
         }
 
-        const user = await User.findById(user_id).select("-password"); 
+        const user = await User.findById(user_id).select("-password");
 
         if (!user) {
             return res.status(404).json({

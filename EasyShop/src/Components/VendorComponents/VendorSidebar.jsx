@@ -15,92 +15,11 @@ import { BookOpen } from 'lucide-react';
 import { useGetVendor } from "../../hook/useVendor";
 import { useVendorUnreadCount } from "../../hook/useChat";
 import useAuthStore from "../../store/useAuthStore";
+import { useTranslation } from "react-i18next";
 
-const menuItems = [
-    {
-        id: "Vendor Dashboard",
-        icon: <MdOutlineDashboard className='w-6 h-6' />,
-        label: "Vendor Dashboard",
-        active: true,
-    },
-    {
-        id: "Products",
-        icon: <AiOutlineProduct className='w-6 h-6' />,
-        label: "Products Management",
-        active: true,
-        submenu: [
-            { id: "All Products", label: "All Products" },
-            { id: "Add Product", label: "Add New Product" },
-            { id: "Inventory", label: "Stock Inventory" }
-        ],
-    },
-    {
-        id: "blog",
-        icon: <BookOpen className='w-6 h-6' />,
-        label: "Blog Management",
-        submenu: [
-            { id: "blogs", label: "Blog List" },
-            { id: "create-blog", label: "Add Blog" },
-        ]
-    },
-    {
-        id: "Orders",
-        icon: <PiShoppingCartSimple className='w-6 h-6' />,
-        label: "Orders",
-        active: true,
-        Badge: "12"
-    },
-    {
-        id: "Earnings",
-        icon: <PiHandCoins className='w-6 h-6' />,
-        label: "Earnings & Payouts",
-        active: true,
-        submenu: [
-            { id: "Transactions", label: "Transactions" },
-            { id: "Withdrawals", label: "Withdraw Requests" }
-        ]
-    },
-    {
-        id: "Customers",
-        icon: <TbUsers className='w-6 h-6' />,
-        label: "My Customers",
-        active: true,
-    },
-    {
-        id: "Messages",
-        icon: <HiOutlineChatAlt2 className='w-6 h-6' />,
-        label: "Customer Chats",
-        active: true,
-        Badge: "5"
-    },
-    {
-        id: "Review",
-        icon: <TiStarOutline className='w-6 h-6' />,
-        label: "Review And Rating",
-        active: true,
-        Badge: "New"
-    },
-    // {
-    //     id: "Promotions",
-    //     icon: <BadgePercent className='w-6 h-6' />,
-    //     label: "Discounts & Offers",
-    //     active: true,
-    // },
-    // {
-    //     id: "CMS",
-    //     icon: <TbSettings className='w-6 h-6' />,
-    //     label: "Shop Settings",
-    //     active: true,
-    //     submenu: [
-    //         { id: "Hero CMS", label: "Home Banners" },
-    //         { id: "Footer CMS", label: "Footer Info" },
-    //         { id: "Shop Policy", label: "Policies" }
-    //     ]
-    // },
-];
+function VendorSidebar({ collapsed, onToggle, currentPage, onPageChange, mobileOpen, onCloseMobile }) {
 
-function VendorSidebar({ collapsed, onToggle, currentPage, onPageChange }) {
-
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const vendorId = user?._id || user?.id;
 
@@ -108,6 +27,72 @@ function VendorSidebar({ collapsed, onToggle, currentPage, onPageChange }) {
     const { data: getVendor, isLoading, isError } = useGetVendor();
 
     const [expandedItems, setExpandedItems] = useState(new Set(['categories']));
+
+    const menuItems = [
+        {
+            id: "Vendor Dashboard",
+            icon: <MdOutlineDashboard className='w-6 h-6' />,
+            label: t('sidebar.dashboard', 'Vendor Dashboard'),
+            active: true,
+        },
+        {
+            id: "Products",
+            icon: <AiOutlineProduct className='w-6 h-6' />,
+            label: t('sidebar.productsManagement', 'Products Management'),
+            active: true,
+            submenu: [
+                { id: "All Products", label: t('sidebar.allProducts', 'All Products') },
+                { id: "Add Product", label: t('sidebar.addNewProduct', 'Add New Product') },
+                { id: "Inventory", label: t('sidebar.stockInventory', 'Stock Inventory') }
+            ],
+        },
+        {
+            id: "blog",
+            icon: <BookOpen className='w-6 h-6' />,
+            label: t('sidebar.blogManagement', 'Blog Management'),
+            submenu: [
+                { id: "blogs", label: t('sidebar.blogList', 'Blog List') },
+                { id: "create-blog", label: t('sidebar.addBlog', 'Add Blog') },
+            ]
+        },
+        {
+            id: "Orders",
+            icon: <PiShoppingCartSimple className='w-6 h-6' />,
+            label: t('sidebar.orders', 'Orders'),
+            active: true,
+            Badge: "12"
+        },
+        {
+            id: "Earnings",
+            icon: <PiHandCoins className='w-6 h-6' />,
+            label: t('sidebar.earningsPayouts', 'Earnings & Payouts'),
+            active: true,
+            submenu: [
+                { id: "Transactions", label: t('sidebar.transactions', 'Transactions') },
+                { id: "Withdrawals", label: t('sidebar.withdrawRequests', 'Withdraw Requests') }
+            ]
+        },
+        {
+            id: "Customers",
+            icon: <TbUsers className='w-6 h-6' />,
+            label: t('sidebar.myCustomers', 'My Customers'),
+            active: true,
+        },
+        {
+            id: "Messages",
+            icon: <HiOutlineChatAlt2 className='w-6 h-6' />,
+            label: t('sidebar.customerChats', 'Customer Chats'),
+            active: true,
+            Badge: "5"
+        },
+        {
+            id: "Review",
+            icon: <TiStarOutline className='w-6 h-6' />,
+            label: t('sidebar.reviewRating', 'Review And Rating'),
+            active: true,
+            Badge: t('sidebar.badgeNew', 'New')
+        },
+    ];
 
     const toggleEcpanded = (itemid) => {
         const newExpanded = new Set(expandedItems);
@@ -121,19 +106,32 @@ function VendorSidebar({ collapsed, onToggle, currentPage, onPageChange }) {
 
     return (
         <div
-            className={`${collapsed ? "w-20 md:w-22" : "w-68 md:w-72"} 
-        shadow-lg transition-all duration-300 ease-in-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-700/50 flex flex-col relative z-10`}>
+            className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200/50 bg-white/95 shadow-xl backdrop-blur-xl transition-transform duration-300 ease-in-out dark:border-slate-700/50 dark:bg-slate-900/95
+            ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+
+            lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-lg
+            ${collapsed ? 'lg:w-20' : 'lg:w-72'}
+        `}
+        >
 
             {/* Logo Section */}
-            <div className={`p-6 flex items-center 
-                ${collapsed ? "justify-center" : "justify-between"} border-b border-pink-50 dark:border-slate-800`}>
+            <div className={`flex items-center border-b border-pink-50 p-6 dark:border-slate-800 
+            ${collapsed ? 'md:justify-center' : 'justify-between'
+                }`}>
                 <Link to="/" className='flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity'>
                     <img
                         src={Logo}
                         alt="EasyShop"
-                        className={`${collapsed ? "w-10" : "w-25"} transition-all duration-300 object-contain`}
+                        className={`${collapsed ? 'md:w-10' : 'w-25'} w-25 object-contain transition-all duration-300`}
                     />
                 </Link>
+
+                <button
+                    onClick={onCloseMobile}
+                    className="rounded-xl p-2 text-slate-500 transition-all hover:bg-pink-50 lg:hidden"
+                >
+                    ✕
+                </button>
             </div>
 
             {/* Navigation Menu */}
@@ -234,8 +232,12 @@ function VendorSidebar({ collapsed, onToggle, currentPage, onPageChange }) {
 
                     {!collapsed && (
                         <div className='flex-1 min-w-0'>
-                            <h1 className='text-sm font-bold text-slate-800 dark:text-white truncate'>EasyShop Vendor</h1>
-                            <p className='text-[10px] font-bold text-pink-500 uppercase tracking-tighter'>Premium Seller</p>
+                            <h1 className='text-xs md:text-sm font-bold text-slate-800 dark:text-white truncate'>
+                                {t('sidebar.vendorName', 'EasyShop Vendor')}
+                            </h1>
+                            <p className='text-[8px] md:text-[10px] font-bold text-pink-500 uppercase tracking-tighter'>
+                                {t('sidebar.vendorBadge', 'Premium Seller')}
+                            </p>
                         </div>
                     )}
                 </div>

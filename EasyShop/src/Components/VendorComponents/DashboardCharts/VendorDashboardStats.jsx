@@ -3,53 +3,68 @@ import React from 'react';
 import { HiOutlineCurrencyRupee, HiOutlineShoppingBag, HiOutlineCube, HiOutlineStar } from "react-icons/hi";
 import CountUp from 'react-countup';
 
-import {useVendorStats} from '../../../hook/useVendor';
+import { useVendorStats } from '../../../hook/useVendor';
+import { useTranslation } from 'react-i18next';
 
 function VendorDashboardStats() {
-    
+
+    const { t } = useTranslation();
     const { data: stats, isLoading, isError } = useVendorStats();
 
     const cardItems = [
         {
             id: 1,
-            title: "Total Revenue",
-            para: "Overall earnings from successful sales.",
+            title: t('vendorStats.revenueTitle'),
+            para: t('vendorStats.revenuePara'),
             icon: <HiOutlineCurrencyRupee />,
-            value: stats?.totalRevenue || 0, // Dynamic Value
-            growth: "+12.5%", 
+            value: stats?.totalRevenue || 0,
+            growth: "+12.5%",
             color: "bg-pink-500"
         },
         {
             id: 2,
-            title: "Total Products", // Updated from Total Orders to match your API
-            para: "Total number of products in your inventory.",
+            title: t('vendorStats.productsTitle'),
+            para: t('vendorStats.productsPara'),
             icon: <HiOutlineShoppingBag />,
-            value: stats?.totalProds || 0, // Dynamic Value
+            value: stats?.totalProds || 0,
             growth: "+8.2%",
             color: "bg-blue-500"
         },
         {
             id: 3,
-            title: "Approved Products",
-            para: "Products currently live in your store.",
+            title: t('vendorStats.approvedTitle'),
+            para: t('vendorStats.approvedPara'),
             icon: <HiOutlineCube />,
-            value: stats?.activeProds || 0, // Dynamic Value
-            growth: "Live",
+            value: stats?.activeProds || 0,
+            growth: t('vendorStats.growthLive'),
             color: "bg-purple-500"
         },
         {
             id: 4,
-            title: "Average Rating",
-            para: "Overall customer satisfaction score.",
+            title: t('vendorStats.ratingTitle'),
+            para: t('vendorStats.ratingPara'),
             icon: <HiOutlineStar />,
-            value: stats?.avgRating || 0, // Dynamic Value
-            growth: "Top Rated",
+            value: stats?.avgRating || 0,
+            growth: t('vendorStats.growthTopRated'),
             color: "bg-amber-500"
         },
     ];
 
-    if (isLoading) return <div className="py-10 text-center text-slate-500">Loading Stats...</div>;
-    if (isError) return <div className="py-10 text-center text-red-500">Failed to load statistics.</div>;
+    if (isLoading) {
+        return (
+            <div className="py-10 text-center text-slate-500">
+                {t('vendorStats.loading')}
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="py-10 text-center text-red-500">
+                {t('vendorStats.error')}
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-4">

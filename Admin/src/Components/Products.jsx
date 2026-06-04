@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { TbEdit } from "react-icons/tb";
 import { LiaTrashSolid } from "react-icons/lia";
 import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
@@ -8,10 +9,11 @@ import { useDeleteProduct, useGetProductDeleteInfo, useGetProducts, useToggleBes
 import EditProductDrawer from './EditProductDrawer';
 import { useAdminUIStore } from '../store/useAdminAuthStore';
 import { getPaginationRange } from '../utils/getPaginationRange';
-import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function Products() {
 
+    const {t} = useTranslation();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [page, setPage] = useState(1);
@@ -84,8 +86,8 @@ function Products() {
         });
     }
 
-    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('adminProducts.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('adminProducts.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -97,15 +99,15 @@ function Products() {
                 <div>
                     <div className='flex gap-2 items-center'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            Products Hub
+                            {t('adminProducts.title')}
                         </h2>
 
                         <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            Total: {data?.count || 0}
+                            {t('adminProducts.totalBadge')} {data?.count || 0}
                         </span>
                     </div>
                     <p className="text-[11px] md:text-xs text-slate-500 mt-1">
-                        Manage and organize your products
+                        {t('adminProducts.description')}
                     </p>
                 </div>
 
@@ -115,7 +117,7 @@ function Products() {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search products..."
+                        placeholder={t('adminProducts.searchPlaceholder')}
                         className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
                 </div>
@@ -127,16 +129,16 @@ function Products() {
 
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                         <tr>
-                            <th className="px-6 py-4 whitespace-nowrap">Image</th>
-                            <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">Product</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Category</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Vendor Info</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Price & Stock</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Stock Status</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Status</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">New Arrival</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Best Seller</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Action</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('adminProducts.colImage')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">{t('adminProducts.colProduct')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('adminProducts.colCategory')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('adminProducts.colVendorInfo')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('adminProducts.colPriceStock')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminProducts.colStockStatus')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminProducts.colStatus')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminProducts.colNewArrival')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminProducts.colBestSeller')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminProducts.colAction')}</th>
                         </tr>
                     </thead>
 
@@ -209,7 +211,7 @@ function Products() {
                                                 {product.price}
                                             </span>
                                             <span className="text-[10px] text-slate-400 font-medium">
-                                                Stock: {product.stock}
+                                                {t('adminProducts.stockLabel')} {product.stock}
                                             </span>
                                         </div>
                                     </td>
@@ -302,7 +304,7 @@ function Products() {
                         }) : (
                             <tr>
                                 <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
-                                    No products found matching your search.
+                                    {t('adminProducts.emptySearch')}
                                 </td>
                             </tr>
                         )}
@@ -318,7 +320,7 @@ function Products() {
                         disabled={page === 1}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Prev
+                        {t('adminProducts.prev')}
                     </button>
 
                     {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -342,7 +344,7 @@ function Products() {
                         disabled={page === totalPages}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Next
+                        {t('adminProducts.next')}
                     </button>
                 </div>
             )}
@@ -382,14 +384,10 @@ function Products() {
 
                     <div className="text-center">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Remove Product
+                            {t('adminProducts.deleteTitle')}
                         </h3>
                         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            {isInfoLoading
-                                ? "Checking product data..."
-                                : deleteInfo?.message
-                            }
-                        </p>
+                            {isInfoLoading ? t('adminProducts.deleteChecking') : deleteInfo?.message}</p>
                     </div>
 
                     <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -399,7 +397,7 @@ function Products() {
                             disabled={isDeleting}
                             className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95"
                         >
-                            No, Keep it
+                            {t('adminProducts.deleteKeep')}
                         </button>
 
                         {deleteInfo?.canDelete && (
@@ -414,7 +412,7 @@ function Products() {
                                 ) : (
                                     <HiOutlineTrash size={18} />
                                 )}
-                                {isDeleting ? "Deleting..." : "Yes, Delete"}
+                                {isDeleting ? t('adminProducts.deleteDeleting') : t('adminProducts.deleteConfirm')}
                             </button>
                         )}
                     </div>

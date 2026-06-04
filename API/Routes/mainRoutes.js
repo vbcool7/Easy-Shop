@@ -18,6 +18,8 @@ import contactRoutes from './contactRoutes.js';
 import blogRoutes from './blogRoutes.js';
 import cmsRoutes from './cmsRoutes.js';
 import bannerRoutes from './bannerRoutes.js';
+import notification from './notificationRoutes.js';
+import adminNotification from './adminNotificationRoutes.js';
 
 const rootRouter = express.Router();
 
@@ -39,5 +41,7 @@ rootRouter.use("/contact", contactRoutes);
 rootRouter.use("/blog", blogRoutes);
 rootRouter.use("/cms", cmsRoutes);
 rootRouter.use("/banner", bannerRoutes);
+rootRouter.use("/notification", notification);
+rootRouter.use("/adminNotification", adminNotification);
 
 export default rootRouter;

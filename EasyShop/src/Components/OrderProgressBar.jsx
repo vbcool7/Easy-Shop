@@ -1,21 +1,25 @@
 
+import { useTranslation } from 'react-i18next';
+
 function OrderProgressBar({ orderStatus }) {
 
+    const { t } = useTranslation();
+
     const allSteps = [
-        { key: "Pending", label: "Order placed" },
-        { key: "Processing", label: "Order confirmed" },
-        { key: "Shipped", label: "At courier warehouse" },
-        { key: "Delivered", label: "Delivered" },
-        { key: "Cancelled", label: "Cancelled" },
+        { key: "Pending", label: t('orderProgress.placed') },
+        { key: "Processing", label: t('orderProgress.confirmed') },
+        { key: "Shipped", label: t('orderProgress.courier') },
+        { key: "Delivered", label: t('orderProgress.delivered') },
+        { key: "Cancelled", label: t('orderProgress.cancelled') },
     ];
 
     const steps = orderStatus === 'Cancelled'
-    ? allSteps.filter(s => s.key !== 'Delivered' && s.key !== 'Shipped')
-    : allSteps.filter(s => s.key !== 'Cancelled');
+        ? allSteps.filter(s => s.key !== 'Delivered' && s.key !== 'Shipped')
+        : allSteps.filter(s => s.key !== 'Cancelled');
 
     const stepMap = orderStatus === 'Cancelled'
-    ? { Pending: 1, Processing: 2, Cancelled: 3 }  
-    : { Pending: 1, Processing: 2, Shipped: 3, Delivered: 4 };
+        ? { Pending: 1, Processing: 2, Cancelled: 3 }
+        : { Pending: 1, Processing: 2, Shipped: 3, Delivered: 4 };
 
     const current = stepMap[orderStatus] || 1;
     const total = steps.length;

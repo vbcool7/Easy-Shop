@@ -8,9 +8,11 @@ import { useBlogList, useDeleteBlog, useUpdateBlogStatus } from '../hooks/useBlo
 import EditBlogDrawer from './EditBlogDrawer';
 import { useState, useEffect } from 'react';
 import { getPaginationRange } from '../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Blogs({ setCurrentPage }) {
 
+    const {t} = useTranslation();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [page, setPage] = useState(1);
@@ -65,8 +67,8 @@ function Blogs({ setCurrentPage }) {
         });
     }
 
-    if (isLoading) return <p className="p-10 text-center">Loading blogs...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching blogs!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('adminBlogs.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('adminBlogs.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -77,16 +79,16 @@ function Blogs({ setCurrentPage }) {
                 <div>
                     <div className='flex items-center gap-2.5'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            All Published Blogs
+                           {t('adminBlogs.title')}
                         </h2>
 
                         <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-                            Total: {blogs?.length || 0}
+                            {t('adminBlogs.totalBadge')} {blogs?.length || 0}
                         </span>
                     </div>
 
                     <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Manage, edit, or remove seasonal articles and style trends.
+                        {t('adminBlogs.description')}
                     </p>
                 </div>
 
@@ -96,7 +98,7 @@ function Blogs({ setCurrentPage }) {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search blogs..."
+                        placeholder={t('adminBlogs.searchPlaceholder')}
                         className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
                     />
 
@@ -105,7 +107,7 @@ function Blogs({ setCurrentPage }) {
                         onClick={() => setCurrentPage('create-blog')}
                         className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none transition-all active:scale-95 shrink-0 cursor-pointer"
                     >
-                        + Add New
+                        {t('adminBlogs.addNew')}
                     </button>
                 </div>
             </div>
@@ -118,12 +120,12 @@ function Blogs({ setCurrentPage }) {
                         {/* Table Head */}
                         <thead className="text-xs uppercase bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800">
                             <tr>
-                                <th scope="col" className="px-6 py-4">Blog Info</th>
-                                <th scope="col" className="px-6 py-4">Category</th>
-                                <th scope="col" className="px-6 py-4">Created By</th>
-                                <th scope="col" className="px-6 py-4">Date Created</th>
-                                <th scope="col" className="px-6 py-4 text-center">Status</th>
-                                <th scope="col" className="px-6 py-4 text-center">Actions</th>
+                                <th scope="col" className="px-6 py-4">{t('adminBlogs.colBlogInfo')}</th>
+                                <th scope="col" className="px-6 py-4">{t('adminBlogs.colCategory')}</th>
+                                <th scope="col" className="px-6 py-4">{t('adminBlogs.colCreatedBy')}</th>
+                                <th scope="col" className="px-6 py-4">{t('adminBlogs.colDateCreated')}</th>
+                                <th scope="col" className="px-6 py-4 text-center">{t('adminBlogs.colStatus')}</th>
+                                <th scope="col" className="px-6 py-4 text-center">{t('adminBlogs.colActions')}</th>
                             </tr>
                         </thead>
 
@@ -134,10 +136,10 @@ function Blogs({ setCurrentPage }) {
                                     <td colSpan={6} className="px-6 py-16 text-center">
                                         <div className="text-center">
                                             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                                No Blogs Found
+                                               {t('adminBlogs.emptyTitle')}
                                             </p>
                                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                                                System me koi bhi blog available nahi hai.
+                                                {t('adminBlogs.emptyDesc')}
                                             </p>
                                         </div>
                                     </td>
@@ -178,11 +180,11 @@ function Blogs({ setCurrentPage }) {
                                                 <div>
                                                     {blog.authorType === 'Admin' ? (
                                                         <span className="px-2 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 text-[10px] font-bold uppercase rounded-md tracking-wider border border-blue-100 dark:border-none">
-                                                            Admin
+                                                            {t('adminBlogs.authorAdmin')}
                                                         </span>
                                                     ) : (
                                                         <span className="px-2 py-0.5 bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 text-[10px] font-bold uppercase rounded-md tracking-wider border border-purple-100 dark:border-none">
-                                                            Vendor
+                                                            {t('adminBlogs.authorVendor')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -256,7 +258,7 @@ function Blogs({ setCurrentPage }) {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                            {t('adminBlogs.prev')}
                         </button>
 
                         {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -280,7 +282,7 @@ function Blogs({ setCurrentPage }) {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                           {t('adminBlogs.next')}
                         </button>
                     </div>
                 )}
@@ -321,11 +323,11 @@ function Blogs({ setCurrentPage }) {
 
                     <div className="text-center">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Remove Blog
+                           {t('adminBlogs.deleteTitle')}
                         </h3>
                         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            Are you sure you want to delete <span className="font-bold text-slate-700 dark:text-white">" {selectedBlog?.title || "this item"}"</span>?
-                            This action cannot be undone.
+                            {t('adminBlogs.deleteMessage')} <span className="font-bold text-slate-700 dark:text-white">" {selectedBlog?.title || "this item"}"</span>
+                            {' '}{t('adminBlogs.deleteWarning')}
                         </p>
                     </div>
 
@@ -336,7 +338,7 @@ function Blogs({ setCurrentPage }) {
                             disabled={isDeleting}
                             className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95"
                         >
-                            No, Keep it
+                            {t('adminBlogs.deleteKeep')}
                         </button>
 
                         <button
@@ -350,7 +352,7 @@ function Blogs({ setCurrentPage }) {
                             ) : (
                                 <HiOutlineTrash size={18} />
                             )}
-                            {isDeleting ? "Deleting..." : "Yes, Delete"}
+                            {isDeleting ? t('adminBlogs.deleteDeleting') : t('adminBlogs.deleteConfirm')}
                         </button>
                     </div>
                 </div>

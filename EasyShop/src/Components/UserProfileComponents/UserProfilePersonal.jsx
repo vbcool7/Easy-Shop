@@ -6,13 +6,15 @@ import { useUpdatedEmailVerifyOtp } from '../../hook/useAuth';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 function UserProfilePersonal({ userData, onSubmit, isPending }) {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
 
     const queryClient = useQueryClient();
-    const userId = user?._id || user?.id; 
+    const userId = user?._id || user?.id;
 
     const { mutate: verifyOtp, isPending: isVerifying } = useUpdatedEmailVerifyOtp();
 
@@ -74,7 +76,7 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                     toast.success("Please verify OTP sent to your new email");
                 } else {
                     toggleEdit(fieldId);
-                    toast.success("Updated successfully");
+                    // toast.success("Updated successfully");
                 }
             },
             onError: (err) => {
@@ -126,16 +128,16 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                     <span
                         onClick={() => toggleEdit(fieldId)}
                         className='text-pink-500 hover:text-pink-600 font-medium text-[13px] md:text-sm cursor-pointer'>
-                        {!isEditing ? "Edit" : "Cancel"}
+                        {!isEditing ? t('userProfile.edit') : t('userProfile.cancel')}
                     </span>
                 </div>
-                <div className='flex flex-row gap-5 items-center'>
+                <div className='flex flex-row gap-4 md:gap-5 items-center'>
                     <input
                         type={type}
                         value={formData[fieldId]}
                         onChange={(e) => handleInputChange(e, fieldId)}
                         disabled={!isEditing}
-                        className={`flex-1 p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border transition-all text-sm outline-none
+                        className={`min-w-0 flex-1 p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border transition-all text-sm outline-none
                             ${!isEditing
                                 ? 'bg-slate-100 border-transparent text-slate-500 cursor-not-allowed'
                                 : 'bg-white border-slate-200 focus:ring-1 focus:ring-pink-500 text-slate-800 shadow-sm'
@@ -145,8 +147,8 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                         <button
                             onClick={() => handleSave(fieldId)}
                             disabled={isPending}
-                            className='px-6 py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl text-sm transition-all active:scale-95 shadow-lg shadow-pink-100 disabled:opacity-50'>
-                            {isPending ? "Saving..." : "Save"}
+                            className='whitespace-nowrap shrink-0 px-4 md:px-5 py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl text-sm transition-all active:scale-95 shadow-lg shadow-pink-100 disabled:opacity-50'>
+                            {isPending ? t('userProfile.saving') : t('userProfile.save')}
                         </button>
                     )}
                 </div>
@@ -180,20 +182,24 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                         </label>
                     </div>
                     <div className="text-center md:text-left">
-                        <h4 className="text-[13px] md:text-sm font-black text-slate-800 uppercase tracking-tight">Profile Photo</h4>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">JPG, GIF or PNG. Max size of 2MB</p>
+                        <h4 className="text-[13px] md:text-sm font-black text-slate-800 uppercase tracking-tight">
+                            {t('userProfile.photoTitle')}
+                            </h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                            {t('userProfile.photoHint')}
+                            </p>
                     </div>
                 </div>
 
                 {/* input fields */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-                    {RenderField("Full Name", "name")}
-                    {RenderField("Email", "email", "email")}
-                    {RenderField("Phone Number", "contact")}
+                    {RenderField(t('userProfile.fieldName'), "name")}
+                    {RenderField(t('userProfile.fieldEmail'), "email", "email")}
+                    {RenderField(t('userProfile.fieldPhone'), "contact")}
                     <div className="lg:col-span-2">{RenderField("Address", "address")}</div>
-                    {RenderField("City", "city")}
-                    {RenderField("Pin Code", "pincode")}
-                    {RenderField("State", "state")}
+                    {RenderField(t('userProfile.fieldCity'), "city")}
+                    {RenderField(t('userProfile.fieldPinCode'), "pincode")}
+                    {RenderField(t('userProfile.fieldState'), "state")}
                 </div>
 
                 {/* footer */}
@@ -202,7 +208,7 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                         <HiOutlineShieldCheck size={20} />
                     </div>
                     <p className="text-[10px] lg:text-xs text-slate-500 font-medium">
-                        We value your privacy. See our <span className="text-pink-500 cursor-pointer hover:underline">Privacy Policy</span>.
+                        {t('userProfile.privacyText')} <span className="text-pink-500 cursor-pointer hover:underline">{t('userProfile.privacyLink')}</span>.
                     </p>
                 </div>
             </div>
@@ -212,8 +218,12 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-2xl max-w-md w-full flex flex-col items-center gap-6">
                         <div className="text-center">
-                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Verify Email</h2>
-                            <p className="text-sm text-slate-500 mt-2">Enter the 6-digit code sent to <br /><b>{tempEmail}</b></p>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+                                {t('userProfile.otpTitle')}
+                                </h2>
+                            <p className="text-sm text-slate-500 mt-2">
+                                {t('userProfile.otpSubtitle')} <br /><b>{tempEmail}</b>
+                                </p>
                         </div>
                         <input
                             type="text"
@@ -227,13 +237,14 @@ function UserProfilePersonal({ userData, onSubmit, isPending }) {
                             <button
                                 onClick={() => setShowOtpModal(false)}
                                 className="flex-1 py-3 font-semibold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">
-                                Cancel
+                                {t('userProfile.otpCancel')}
                             </button>
+                            
                             <button
                                 onClick={handleVerifyOtp}
                                 disabled={isVerifying}
                                 className="flex-1 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50">
-                                {isVerifying ? "Verifying..." : "Verify OTP"}
+                                {isVerifying ? t('userProfile.otpVerifying') : t('userProfile.otpVerify')}
                             </button>
                         </div>
                     </div>

@@ -5,18 +5,18 @@ import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
 import { HiOutlineInformationCircle } from "react-icons/hi";
 import { HiOutlineLockClosed } from "react-icons/hi";
+import toast from 'react-hot-toast';
 
 import { HiOutlineCloudUpload, HiOutlineX, HiOutlinePhotograph } from "react-icons/hi";
 import { useAddProduct, useVendorCategories, useVendorSubCategories } from '../../hook/uesProducts';
 import useAuthStore from '../../store/useAuthStore';
-import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function AddNewProduct({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
-    // const vendorCategoryType = user?.category;
 
-    // const { data: categories, isLoading: catLoading } = useVendorCategories();
     const { data: subCategories = [], isLoading } = useVendorSubCategories(user?.category);
     const { mutate: addProduct, isPending: isAdding } = useAddProduct();
 
@@ -414,9 +414,11 @@ function AddNewProduct({ setCurrentPage }) {
                 <div className='absolute -bottom-10 -left-10 h-24 w-24 bg-white/10 rounded-full blur-xl'></div>
 
                 <div className='relative z-10 text-center md:text-start'>
-                    <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>Product Inventory Portal</h1>
+                    <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>
+                        {t('addProduct.title')}
+                    </h1>
                     <p className='text-pink-50 text-xs font-medium opacity-90'>
-                        Complete the form below to showcase your product to millions.
+                        {t('addProduct.subtitle')}
                     </p>
                 </div>
             </div>
@@ -427,7 +429,7 @@ function AddNewProduct({ setCurrentPage }) {
                 {/* Category  */}
                 <div className='mb-6 md:mb-8'>
                     <label className='ml-1 text-[12px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1.5 md:mb-2 block'>
-                        Your Selected Category
+                        {t('addProduct.selectedCategoryLabel')}
                     </label>
 
                     <div className="w-full bg-slate-100 dark:bg-slate-800/50 px-4 md:px-5 py-3 md:py-3.5 rounded-xl md:rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between group">
@@ -437,10 +439,10 @@ function AddNewProduct({ setCurrentPage }) {
                             </div>
                             <div>
                                 <span className="text-slate-800 dark:text-white font-bold text-sm md:text-base">
-                                    {user?.category || 'General'}
+                                    {user?.category || t('addProduct.categoryGeneral')}
                                 </span>
                                 <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                                    Fixed based on your profile
+                                    {t('addProduct.categoryFixedNotice')}
                                 </p>
                             </div>
                         </div>
@@ -451,7 +453,7 @@ function AddNewProduct({ setCurrentPage }) {
                 {/* sub cat */}
                 <div className='mb-6 md:mb-8 '>
                     <label className='ml-1 text-[12px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1.5 md:mb-2 block'>
-                        Select Sub-Category {isLoading && <span className="text-pink-400 animate-pulse text-[10px] ml-2">(Loading...)</span>}
+                        {t('addProduct.subCategoryLabel')} {isLoading && <span className="text-pink-400 animate-pulse text-[10px] ml-2">{t('addProduct.loading')}</span>}
                     </label>
 
                     <button
@@ -463,7 +465,7 @@ function AddNewProduct({ setCurrentPage }) {
                         ${(isLoading || subCategories.length === 0) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                         <span className={`${selectedSubCat ? 'text-slate-800 dark:text-white font-medium' : 'text-slate-400'} text-[11px] md:text-[14px] truncate mr-2`}>
-                            {selectedSubCat ? selectedSubCat.subCatName : (subCategories.length === 0 ? 'No sub-categories available' : 'Choose sub-category...')}
+                            {selectedSubCat ? selectedSubCat.subCatName : (subCategories.length === 0 ? t('addProduct.noSubCategoriesAvailable') : t('addProduct.chooseSubCategory'))}
                         </span>
 
                         <div className="shrink-0">
@@ -487,7 +489,7 @@ function AddNewProduct({ setCurrentPage }) {
                                     ))
                                 ) : (
                                     <div className="px-5 py-3 text-slate-400 text-xs italic text-center">
-                                        No sub-categories found for this category.
+                                        {t('addProduct.noSubCategoriesFound')}
                                     </div>
                                 )}
                             </div>
@@ -504,14 +506,14 @@ function AddNewProduct({ setCurrentPage }) {
                             {/* prod name */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-slate-600 ml-1">
-                                    Product Name
+                                    {t('addProduct.productNameLabel')}
                                 </label>
                                 <input
                                     type="text"
                                     name="prodName"
                                     value={formData.prodName}
                                     onChange={handleInputChange}
-                                    placeholder="e.g. Premium Cotton Diapers"
+                                    placeholder={t('addProduct.productNamePlaceholder')}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-pink-400 outline-none transition-all text-sm placeholder:text-[11px] md:placeholder:text-[14px]"
                                 />
                             </div>
@@ -519,14 +521,13 @@ function AddNewProduct({ setCurrentPage }) {
                             {/* stock - always visible */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-slate-600 ml-1">
-                                    Stock Quantity
+                                    {t('addProduct.stockQuantityLabel')}
                                 </label>
                                 <input
                                     type="number"
                                     name="stock"
                                     value={autoCalculatedStock ? getTotalStock() : formData.stock}
                                     onChange={!autoCalculatedStock ? handleInputChange : undefined}
-
                                     readOnly={autoCalculatedStock}
                                     placeholder="0"
                                     className={`w-full px-4 py-3 rounded-xl border border-slate-200 text-sm
@@ -534,7 +535,7 @@ function AddNewProduct({ setCurrentPage }) {
                                 />
                                 {autoCalculatedStock && (
                                     <p className="text-[11px] text-slate-400 ml-1">
-                                        Auto calculated from variant stocks
+                                        {t('addProduct.autoStockCalculatedNotice')}
                                     </p>
                                 )}
                             </div>
@@ -545,7 +546,7 @@ function AddNewProduct({ setCurrentPage }) {
                             {/* selling price */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-slate-600 ml-1">
-                                    Selling Price (₹)
+                                    {t('addProduct.sellingPriceLabel')}
                                 </label>
                                 <input
                                     type="number"
@@ -559,7 +560,7 @@ function AddNewProduct({ setCurrentPage }) {
                             {/* original price */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-slate-500 ml-1">
-                                    MRP / Original Price (₹)
+                                    {t('addProduct.mrpPriceLabel')}
                                 </label>
                                 <input
                                     type="number"
@@ -573,14 +574,14 @@ function AddNewProduct({ setCurrentPage }) {
                             {/* description */}
                             <div className='flex flex-col gap-1.5 md:gap-2 col-span-full mt-2'>
                                 <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                    Description
+                                    {t('addProduct.descriptionLabel')}
                                 </label>
                                 <textarea
                                     rows="4"
                                     name="description"
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    placeholder="Briefly describe this category..."
+                                    placeholder={t('addProduct.descriptionPlaceholder')}
                                     className="p-3 md:p-4 rounded-lg md:rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring focus:ring-pink-400 dark:text-white text-sm transition-all resize-none placeholder:text-[11px] md:placeholder:text-[14px]" />
                             </div>
                         </div>
@@ -590,7 +591,7 @@ function AddNewProduct({ setCurrentPage }) {
                             <div className="mb-8">
                                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                                     <div className="w-1 h-4 bg-pink-500 rounded-full"></div>
-                                    Specifications for {selectedSubCat.subCatName}
+                                    {t('addProduct.specificationsTitle', { subCategory: selectedSubCat.subCatName })}
                                 </h3>
 
                                 <div className="space-y-6">
@@ -617,7 +618,7 @@ function AddNewProduct({ setCurrentPage }) {
                                             {attr.hasVariants && attr.type === 'size' && (
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-[12px] font-medium text-slate-500 ml-1">
-                                                        {attr.name} <span className="text-pink-400">(press Enter to add)</span>
+                                                        {attr.name} <span className="text-pink-400">{t('addProduct.pressEnterHint')}</span>
                                                     </label>
 
                                                     {/* Size tags with stock input */}
@@ -636,7 +637,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                                 {!vendorAddedColors && (
                                                                     <div className="flex items-center gap-2 flex-1">
                                                                         <label className="text-[11px] text-slate-400 font-medium shrink-0">
-                                                                            Stock:
+                                                                            {t('addProduct.stockLabel')}
                                                                         </label>
                                                                         <input
                                                                             type="number"
@@ -673,7 +674,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                     {/* Add new size input */}
                                                     <input
                                                         type="text"
-                                                        placeholder="Size — press Enter"
+                                                        placeholder={t('addProduct.sizeInputPlaceholder')}
                                                         className="w-full px-4 py-2.5 bg-slate-50 rounded-lg border border-slate-200 focus:border-pink-400 outline-none text-sm"
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter' && e.target.value.trim()) {
@@ -698,7 +699,7 @@ function AddNewProduct({ setCurrentPage }) {
                                             {attr.hasVariants && attr.type === 'color' && (
                                                 <div className="flex flex-col gap-3">
                                                     <label className="text-[12px] font-medium text-slate-500 ml-1">
-                                                        {attr.name} <span className="text-pink-400">(add color + images)</span>
+                                                        {attr.name} <span className="text-pink-400">{t('addProduct.colorHint')}</span>
                                                     </label>
 
                                                     {/* Existing colors */}
@@ -722,14 +723,14 @@ function AddNewProduct({ setCurrentPage }) {
                                                                         });
                                                                     }}
                                                                     className="text-red-400 text-xs font-bold hover:text-red-600"
-                                                                >Remove</button>
+                                                                >{t('addProduct.removeBtn')}</button>
                                                             </div>
 
                                                             {/* Stock input for this color */}
                                                             {!vendorAddedSizes && (
                                                                 <div className="flex items-center gap-2 mb-3">
                                                                     <label className="text-[11px] text-slate-400 font-medium shrink-0">
-                                                                        Stock:
+                                                                        {t('addProduct.stockLabel')}
                                                                     </label>
                                                                     <input
                                                                         type="number"
@@ -745,7 +746,9 @@ function AddNewProduct({ setCurrentPage }) {
                                                             {/* Image upload for this color */}
                                                             <div className="flex flex-col gap-2">
                                                                 <p className="text-[11px] text-slate-400 font-medium">
-                                                                    Upload images for {color}
+                                                                    <p className="text-[11px] text-slate-400 font-medium">
+                                                                        {t('addProduct.uploadImagesForColor', { color })}
+                                                                    </p>
                                                                 </p>
                                                                 <input
                                                                     type="file"
@@ -781,7 +784,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                     <div className="flex gap-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="e.g. Red, Pink, Yellow"
+                                                            placeholder={t('addProduct.colorInputPlaceholder')}
                                                             className="flex-1 px-4 py-2.5 bg-slate-50 rounded-lg border border-slate-200 focus:border-pink-400 outline-none text-sm"
                                                             onKeyDown={(e) => {
                                                                 if (e.key === 'Enter' && e.target.value.trim()) {
@@ -816,7 +819,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                             }}
                                                             className="px-4 py-2 bg-pink-500 text-white text-xs font-bold rounded-lg hover:bg-pink-600"
                                                         >
-                                                            Add
+                                                            {t('addProduct.addBtn')}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -828,7 +831,7 @@ function AddNewProduct({ setCurrentPage }) {
                                 {vendorAddedColors && vendorAddedSizes && (
                                     <div className="mt-8">
                                         <h4 className="text-sm font-bold text-slate-800 mb-3">
-                                            Variant Stock Matrix
+                                            {t('addProduct.variantMatrixTitle')}
                                         </h4>
 
                                         <div className="overflow-x-auto border border-pink-100 rounded-xl">
@@ -836,7 +839,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                 <thead className="bg-pink-50">
                                                     <tr>
                                                         <th className="text-left p-3 font-bold text-slate-600">
-                                                            Color / Size
+                                                            {t('addProduct.matrixHeaderColorSize')}
                                                         </th>
                                                         {sizes.map((size) => (
                                                             <th key={size} className="p-3 font-bold text-slate-600 text-center">
@@ -881,7 +884,7 @@ function AddNewProduct({ setCurrentPage }) {
                             <div className="bg-white dark:bg-slate-900">
 
                                 <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white mb-4 md:mb-6">
-                                    Product Media
+                                    {t('addProduct.mediaSectionTitle')}
                                 </h2>
 
                                 <div className="space-y-6 md:space-y-8">
@@ -890,7 +893,7 @@ function AddNewProduct({ setCurrentPage }) {
                                     <div className="flex flex-col gap-3">
 
                                         <label className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                            Main Product Image <span className="text-pink-500">(Required)</span>
+                                            {t('addProduct.mainImageLabel')} <span className="text-pink-500">{t('addProduct.requiredLabel')}</span>
                                         </label>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-start">
@@ -905,8 +908,8 @@ function AddNewProduct({ setCurrentPage }) {
 
                                                 <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
                                                     <HiOutlinePhotograph className="text-4xl text-pink-400 mb-2" />
-                                                    <p className="text-xs text-pink-500 font-bold">Upload Main Image</p>
-                                                    <p className="text-[10px] text-slate-400 mt-1 italic text-center px-4">Best size: 1080x1080px</p>
+                                                    <p className="text-xs text-pink-500 font-bold">{t('addProduct.uploadMainImgBtn')}</p>
+                                                    <p className="text-[10px] text-slate-400 mt-1 italic text-center px-4">{t('addProduct.bestSizeNotice')}</p>
                                                 </div>
                                             </div>
 
@@ -925,7 +928,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                         className="absolute top-3 right-3 bg-white/90 dark:bg-slate-800/90 p-1.5 rounded-full text-pink-500 shadow-md md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                         <HiOutlineX size={16} />
                                                     </button>
-                                                    <span className="absolute bottom-3 left-3 bg-pink-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold shadow-lg">Primary</span>
+                                                    <span className="absolute bottom-3 left-3 bg-pink-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold shadow-lg">{t('addProduct.primaryBadge')}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -938,11 +941,11 @@ function AddNewProduct({ setCurrentPage }) {
                                         <div className="flex justify-between items-center mb-1">
 
                                             <label className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                                Additional Gallery Images
+                                                {t('addProduct.galleryImagesLabel')}
                                             </label>
 
                                             <span className="text-[10px] md:text-xs text-center font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-                                                {galleryImages.length} / {MAX_GALLERY_IMAGES} slots
+                                                {t('addProduct.gallerySlotsCounter', { current: galleryImages.length, max: MAX_GALLERY_IMAGES })}
                                             </span>
                                         </div>
 
@@ -950,7 +953,7 @@ function AddNewProduct({ setCurrentPage }) {
 
                                             {/* Gallery Upload Box */}
                                             <div className={`aspect-square border-2 border-dashed border-pink-100 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center bg-pink-50/10 hover:bg-pink-50/30 transition-all relative 
-                                    ${galleryImages.length >= MAX_GALLERY_IMAGES ? 'hidden' : 'flex'}`}>
+                                            ${galleryImages.length >= MAX_GALLERY_IMAGES ? 'hidden' : 'flex'}`}>
 
                                                 <input
                                                     type="file"
@@ -960,7 +963,7 @@ function AddNewProduct({ setCurrentPage }) {
                                                     className="absolute inset-0 opacity-0 cursor-pointer z-10" />
 
                                                 <HiOutlineCloudUpload className="text-3xl text-pink-400 mb-1" />
-                                                <p className="text-[10px] text-pink-500 font-bold">Add Images</p>
+                                                <p className="text-[10px] text-pink-500 font-bold">{t('addProduct.addImagesBtn')}</p>
                                             </div>
 
                                             {/* Gallery Previews */}
@@ -995,7 +998,7 @@ function AddNewProduct({ setCurrentPage }) {
                                 onClick={() => setCurrentPage('All Products')}
                                 className='w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-pink-500 hover:bg-pink-100 transition-all active:scale-95 cursor-pointer'
                             >
-                                Cancel
+                                {t('addProduct.cancelBtn')}
                             </button>
 
                             <button
@@ -1008,7 +1011,7 @@ function AddNewProduct({ setCurrentPage }) {
                                         : 'bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 hover:shadow-pink-200 active:scale-95 cursor-pointer'
                                     }`}
                             >
-                                {isAdding ? "Publishing..." : "Publish Product"}
+                                {isAdding ? t('addProduct.publishingState') : t('addProduct.publishBtn')}
                             </button>
                         </div>
                     </div>

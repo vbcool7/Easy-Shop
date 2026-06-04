@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { HiOutlineX, HiOutlineSave, HiOutlineInformationCircle } from "react-icons/hi";
 import toast from 'react-hot-toast';
 import { useUpdateProduct } from '../../hook/uesProducts';
+import { useTranslation } from 'react-i18next';
 
 const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
 
+    const { t } = useTranslation();
     const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
     const [mainImage, setMainImage] = useState(null);
@@ -161,7 +163,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
 
     // ---- Build variants ----
     const buildVariants = () => {
-        
+
         if (colors.length && sizes.length) {
             return colors.flatMap(color =>
                 sizes.map(size => {
@@ -308,10 +310,10 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                                Edit Product <span className="text-pink-500 text-xs font-bold px-2 py-0.5 bg-pink-50 rounded-full uppercase">Vendor Mode</span>
+                                {t('editProduct.title')} <span className="text-pink-500 text-xs font-bold px-2 py-0.5 bg-pink-50 rounded-full uppercase">{t('editProduct.vendorMode')}</span>
                             </h2>
                             <p className="text-xs text-slate-400 font-medium mt-1">
-                                ID: {product?._id}
+                                {t('editProduct.id')}: {product?._id}
                             </p>
                         </div>
 
@@ -329,7 +331,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                         {!hasColorVariant && (
                             <div className="p-5 bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800 space-y-4">
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Media Assets
+                                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500" /> {t('editProduct.mediaAssets')}
                                 </h4>
 
                                 <div className="grid grid-cols-1 gap-6">
@@ -344,7 +346,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                         </div>
                                         <div className="flex-1">
                                             <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">
-                                                Cover Image
+                                                {t('editProduct.coverImage')}
                                             </label>
 
                                             <input
@@ -357,13 +359,14 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                     {/* Gallery Input */}
                                     <div>
                                         <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">
-                                            Gallery (Multiple)
+                                            {t('editProduct.galleryMultiple')}
                                         </label>
                                         <input
                                             type="file"
                                             multiple
                                             onChange={handleGalleryImages}
                                             className="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer" accept="image/*" />
+
                                         <div className="flex gap-1.5 mt-2 overflow-x-auto py-1">
                                             {(galleryImages.length > 0 ? galleryImages : product?.prodImages || []).map((img, i) => (
                                                 <div
@@ -383,14 +386,14 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                         {/* Section 2: prod info  */}
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Primary Information
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> {t('editProduct.primaryInformation')}
                             </h4>
 
                             {/* product name */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                                        Product Name
+                                        {t('editProduct.productName')}
                                     </label>
                                     <input
                                         name="prodName"
@@ -403,7 +406,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                 {/* Description */}
                                 <div className="col-span-2">
                                     <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                                        Description
+                                        {t('editProduct.description')}
                                     </label>
                                     <textarea
                                         rows="4"
@@ -416,7 +419,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                 {/*price */}
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                                        Price
+                                        {t('editProduct.price')}
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
@@ -434,7 +437,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                 {/* stock */}
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">
-                                        Stock {(hasColorVariant || hasSizeVariant) && "(Auto)"}
+                                        {t('editProduct.stock')} {(hasColorVariant || hasSizeVariant) && `(${t('editProduct.auto')})`}
                                     </label>
 
                                     <input
@@ -459,7 +462,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             {/* Dynamic Attributes */}
                             <div className="space-y-3 col-span-2">
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    Attributes
+                                    {t('editProduct.attributes')}
                                 </h4>
 
                                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
@@ -485,7 +488,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             {colorAttrName && (
                                 <div className="space-y-3 mt-5">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                        Color <span className="text-pink-400 normal-case font-medium">(add color + images)</span>
+                                        {t('editProduct.color')} <span className="text-pink-400 normal-case font-medium">({t('editProduct.colorHint')})</span>
                                     </h4>
 
                                     {/* Existing colors */}
@@ -500,7 +503,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                                         type="button"
                                                         onClick={() => handleRemoveColor(color)}
                                                         className="text-red-400 text-xs font-bold hover:text-red-600"
-                                                    >Remove</button>
+                                                    >{t('common.remove')}</button>
                                                 </div>
 
                                                 {/* existing images */}
@@ -514,7 +517,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                                 </div>
 
                                                 <p className="text-[10px] text-slate-400 mb-1">
-                                                    Upload new images to replace {color} images
+                                                    {t('editProduct.uploadReplaceHint', { color })}
                                                 </p>
                                                 <input
                                                     type="file"
@@ -530,7 +533,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                                 {/* color stock — only if no size */}
                                                 {!hasSizeVariant && (
                                                     <div className="flex items-center gap-2 mt-2">
-                                                        <label className="text-[11px] text-slate-400">Stock:</label>
+                                                        <label className="text-[11px] text-slate-400">{t('editProduct.stockLabel')}</label>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -571,7 +574,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                                 }
                                             }}
                                             className="px-3 py-2 mb-4 bg-pink-500 text-white text-xs font-bold rounded-lg hover:bg-pink-600"
-                                        >Add</button>
+                                        >{t('common.add')}</button>
                                     </div>
                                 </div>
                             )}
@@ -580,7 +583,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             {sizeAttrName && (
                                 <div className="space-y-3">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                        Size <span className="text-pink-400 normal-case font-medium">(press Enter to add)</span>
+                                        {t('editProduct.size')} <span className="text-pink-400 normal-case font-medium">({t('editProduct.sizeHint')})</span>
                                     </h4>
 
                                     {sizes.map((size, i) => (
@@ -590,7 +593,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                             {/* size stock — only if no color */}
                                             {!hasColorVariant && (
                                                 <div className="flex items-center gap-2 flex-1">
-                                                    <label className="text-[11px] text-slate-400 shrink-0">Stock:</label>
+                                                    <label className="text-[11px] text-slate-400 shrink-0">{t('editProduct.stockLabel')}</label>
                                                     <input
                                                         type="number"
                                                         min="0"
@@ -631,14 +634,14 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             {hasColorVariant && hasSizeVariant && (
                                 <div className="space-y-2">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                        Variant Stock Matrix
+                                        {t('editProduct.variantMatrix')}
                                     </h4>
                                     <div className="overflow-x-auto border border-pink-100 rounded-xl">
                                         <table className="w-full text-xs">
                                             <thead className="bg-pink-50">
                                                 <tr>
                                                     <th className="text-left p-2 font-bold text-slate-600">
-                                                        Color / Size
+                                                        {t('editProduct.colorSizeLabel')}
                                                     </th>
                                                     {sizes.map(size => (
                                                         <th
@@ -680,9 +683,9 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             )}
 
                             {/* Status Control */}
-                            <div className="space-y-3">
+                            <div className="space-y-3 mt-5">
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    Product Status
+                                    {t('editProduct.productStatus')}
                                 </h4>
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium
                                          ${formData.status === 'Approved'
@@ -692,7 +695,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                                             : " text-red-700 "
                                     }`}>
 
-                                    {formData.status}
+                                    {t(`status.${formData.status.toLowerCase()}`, { defaultValue: formData.status })}
                                 </span>
                             </div>
                         </div>
@@ -707,7 +710,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black
                         ${isUpdating ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-slate-100 text-slate-900 cursor-pointer"}`}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
 
                         <button
@@ -716,7 +719,7 @@ const UpdateProductDrawer = ({ product, isOpen, onClose }) => {
                             className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2
                             ${isUpdating ? "bg-slate-400 cursor-not-allowed" : "bg-slate-900 text-white cursor-pointer"}`}
                         >
-                            <HiOutlineSave size={18} /> {isUpdating ? 'Saving...' : 'Save Changes'}
+                            <HiOutlineSave size={18} /> {isUpdating ? t('common.saving') : t('common.saveChanges')}
                         </button>
 
                     </div>

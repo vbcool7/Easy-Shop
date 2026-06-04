@@ -21,39 +21,64 @@ import Blogs from '../Components/VendorComponents/Blogs';
 import AddBlog from '../Components/VendorComponents/AddBlog';
 
 function VendorPage() {
+
     const [sideBarCollapsed, setSideBarCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState("Vendor Dashboard");
 
+    const handleToggleSidebar = () => {
+        if (window.innerWidth < 1024) {
+            setMobileSidebarOpen((prev) => !prev);
+        } else {
+            setSideBarCollapsed((prev) => !prev);
+        }
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        setMobileSidebarOpen(false);
+    };
+
     return (
-        <div className='min-h-screen bg-[#F5F5F5]
-        dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500'>
+        <div className='min-h-screen bg-[#F5F5F5] dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-500'>
+
+            {mobileSidebarOpen && (
+                <div
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                />
+            )}
 
             {/* sidebar call */}
             <div className='flex h-screen overflow-hidden'>
                 <VendorSidebar
                     collapsed={sideBarCollapsed}
-                    onToggle={() => setSideBarCollapsed(!sideBarCollapsed)}
+                    mobileOpen={mobileSidebarOpen}
+                    onCloseMobile={() => setMobileSidebarOpen(false)}
+                    onToggle={handleToggleSidebar}
                     currentPage={currentPage}
-                    onPageChange={setCurrentPage} />
+                    onPageChange={handlePageChange}
+                />
 
                 {/* header call */}
                 <div className='flex-1 flex flex-col overflow-hidden'>
                     <Header
-                    setCurrentPage={setCurrentPage}
+                        setCurrentPage={setCurrentPage}
                         sidebarCollapsed={sideBarCollapsed}
-                        onToggleSideBar={() => setSideBarCollapsed(!sideBarCollapsed)} />
+                        onToggleSideBar={handleToggleSidebar}
+                    />
 
                     <main className='flex overflow-y-auto bg-transparent'>
                         <div className='p-6 space-y-6 w-full'>
 
                             {/* dashboard */}
-                            {currentPage === "Vendor Dashboard" && <VendorDashboard setCurrentPage={setCurrentPage}/>}
+                            {currentPage === "Vendor Dashboard" && <VendorDashboard setCurrentPage={setCurrentPage} />}
 
                             {/* products management */}
                             {currentPage === "All Products" && <AllProducts setCurrentPage={setCurrentPage} />}
-                            {currentPage === "Add Product" && <AddNewProduct setCurrentPage={setCurrentPage}/>}
-                            {currentPage === "Inventory" && <VendorStockInventoryPage setCurrentPage={setCurrentPage}/>}
-                            
+                            {currentPage === "Add Product" && <AddNewProduct setCurrentPage={setCurrentPage} />}
+                            {currentPage === "Inventory" && <VendorStockInventoryPage setCurrentPage={setCurrentPage} />}
+
                             {/* blog management */}
                             {currentPage === "blogs" && <Blogs setCurrentPage={setCurrentPage} />}
                             {currentPage === "create-blog" && <AddBlog setCurrentPage={setCurrentPage} />}
@@ -69,7 +94,7 @@ function VendorPage() {
                             {currentPage === "Customers" && <Customers />}
 
                             {/* chat */}
-                            {currentPage === "Messages" && <VendorChat  />}
+                            {currentPage === "Messages" && <VendorChat />}
 
                             {/* review ratung */}
                             {currentPage === "Review" && <ReviewRating />}

@@ -15,9 +15,11 @@ import { FiTrendingUp } from "react-icons/fi";
 
 import { useToggleVendorStatus, useVendorList, useVendorStats } from '../hooks/useVendors';
 import VendorProfileDrawer from './VendorProfileDrawer';
+import { useTranslation } from 'react-i18next';
 
 function VendorList() {
 
+    const { t } = useTranslation();
     const [searchVal, setSearchVal] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -41,14 +43,14 @@ function VendorList() {
     const totalPages = vendorData?.totalPages || 1;
 
     const cards = [
-        { label: 'Total Vendors', value: stats?.total, sub: 'all registered', color: '#185FA5', bg: '#E6F1FB', icon: <FiUsers /> },
-        { label: 'Active', value: stats?.active, sub: 'currently live', color: '#3B6D11', bg: '#EAF3DE', icon: <FiCheckCircle /> },
-        { label: 'Inactive', value: stats?.inactive, sub: 'needs attention', color: '#A32D2D', bg: '#FCEBEB', icon: <FiXCircle /> },
-        { label: 'New This Month', value: stats?.newThisMonth, sub: 'joined recently', color: '#854F0B', bg: '#FAEEDA', icon: <FiTrendingUp /> },
+        { label: t('vendorList.totalVendors'), value: stats?.total, sub: t('vendorList.totalSub'), color: '#185FA5', bg: '#E6F1FB', icon: <FiUsers /> },
+        { label: t('vendorList.active'), value: stats?.active, sub: t('vendorList.activeSub'), color: '#3B6D11', bg: '#EAF3DE', icon: <FiCheckCircle /> },
+        { label: t('vendorList.inactive'), value: stats?.inactive, sub: t('vendorList.inactiveSub'), color: '#A32D2D', bg: '#FCEBEB', icon: <FiXCircle /> },
+        { label: t('vendorList.newMonth'), value: stats?.newThisMonth, sub: t('vendorList.newMonthSub'), color: '#854F0B', bg: '#FAEEDA', icon: <FiTrendingUp /> },
     ];
 
-    if (isLoading) return <p className="p-10 text-center">Loading vendors list...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching vendors!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('vendorList.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('vendorList.error')}</p>;
 
     return (
         <div className="space-y-6">
@@ -89,13 +91,15 @@ function VendorList() {
                     <div>
                         <div className='flex gap-2 items-center'>
                             <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                                Vendors
+                                {t('vendorList.title')}
                             </h2>
                             <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                                {vendorData?.count || 0} counts
+                                {t('vendorList.totalLabel')} : {vendorData?.count || 0}
                             </span>
                         </div>
-                        <p className="text-[11px] md:text-xs text-slate-500 mt-1">See platform vendors</p>
+                        <p className="text-[11px] md:text-xs text-slate-500 mt-1">
+                            {t('vendorList.desc')}
+                        </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -103,7 +107,7 @@ function VendorList() {
                             type="text"
                             value={searchVal}
                             onChange={(e) => setSearchVal(e.target.value)}
-                            placeholder="Search vendors..."
+                            placeholder={t('vendorList.searchPlaceholder')}
                             className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                         />
                     </div>
@@ -113,13 +117,13 @@ function VendorList() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-50 dark:border-slate-800 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
-                                <th className="px-6 py-4 text-center w-16">#ID</th>
-                                <th className="px-6 py-4">Vendor/Store</th>
-                                <th className="px-6 py-4">Contact</th>
-                                <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4">Created Date</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Action</th>
+                                <th className="px-6 py-4 text-center w-16">{t('vendorList.id')}</th>
+                                <th className="px-6 py-4">{t('vendorList.vendorStore')}</th>
+                                <th className="px-6 py-4">{t('vendorList.contact')}</th>
+                                <th className="px-6 py-4">{t('vendorList.category')}</th>
+                                <th className="px-6 py-4">{t('vendorList.createdDate')}</th>
+                                <th className="px-6 py-4">{t('vendorList.status')}</th>
+                                <th className="px-6 py-4 text-right">{t('vendorList.action')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -162,13 +166,13 @@ function VendorList() {
                                                     onClick={() => toggleVendorStatus(vendor._id)}
                                                     disabled={isPending}
                                                     className={`w-16 inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase border transition-all
-                                                        ${isThisRowLoading ? 'opacity-50' : 'cursor-pointer'}
-                                                        ${vendor.isActive ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' : 'bg-slate-50 text-red-400 border-red-200 hover:bg-red-100'}`}
+                                                    ${isThisRowLoading ? 'opacity-50' : 'cursor-pointer'}
+                                                    ${vendor.isActive ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' : 'bg-slate-50 text-red-400 border-red-200 hover:bg-red-100'}`}
                                                 >
                                                     {isThisRowLoading ? (
                                                         <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                     ) : (
-                                                        vendor.isActive ? "Active" : "Inactive"
+                                                        vendor.isActive ? t('vendorList.activeStatus') : t('vendorList.inactiveStatus')
                                                     )}
                                                 </button>
                                             </td>
@@ -186,7 +190,7 @@ function VendorList() {
                             ) : (
                                 <tr>
                                     <td colSpan="7" className="text-center py-10 text-slate-400 text-sm">
-                                        No vendors found matching your search.
+                                        {t('vendorList.noVendors')}
                                     </td>
                                 </tr>
                             )}
@@ -202,7 +206,7 @@ function VendorList() {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-all"
                         >
-                            Prev
+                            {t('vendorList.prev')}
                         </button>
 
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
@@ -210,7 +214,7 @@ function VendorList() {
                                 key={num}
                                 onClick={() => setPage(num)}
                                 className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all
-                                    ${page === num
+                        ${page === num
                                         ? 'bg-pink-500 text-white border-pink-500'
                                         : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                             >
@@ -223,7 +227,7 @@ function VendorList() {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-all"
                         >
-                            Next
+                            {t('vendorList.next')}
                         </button>
                     </div>
                 )}

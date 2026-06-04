@@ -1,12 +1,14 @@
 
-//updated
 import React from 'react';
 import { HiOutlineShoppingBag } from "react-icons/hi2";
 import { HiOutlineBuildingStorefront } from "react-icons/hi2";
 import { useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 function AccountType() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     return (
@@ -16,11 +18,12 @@ function AccountType() {
                 {/* heading */}
                 <div className="flex flex-col text-center mb-8 md:mb-12">
                     <h2 className="text-2xl md:text-4xl font-bold text-gray-800 tracking-tight">
-                        Join <span className="text-pink-500 text-4xl md:text-5xl">Easy</span> Shop
+                        {t('auth.joinHeading')}
+                        <span className="text-pink-500 text-4xl md:text-5xl">Easy</span> {t('auth.joinSubheading')}
                     </h2>
 
                     <p className="max-w-xl mx-auto mt-4 text-gray-500 text-sm md:text-lg lg:text-xl leading-relaxed font-light italic">
-                        Choose how you want to use the platform
+                        {t('auth.choosePlatform')}
                     </p>
                 </div>
 
@@ -36,15 +39,15 @@ function AccountType() {
                         </div>
 
                         <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">
-                            Customer
+                            {t('auth.customer')}
                         </h2>
 
                         <p className="text-sm md:text-[16px] text-gray-500 leading-relaxed">
-                            I want to discover unique products and shop for my favorite trends.
+                            {t('auth.customerDesc')}
                         </p>
 
                         <div className="mt-5 md:mt-8 flex items-center text-pink-500 font-bold group-hover:gap-2 transition-all">
-                            Get Started <span className="ml-2">→</span>
+                            {t('auth.getStarted')} <span className="ml-2">→</span>
                         </div>
                     </div>
 
@@ -58,15 +61,15 @@ function AccountType() {
                         </div>
 
                         <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">
-                            Vendor
-                            </h2>
+                            {t('auth.vendor')}
+                        </h2>
 
                         <p className="text-sm md:text-[16px] text-gray-500 leading-relaxed">
-                            I want to grow my business and sell my products to millions of customers.
+                            {t('auth.vendorDesc')}
                         </p>
 
                         <div className="mt-5 md:mt-8 flex items-center text-pink-500 font-bold group-hover:gap-2 transition-all">
-                            Open Shop <span className="ml-2">→</span>
+                           {t('auth.openShop')} <span className="ml-2">→</span>
                         </div>
                     </div>
 
@@ -76,7 +79,7 @@ function AccountType() {
                 <p
                     onClick={() => navigate("/login")}
                     className="mt-8 md:mt-12 ml-2 text-gray-400 text-sm">
-                    Already have an account? <span className="text-pink-500 font-bold cursor-pointer hover:underline">Log in directly</span>
+                    {t('auth.alreadyAccount')} <span className="text-pink-500 font-bold cursor-pointer hover:underline">{t('auth.loginDirectly')}</span>
                 </p>
             </div>
         </section>

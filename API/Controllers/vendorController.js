@@ -11,10 +11,11 @@ import sendEmail from "../utils/sendEmail.js";
 import { deleteCloudinaryFiles, deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { createAdminNotification } from "../utils/createAdminNotifications.js";
 
 export const vendorSignUp = async (req, res) => {
     try {
-        // Files ka path nikalna
+        // Files path
         const profilePhoto = req.files['profilePhoto']?.[0]?.path;
         const storeLogo = req.files['storeLogo']?.[0]?.path;
         const categoryLicenseUpload = req.files['categoryLicenseUpload']?.[0]?.path || "";
@@ -38,7 +39,6 @@ export const vendorSignUp = async (req, res) => {
             });
         }
 
-        // Agar DB mein is category ke liye license required hai par file nahi aayi
         if (categoryData.requiresCertificate && !categoryLicenseUpload) {
             if (req.files) await deleteCloudinaryFiles(req.files);
             return res.status(400).json({
@@ -49,7 +49,6 @@ export const vendorSignUp = async (req, res) => {
 
         if (!profilePhoto || !name || !email || !contact || !password || !storeLogo || !storeName || !aboutShop || !businessEmail || !businessContact || !businessType || !category || !address || !city || !state || !pincode || !businessPAN || !panCardUpload || !accHolder || !bank || !accNumber || !ifsc || !bankDocumentUpload) {
 
-            // ERROR: Fields missing hain, toh upload hui images delete karo
             if (req.files) await deleteCloudinaryFiles(req.files);
 
             return res.status(400).json({
@@ -111,6 +110,14 @@ export const vendorSignUp = async (req, res) => {
             accNumber,
             ifsc,
             bankDocumentUpload
+        });
+
+        // notify to admin
+        await createAdminNotification({
+            type: 'NEW_VENDOR',
+            title: 'New Vendor Registration',
+            message: `${vendor.storeName} (${vendor.name}) has applied to become a vendor`,
+            relatedId: vendor._id
         });
 
         await OTP.deleteMany({ email, role: 'vendor' });
@@ -435,11 +442,9 @@ export const updateVendorDetail = async (req, res) => {
 
             for (const field of fileFields) {
                 if (req.files[field] && req.files[field][0]) {
-                    // 1. Purani image delete karo (agar database mein pehle se thi)
                     if (currentVendor[field]) {
                         await deleteOldFileFromCloudinary(currentVendor[field]);
                     }
-                    // 2. Nayi image ka path set karo
                     updateData[field] = req.files[field][0].path;
                 }
             }
@@ -453,12 +458,11 @@ export const updateVendorDetail = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Updated & Old files cleaned!",
+            message: "Profile Updated!",
             data: updatedVendor
         });
 
     } catch (err) {
-        // Error aane par naye upload huye files delete karein (jo cleanup hum pehle kar rahe the)
         if (req.files) await deleteCloudinaryFiles(req.files);
         console.log("Error :", err);
         res.status(500).json({
@@ -538,11 +542,11 @@ export const vendorDashboardStats = async (req, res) => {
         // Convert string ID to MongoDB ObjectId
         const vId = new mongoose.Types.ObjectId(req.user.id);
 
-        // 1. Get Product Stats based on YOUR schema field names
+        // 1. Get Product Stats based on schema field names
         const productStats = await Product.aggregate([
             {
                 $match: {
-                    vendorId: vId // Matches 'vendorId' in your schema
+                    vendorId: vId // Matches 'vendorId' in schema
                 }
             },
             {

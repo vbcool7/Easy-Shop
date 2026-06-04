@@ -1,5 +1,4 @@
 
-//updated
 import React, { useState } from 'react'
 import { HiOutlineUser } from "react-icons/hi";
 import { HiOutlineMail } from "react-icons/hi";
@@ -18,14 +17,17 @@ import confetti from 'canvas-confetti';
 
 import { useSendOTP, useSignup, useVerifyOtp } from '../hook/useAuth';
 import useAuthStore from '../store/useAuthStore';
+import { useTranslation } from 'react-i18next';
 
 function UserSignUp() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
+
     const [showOtpModal, setShowOtpModal] = useState(false);
     const [isSubmitOpen, setIsSubmitOpen] = useState(false);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null); // Asli file ke liye
+    const [selectedFile, setSelectedFile] = useState(null);
     const [previewImage, setPreviewImage] = useState("https://i.pinimg.com/1200x/f9/1f/ba/f91fba046dd5208787a3ffa5c1f299e7.jpg"); // Preview ke liye
 
     const { mutate: sendOTP, isPending: isSending } = useSendOTP();
@@ -45,7 +47,7 @@ function UserSignUp() {
         otp: ''
     });
 
-    // Zustand store se login function uthayein
+    // login from Zustand store 
     const login = useAuthStore((state) => state.login);
 
     // Input change handler
@@ -89,12 +91,12 @@ function UserSignUp() {
                 const errorMessage = err.response?.data?.message || "Invalid OTP. Please try again.";
                 toast.error(errorMessage);
 
-                // Optional: OTP field ko clear kar dena agar galat ho
+                // Optional: clear otp field if wrong
                 setFormData({ ...formData, otp: '' });
             }
         });
     };
-    
+
     // submit
     const handleCreateAccount = () => {
 
@@ -130,10 +132,10 @@ function UserSignUp() {
                     colors: ['#ec4899', '#f472b6', '#db2777']
                 });
 
-                // Zustand store mein user aur token bharo
+                // Zustand store - token store 
                 login(res.user, res.token);
-                setIsSubmitOpen(true); // Success modal/message dikhao
-                setFormData(null);
+                setIsSubmitOpen(true);
+                setFormData({ name: '', email: '', contact: '', password: '', confirmPassword: '', address: '', city: '', pincode: '', state: '', otp: '' });
             },
             onError: (err) => toast.error(err.response?.data?.message || "Failed in signup")
         });
@@ -148,13 +150,13 @@ function UserSignUp() {
                     {/* heading */}
                     <div className='mb-8 text-center md:text-left'>
                         <h1 className='text-xl md:text-2xl font-bold text-gray-800 tracking-tight'>
-                            Register as a User
+                            {t('userSignup.title')}
                         </h1>
-                        {/* Ek choti line jo active step ko highlight karti hai */}
+
                         <div className='w-12 h-1 bg-pink-500 rounded-full mt-1 mx-auto md:ml-0'></div>
 
                         <p className='text-gray-500 text-xs md:text-sm mt-2'>
-                            Please provide your basic contact details to get started.
+                            {t('userSignup.subtitle')}
                         </p>
                     </div>
 
@@ -188,10 +190,10 @@ function UserSignUp() {
 
                         <div className="text-center md:text-left">
                             <h4 className="text-[13px] md:text-sm font-black text-slate-800 uppercase tracking-tight">
-                                Profile Photo
+                                {t('userSignup.profilePhoto')}
                             </h4>
                             <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                JPG, GIF or PNG. Max size of 2MB
+                                {t('userSignup.photoDesc')}
                             </p>
                         </div>
                     </div>
@@ -201,7 +203,7 @@ function UserSignUp() {
 
                         {/* name */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="full name" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Full Name</label>
+                            <label htmlFor="full name" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.fullName')}</label>
                             <div className='relative group'>
                                 <HiOutlineUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -210,7 +212,7 @@ function UserSignUp() {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    placeholder='Full Name'
+                                    placeholder={t('userSignup.fullName')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -219,7 +221,7 @@ function UserSignUp() {
 
                         {/* email */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="email" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Email</label>
+                            <label htmlFor="email" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.email')}</label>
                             <div className='relative group'>
                                 <HiOutlineMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -229,8 +231,8 @@ function UserSignUp() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     disabled={isEmailVerified}
-                                    placeholder='Email'
-                                    className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
+                                    placeholder={t('userSignup.email')}
+                                    className="w-full pl-10 md:pl-12 pr-20 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
 
@@ -245,7 +247,7 @@ function UserSignUp() {
                                         }}
                                         // Agar email nahi hai ya loading hai toh disable
                                         disabled={isSending || !formData.email}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
                                     >
                                         {isSending ? (
                                             <span className="flex items-center gap-1">
@@ -253,13 +255,13 @@ function UserSignUp() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Wait...
+                                                {t('userSignup.wait')}
                                             </span>
-                                        ) : "Verify"}
+                                        ) : t('userSignup.verify')}
                                     </button>
                                 ) : (
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 font-bold text-xs flex items-center gap-1 z-20">
-                                        Verified <HiOutlineBadgeCheck className="text-lg" />
+                                        {t('userSignup.verified')} <HiOutlineBadgeCheck className="text-lg" />
                                     </span>
                                 )}
 
@@ -268,7 +270,7 @@ function UserSignUp() {
 
                         {/* mobile num */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="Mobile Number" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Mobile Number</label>
+                            <label htmlFor="Mobile Number" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.mobileNumber')}</label>
                             <div className='relative group'>
                                 <HiOutlinePhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -277,7 +279,7 @@ function UserSignUp() {
                                     name="contact"
                                     value={formData.contact}
                                     onChange={handleChange}
-                                    placeholder='Mobile Number'
+                                    placeholder={t('userSignup.mobileNumber')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -286,7 +288,7 @@ function UserSignUp() {
 
                         {/* password */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="password" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Password</label>
+                            <label htmlFor="password" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.password')}</label>
                             <div className='relative group'>
                                 <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -295,7 +297,7 @@ function UserSignUp() {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    placeholder='Password'
+                                    placeholder={t('userSignup.password')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -304,7 +306,7 @@ function UserSignUp() {
 
                         {/* confirm password */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="confirm password" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Confirm Password</label>
+                            <label htmlFor="confirm password" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.confirmPassword')}</label>
                             <div className='relative group'>
                                 <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -313,7 +315,7 @@ function UserSignUp() {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    placeholder='Confirm Password'
+                                    placeholder={t('userSignup.confirmPassword')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -322,7 +324,7 @@ function UserSignUp() {
 
                         {/* address */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="address" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Address</label>
+                            <label htmlFor="address" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.address')}</label>
                             <div className='relative group'>
                                 <FaMapMarkerAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -331,7 +333,7 @@ function UserSignUp() {
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    placeholder='Address'
+                                    placeholder={t('userSignup.address')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -340,7 +342,7 @@ function UserSignUp() {
 
                         {/* city */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="city" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">City</label>
+                            <label htmlFor="city" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.city')}</label>
                             <div className='relative group'>
                                 <FaCity className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -349,7 +351,7 @@ function UserSignUp() {
                                     name="city"
                                     value={formData.city}
                                     onChange={handleChange}
-                                    placeholder='City'
+                                    placeholder={t('userSignup.city')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -358,7 +360,7 @@ function UserSignUp() {
 
                         {/* pincode */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="pincode" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Pin Code</label>
+                            <label htmlFor="pincode" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.pinCode')}</label>
                             <div className='relative group'>
                                 <FaMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -367,7 +369,7 @@ function UserSignUp() {
                                     name="pincode"
                                     value={formData.pincode}
                                     onChange={handleChange}
-                                    placeholder='Pin Code'
+                                    placeholder={t('userSignup.pinCode')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -376,7 +378,7 @@ function UserSignUp() {
 
                         {/* state */}
                         <div className='flex flex-col gap-1.5'>
-                            <label htmlFor="state" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">State</label>
+                            <label htmlFor="state" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.state')}</label>
                             <div className='relative group'>
                                 <FaMapMarkedAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -385,7 +387,7 @@ function UserSignUp() {
                                     name="state"
                                     value={formData.state}
                                     onChange={handleChange}
-                                    placeholder='State'
+                                    placeholder={t('userSignup.state')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -408,9 +410,9 @@ function UserSignUp() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Creating...
+                                    {t('userSignup.creating')}
                                 </span>
-                            ) : "Create Account"}
+                            ) : t('userSignup.createAccount')}
                         </button>
                     </div>
 
@@ -420,8 +422,12 @@ function UserSignUp() {
                 {showOtpModal && (
                     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center transform transition-all scale-100">
-                            <h3 className="text-xl font-bold mb-2">Check your Inbox</h3>
-                            <p className="text-sm text-gray-500 mb-6">Enter OTP sent to {formData.email}</p>
+                            <h3 className="text-xl font-bold mb-2">
+                                {t('userSignup.checkInbox')}
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                {t('userSignup.otpSentTo')} {formData.email}
+                            </p>
 
                             <input
                                 type="text"
@@ -445,9 +451,9 @@ function UserSignUp() {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Verifying...
+                                        {t('userSignup.verifying')}
                                     </span>
-                                ) : "Confirm OTP"}
+                                ) : t('userSignup.confirmOtp')}
                             </button>
                         </div>
                     </div>
@@ -456,7 +462,7 @@ function UserSignUp() {
                 {/* Success Popup Section */}
                 <div
                     className={`fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm z-100 px-4 transition-all duration-500 
-                                ${isSubmitOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+                    ${isSubmitOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
                 >
                     <div
                         className="absolute inset-0"
@@ -464,23 +470,26 @@ function UserSignUp() {
                     ></div>
                     <div
                         className={`bg-white rounded-3xl p-8 md:p-10 shadow-2xl text-center max-w-sm w-full transition-all duration-500 transform 
-                               ${isSubmitOpen ? "translate-y-0 scale-100" : "translate-y-10 scale-95"}`}
+                        ${isSubmitOpen ? "translate-y-0 scale-100" : "translate-y-10 scale-95"}`}
                     >
                         {/* Animated Check Icon */}
                         <div className="w-20 h-20 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
                             <FaCheckCircle />
                         </div>
 
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Success!</h2>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                            {t('userSignup.success')}
+                        </h2>
                         <p className="text-gray-500 mb-8">
-                            Your account has been created successfully. Start exploring <span className="text-pink-500 font-semibold">Easy</span>!
+                            {t('userSignup.successDesc')}
+                            <span className="text-pink-500 font-semibold">Easy</span>!
                         </p>
 
                         <button
                             onClick={() => navigate("/")}
                             className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-pink-200 hover:bg-pink-600 transition-all active:scale-95 cursor-pointer"
                         >
-                            Start Shopping
+                            {t('userSignup.startShopping')}
                         </button>
                     </div>
                 </div>

@@ -10,9 +10,11 @@ import { useProductList, useToggleProductStatus } from '../../hook/uesProducts';
 import UpdateProductDrawer from './UpdateProductDrawer';
 import { useVendorUIStore } from '../../store/useAuthStore';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function AllProducts({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -49,8 +51,8 @@ function AllProducts({ setCurrentPage }) {
         toggleStatus(product);
     };
 
-    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('allProducts.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('allProducts.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -62,15 +64,15 @@ function AllProducts({ setCurrentPage }) {
                 <div>
                     <div className='flex gap-2 items-center'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            Products Hub
+                            {t('allProducts.hubTitle')}
                         </h2>
                         <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            Total : {totalCount || 0}
+                            {t('allProducts.totalCount', { count: totalCount || 0 })}
                         </span>
                     </div>
 
                     <p className="text-[11px] md:text-xs text-slate-500 mt-1">
-                        Manage and organize your products
+                        {t('allProducts.hubSubtitle')}
                     </p>
                 </div>
 
@@ -80,7 +82,7 @@ function AllProducts({ setCurrentPage }) {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search products..."
+                        placeholder={t('allProducts.searchPlaceholder')}
                         className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
 
@@ -90,16 +92,16 @@ function AllProducts({ setCurrentPage }) {
                         onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                         className="w-full sm:w-auto text-sm px-3 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 transition-all shadow-sm text-slate-600 dark:text-slate-300"
                     >
-                        <option value="">All</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="">{t('allProducts.filterAll')}</option>
+                        <option value="true">{t('allProducts.filterActive')}</option>
+                        <option value="false">{t('allProducts.filterInactive')}</option>
                     </select>
 
                     {/* Add Button */}
                     <button
                         onClick={() => setCurrentPage('Add Product')}
                         className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 text-white px-2 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 transition-all active:scale-95 shrink-0 cursor-pointer">
-                        + Add New
+                        {t('allProducts.addNew')}
                     </button>
                 </div>
             </div>
@@ -109,14 +111,14 @@ function AllProducts({ setCurrentPage }) {
                 <table className="w-full text-left">
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                         <tr>
-                            <th className="px-6 py-4 whitespace-nowrap">Image</th>
-                            <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">Product</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Category</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Price & Qty</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Stock Status</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Approved?</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Status</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Action</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('allProducts.thImage')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">{t('allProducts.thProduct')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('allProducts.thCategory')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('allProducts.thPriceQty')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('allProducts.thStockStatus')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('allProducts.thApproved')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('allProducts.thStatus')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('allProducts.thAction')}</th>
                         </tr>
                     </thead>
 
@@ -172,7 +174,7 @@ function AllProducts({ setCurrentPage }) {
                                                 {product.price}
                                             </span>
                                             <span className="text-[10px] text-slate-400 font-medium">
-                                                Stock: {product.stock}
+                                                {t('allProducts.stockLabel', { count: product.stock })}
                                             </span>
                                         </div>
                                     </td>
@@ -181,7 +183,11 @@ function AllProducts({ setCurrentPage }) {
                                     <td className="px-4 py-4 text-center">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border
                                         ${stockStyles[product.stockStatus] || 'bg-slate-50 text-slate-400'}`}>
-                                            {product.stockStatus || '---'}
+                                            {product.stockStatus === 'Out of Stock' ? t('allProducts.stockOutOfStock') :
+                                                product.stockStatus === 'Critical' ? t('allProducts.stockCritical') :
+                                                    product.stockStatus === 'Low Stock' ? t('allProducts.stockLow') :
+                                                        product.stockStatus === 'Medium' ? t('allProducts.stockMedium') :
+                                                            product.stockStatus === 'High Stock' ? t('allProducts.stockHigh') : (product.stockStatus || '---')}
                                         </span>
                                     </td>
 
@@ -194,8 +200,8 @@ function AllProducts({ setCurrentPage }) {
                                                     ? " text-amber-700 "
                                                     : " text-red-700 "
                                             }`}>
-
-                                            {product.status}
+                                            {product.status === 'Approved' ? t('allProducts.appApproved') :
+                                                product.status === 'Pending' ? t('allProducts.appPending') : t('allProducts.appRejected')}
                                         </span>
                                     </td>
 
@@ -214,7 +220,7 @@ function AllProducts({ setCurrentPage }) {
                                             {isThisRowLoading ? (
                                                 <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                                             ) : (
-                                                product.isActive ? "Active" : "Inactive"
+                                                product.isActive ? t('allProducts.statusActive') : t('allProducts.statusInactive')
                                             )}
                                         </button>
                                     </td>
@@ -232,13 +238,13 @@ function AllProducts({ setCurrentPage }) {
                         }) : (
                             <tr>
                                 <td colSpan="8" className="text-center py-10 text-slate-400 text-sm">
-                                    No products found matching your search.
+                                    {t('allProducts.noProductsFound')}
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
-                
+
                 {/* pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
@@ -247,7 +253,7 @@ function AllProducts({ setCurrentPage }) {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                            {t('allProducts.btnPrev')}
                         </button>
 
                         {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -257,7 +263,7 @@ function AllProducts({ setCurrentPage }) {
                                     key={num}
                                     onClick={() => setPage(num)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                        ${page === num
+                                    ${page === num
                                             ? 'bg-pink-500 text-white border-pink-500'
                                             : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
                                         }`}
@@ -271,7 +277,7 @@ function AllProducts({ setCurrentPage }) {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                            {t('allProducts.btnNext')}
                         </button>
                     </div>
                 )}

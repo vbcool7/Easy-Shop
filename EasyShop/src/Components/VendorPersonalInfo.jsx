@@ -1,5 +1,4 @@
 
-//updated
 import React, { useState } from 'react'
 import { HiOutlineUser } from "react-icons/hi";
 import { HiOutlineMail } from "react-icons/hi";
@@ -9,9 +8,11 @@ import { HiOutlineBadgeCheck } from "react-icons/hi";
 import { HiOutlineCamera } from "react-icons/hi2";
 import { useSendOTP, useVerifyOtp } from '../hook/useAuth';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setIsEmailVerified }) {
 
+    const { t } = useTranslation();
     const [showOtpModal, setShowOtpModal] = useState(false);
 
     const [previewImage, setPreviewImage] = useState(
@@ -52,7 +53,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
     const handleVerifyOTP = () => {
         verifyOtp({ email: formData.email, otp: formData.otp, role: 'vendor' }, {
             onSuccess: () => {
-                setIsEmailVerified(true); // Parent state update
+                setIsEmailVerified(true); 
                 setShowOtpModal(false);
                 toast.success("OTP Verified");
             },
@@ -94,13 +95,13 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
             {/* heading */}
             <div className='mb-8 text-center md:text-left'>
                 <h1 className='text-xl md:text-2xl font-bold text-gray-800 tracking-tight'>
-                    Personal Information
+                    {t('vendorSignup.personalInfo')}
                 </h1>
-                {/* Ek choti line jo active step ko highlight karti hai */}
+    
                 <div className='w-12 h-1 bg-pink-500 rounded-full mt-1 mx-auto md:ml-0'></div>
 
                 <p className='text-gray-500 text-xs md:text-sm mt-2'>
-                    Please provide your basic contact details to get started.
+                    {t('userSignup.subtitle')}
                 </p>
             </div>
 
@@ -134,10 +135,10 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
                 <div className="text-center md:text-left">
                     <h4 className="text-[13px] md:text-sm font-black text-slate-800 uppercase tracking-tight">
-                        Profile Photo
+                        {t('userSignup.profilePhoto')}
                     </h4>
                     <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                        JPG, GIF or PNG. Max size of 2MB
+                        {t('userSignup.photoDesc')}
                     </p>
                 </div>
             </div>
@@ -150,7 +151,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="full name"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Full Name
+                        {t('userSignup.fullName')} 
                     </label>
                     <div className='relative group'>
                         <HiOutlineUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -160,7 +161,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             name='name'
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder='Full Name'
+                            placeholder={t('userSignup.fullName')}
                             className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                             required
                         />
@@ -169,7 +170,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
                 {/* email */}
                 <div className='flex flex-col gap-1.5'>
-                    <label htmlFor="email" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Email</label>
+                    <label htmlFor="email" className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('userSignup.email')}</label>
                     <div className='relative group'>
                         <HiOutlineMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
 
@@ -179,8 +180,8 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             value={formData.email}
                             onChange={handleChange}
                             disabled={isEmailVerified}
-                            placeholder='Email'
-                            className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
+                            placeholder={t('userSignup.email')}
+                            className="w-full pl-10 md:pl-12 pr-20 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                             required
                         />
 
@@ -189,13 +190,12 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             <button
                                 type="button"
                                 onClick={(e) => {
-                                    e.stopPropagation(); // Click event ko upar jaane se roko
-                                    console.log("Verify Clicked!");
+                                    e.stopPropagation(); 
                                     handleSendOTP();
                                 }}
-                                // Agar email nahi hai ya loading hai toh disable
+                                
                                 disabled={isSending || !formData.email}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
                             >
                                 {isSending ? (
                                     <span className="flex items-center gap-1">
@@ -203,13 +203,13 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Wait...
+                                        {t('userSignup.wait')}
                                     </span>
-                                ) : "Verify"}
+                                ) : t('userSignup.verify')}
                             </button>
                         ) : (
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 font-bold text-xs flex items-center gap-1 z-20">
-                                Verified <HiOutlineBadgeCheck className="text-lg" />
+                                {t('userSignup.verified')} <HiOutlineBadgeCheck className="text-lg" />
                             </span>
                         )}
 
@@ -221,7 +221,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="Mobile Number"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Mobile Number
+                        {t('userSignup.mobileNumber')}
                     </label>
                     <div className='relative group'>
                         <HiOutlinePhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -231,7 +231,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             name='contact'
                             value={formData.contact}
                             onChange={handleChange}
-                            placeholder='Mobile Number'
+                            placeholder={t('userSignup.mobileNumber')}
                             className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                             required
                         />
@@ -243,7 +243,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="password"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Password
+                       {t('userSignup.password')}
                     </label>
                     <div className='relative group'>
                         <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -253,7 +253,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             name='password'
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder='Password'
+                            placeholder={t('userSignup.password')}
                             className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                             required
                         />
@@ -265,7 +265,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="confirm password"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Confirm Password
+                        {t('userSignup.confirmPassword')}
                     </label>
                     <div className='relative group'>
                         <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -275,7 +275,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             name='confirmPassword'
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            placeholder='Confirm Password'
+                            placeholder={t('userSignup.confirmPassword')}
                             className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                             required
                         />
@@ -287,9 +287,9 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
             <div className="flex justify-end mt-10">
                 <button
                     onClick={countinueToBusinessDetail}
-                    className="w-full md:w-auto text-sm md:text-base bg-pink-500 text-white hover:bg-pink-600 hover:scale-[1.02] md:hover:scale-105 active:scale-95 px-8 py-3 rounded-2xl md:rounded-xl font-bold shadow-lg shadow-pink-200 transition-all cursor-pointer "
+                    className="w-full md:w-auto text-[12px] md:text-base bg-pink-500 text-white hover:bg-pink-600 hover:scale-[1.02] md:hover:scale-105 active:scale-95 px-6 md:px-8 py-3 rounded-2xl md:rounded-xl font-bold shadow-lg shadow-pink-200 transition-all cursor-pointer "
                 >
-                    Continue to Business Details
+                    {t('vendorSignup.continueBtn')}
                 </button>
             </div>
 
@@ -297,8 +297,12 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
             {showOtpModal && (
                 <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                     <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center transform transition-all scale-100">
-                        <h3 className="text-xl font-bold mb-2">Check your Inbox</h3>
-                        <p className="text-sm text-gray-500 mb-6">Enter OTP sent to {formData.email}</p>
+                        <h3 className="text-xl font-bold mb-2">
+                            {t('userSignup.checkInbox')}
+                            </h3>
+                        <p className="text-sm text-gray-500 mb-6">
+                            {t('userSignup.otpSentTo')} {formData.email}
+                            </p>
 
                         <input
                             type="text"
@@ -313,7 +317,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
                         <button
                             onClick={handleVerifyOTP}
-                            disabled={isVerifying || formData.otp.length < 6} // Button lock logic
+                            disabled={isVerifying || formData.otp.length < 6} 
                             className="w-full py-3 bg-pink-500 text-white font-bold rounded-2xl hover:bg-pink-600 transition-all shadow-lg cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             {isVerifying ? (
@@ -322,9 +326,9 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Verifying...
+                                    {t('userSignup.verifying')}
                                 </span>
-                            ) : "Confirm OTP"}
+                            ) : t('userSignup.confirmOtp')}
                         </button>
                     </div>
                 </div>

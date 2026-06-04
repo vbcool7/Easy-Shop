@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import toast from 'react-hot-toast';
 import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
+import { useTranslation } from 'react-i18next';
 
 const businessMenu = [
     { id: 1, businessName: "Individual / Sole Proprietorship" },
@@ -15,6 +16,7 @@ const businessMenu = [
 
 function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isCatLoading }) {
 
+    const { t } = useTranslation();
     const [isBusinessOpen, setIsBusinessOpen] = useState(false);
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [selectedCat, setSelectedCat] = useState(null);
@@ -41,9 +43,9 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
         setFormData(prev => ({
             ...prev,
             category: cat.catName,
-            categoryLicenseUpload: null  
+            categoryLicenseUpload: null
         }));
-        setSelectedCat(cat);  
+        setSelectedCat(cat);
         setIsCategoryOpen(false);
     };
 
@@ -98,13 +100,13 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
             {/* heading */}
             <div className='mb-8 text-center md:text-left'>
                 <h1 className='text-xl md:text-2xl font-bold text-gray-800 tracking-tight'>
-                    Business Information
+                    {t('vendorSignup.businessInfo')}
                 </h1>
 
                 <div className='w-12 h-1 bg-pink-500 rounded-full mt-1 mx-auto md:ml-0'></div>
 
                 <p className='text-gray-500 text-xs md:text-sm mt-2'>
-                    Tell us about your company or brand details.
+                    {t('vendorSignup.businessSubtitle')}
                 </p>
             </div>
 
@@ -125,15 +127,17 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     htmlFor="storeLogo"
                     className="w-20 h-20 bg-white border-2 border-gray-100 rounded-full flex flex-col items-center justify-center text-gray-400 text-[10px] sm:text-xs text-center p-3 cursor-pointer hover:border-pink-500 hover:text-pink-500 transition-all shadow-sm shrink-0 active:scale-95"
                 >
-                    <span className="font-bold">Upload Logo</span>
+                    <span className="font-bold">
+                        {t('vendorSignup.uploadLogo')}
+                    </span>
                 </label>
 
                 <div className="text-center sm:text-left overflow-hidden w-full">
                     <span className="block font-bold text-gray-700 text-sm md:text-base truncate">
-                        {formData.storeLogo ? formData.storeLogo.name : "Store Logo"}
+                        {formData.storeLogo ? formData.storeLogo.name : t('vendorSignup.storeLogo')}
                     </span>
                     <p className="text-[10px] sm:text-xs text-gray-500 mt-1 leading-tight">
-                        Recommended: 500x500px <br className="sm:hidden" /> (PNG/JPG)
+                        {t('vendorSignup.logoDesc')} <br className="sm:hidden" /> (PNG/JPG)
                     </p>
                 </div>
             </div>
@@ -146,43 +150,45 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='storeName'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Store Name
+                        {t('vendorSignup.storeName')}
                     </label>
                     <input
                         type="text"
                         name='storeName'
                         value={formData.storeName || ""}
                         onChange={handleChange}
-                        placeholder="e.g. Trendify Fashion"
+                        placeholder={t('vendorSignup.storeNamePlaceholder')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
                 {/* About Shop */}
                 <div className='flex flex-col gap-1.5 md:col-span-2'>
                     <label className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        About Shop / Description
+                        {t('vendorSignup.aboutShop')}
                     </label>
                     <textarea
                         name='aboutShop'
                         value={formData.aboutShop || ""}
                         onChange={handleChange}
                         rows="3"
-                        placeholder="Tell customers about your shop, what you sell, and your brand story..."
+                        placeholder={t('vendorSignup.aboutShopPlaceholder')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all resize-none" />
-                    <span className='text-[10px] text-gray-400 ml-1'>This will be displayed on your public shop profile.</span>
+                    <span className='text-[10px] text-gray-400 ml-1'>
+                        {t('vendorSignup.aboutShopHint')}
+                    </span>
                 </div>
 
                 {/* business email */}
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='businessEmail'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Business Email</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.businessEmail')}</label>
                     <input
                         type="email"
                         name='businessEmail'
                         value={formData.businessEmail || ""}
                         onChange={handleChange}
-                        placeholder="Business Email"
+                        placeholder={t('vendorSignup.businessEmail')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -190,13 +196,13 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='businessContact'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Business Mobile Number</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.businessContact')}</label>
                     <input
                         type="text"
                         name='businessContact'
                         value={formData.businessContact || ""}
                         onChange={handleChange}
-                        placeholder="Business Mobile Number"
+                        placeholder={t('vendorSignup.businessContact')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -205,7 +211,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='businessType'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Business Type
+                        {t('vendorSignup.businessType')}
                     </label>
 
                     <div className='cursor-pointer'>
@@ -219,7 +225,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                         >
                             <span className={`text-sm md:text-base truncate 
                                 ${formData.businessType ? "text-gray-900 font-medium" : "text-gray-400"}`}>
-                                {formData.businessType || "Select Business"}
+                                {formData.businessType || t('vendorSignup.selectBusiness')}
                             </span>
 
                             <div className="text-gray-400 group-hover:text-pink-500">
@@ -254,7 +260,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='category'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Category
+                        {t('vendorSignup.category')}
                     </label>
 
                     <div className='cursor-pointer'>
@@ -269,7 +275,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                             <span className={`text-sm md:text-base truncate 
                                 ${formData.category ? "text-gray-900 font-medium" : "text-gray-400"}`}>
-                                {formData.category || "Select Category"}
+                                {formData.category || t('vendorSignup.selectCategory')}
                             </span>
 
                             <div className="text-gray-400 group-hover:text-pink-500">
@@ -285,7 +291,9 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     >
                         <div className='bg-white my-2 rounded-2xl'>
                             {isCatLoading ? (
-                                <div className="p-3 text-sm text-gray-400">Loading categories...</div>
+                                <div className="p-3 text-sm text-gray-400">
+                                    {t('vendorSignup.loadingCategories')}
+                                </div>
                             ) : (
                                 categories?.filter(cat => cat.isActive).map((cat, index) => (
                                     <div
@@ -325,7 +333,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                                     Upload
                                 </button>
                                 <span className='text-sm md:text-base text-gray-500 truncate'>
-                                    {formData.categoryLicenseUpload ? formData.categoryLicenseUpload.name : "No file chosen"}
+                                    {formData.categoryLicenseUpload ? formData.categoryLicenseUpload.name : t('vendorSignup.noFile')}
                                 </span>
                             </div>
                         </div>
@@ -337,17 +345,19 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='address'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Business Address
+                        {t('vendorSignup.businessAddress')}
                     </label>
                     <input
                         type="text"
                         name='address'
                         value={formData.address || ""}
                         onChange={handleChange}
-                        placeholder="Address"
+                        placeholder={t('vendorSignup.addressPlaceholder')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
 
-                    <span className='text-[11px] text-gray-500 ml-1 tracking-wide'>"This address will be used as your primary pickup point for orders."</span>
+                    <span className='text-[11px] text-gray-500 ml-1 tracking-wide'>
+                        {t('vendorSignup.addressHint')}
+                        </span>
                 </div>
 
                 {/* city */}
@@ -355,14 +365,14 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='city'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        City
+                        {t('vendorSignup.city')} 
                     </label>
                     <input
                         type="text"
                         name='city'
                         value={formData.city || ""}
                         onChange={handleChange}
-                        placeholder="e.g. Indore"
+                        placeholder={t('vendorSignup.cityPlaceholder')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -371,14 +381,14 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='state'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        State
+                        {t('vendorSignup.state')}
                     </label>
                     <input
                         type="text"
                         name='state'
                         value={formData.state || ""}
                         onChange={handleChange}
-                        placeholder="e.g. Madhya Pradesh..."
+                        placeholder={t('vendorSignup.statePlaceholder')}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -387,7 +397,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='pincode'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Pin Code
+                        {t('vendorSignup.pinCode')}
                     </label>
                     <input
                         type="text"
@@ -403,7 +413,8 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='businessPAN'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Business PAN Number</label>
+                        {t('vendorSignup.businessPAN')}
+                        </label>
                     <input
                         type="text"
                         name='businessPAN'
@@ -418,7 +429,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='panCardUpload'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        Business PAN Upload
+                        {t('vendorSignup.businessPANUpload')}
                     </label>
 
                     <div className="relative">
@@ -432,10 +443,10 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                         <div className="w-full p-3 text-sm md:text-base bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl flex gap-2 items-center outline-none transition-all peer-focus:border-pink-500">
                             <button className="text-sm md:text-base border border-pink-100 rounded-sm px-2 text-pink-600 bg-pink-50 pointer-events-none">
-                                Upload
+                               {t('vendorSignup.upload')}
                             </button>
                             <span className='text-sm md:text-base text-gray-500 truncate'>
-                                {formData.panCardUpload ? formData.panCardUpload.name : "No file chosen"}
+                                {formData.panCardUpload ? formData.panCardUpload.name : t('vendorSignup.noFile')}
                             </span>
                         </div>
                     </div>
@@ -446,7 +457,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='gstNumber'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        GST Number (if available)
+                        {t('vendorSignup.gstNumber')}
                     </label>
                     <input
                         type="text"
@@ -464,7 +475,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                         <label
                             htmlFor='gstDocumentUpload'
                             className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                            GST Certificate Upload
+                            {t('vendorSignup.gstUpload')}
                         </label>
 
                         <div className="relative">
@@ -478,10 +489,10 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                             <div className="w-full p-3 text-sm md:text-base bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl flex gap-2 items-center outline-none transition-all peer-focus:border-pink-500">
                                 <button className="text-sm md:text-base border border-pink-100 rounded-sm px-2 text-pink-600 bg-pink-50 pointer-events-none">
-                                    Upload
+                                   {t('vendorSignup.upload')}
                                 </button>
                                 <span className='text-sm md:text-base text-gray-500 truncate'>
-                                    {formData.gstDocumentUpload ? formData.gstDocumentUpload.name : "No file chosen"}
+                                    {formData.gstDocumentUpload ? formData.gstDocumentUpload.name : t('vendorSignup.noFile')}
                                 </span>
                             </div>
                         </div>
@@ -497,14 +508,14 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     onClick={prev}
                     className="w-full text-start sm:w-auto text-gray-500 hover:text-pink-500 px-6 py-3 hover:bg-pink-50 rounded-xl font-bold transition-all cursor-pointer text-sm md:text-base"
                 >
-                    ← Back
+                    {t('vendorSignup.back')}
                 </button>
 
                 <button
                     onClick={countinueToAccountDetail}
                     className="w-full sm:w-auto bg-pink-500 text-white px-8 py-3.5 md:py-3 rounded-xl font-bold shadow-lg shadow-pink-200 hover:bg-pink-600 md:hover:scale-105 active:scale-95 transition-all cursor-pointer text-sm md:text-base"
                 >
-                    Continue to Account Details
+                    {t('vendorSignup.continueAccount')}
                 </button>
 
             </div>

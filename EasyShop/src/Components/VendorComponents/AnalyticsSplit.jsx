@@ -4,27 +4,23 @@ import { HiOutlineArrowNarrowRight, HiOutlineExclamationCircle } from "react-ico
 
 import { useStockAlert, useTopSellingProducts } from '../../hook/uesProducts';
 import UpdateProductDrawer from './UpdateProductDrawer';
-
-const lowStock = [
-    { name: "Cotton T-Shirt", left: 3, status: "Critical" },
-    { name: "Leather Wallet", left: 8, status: "Low" },
-    { name: "Denim Jacket", left: 5, status: "Critical" },
-];
+import { useTranslation } from 'react-i18next';
 
 const AnalyticsSplit = ({ setCurrentPage }) => {
 
+    const { t } = useTranslation();
     const { data: topSellingProducts, isLoading, isError } = useTopSellingProducts();
     const { data: stockAlert } = useStockAlert();
 
     const [isEditOpen, setIsEditOpen] = useState(false);
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading products...</p>;
-
     // --------Edit--------
     const handleEditProduct = (product) => {
         setIsEditOpen(product)
     };
+
+    if (isLoading) return <p className="p-10 text-center animate-pulse">{t('analyticsSplit.fetching')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('analyticsSplit.error')}</p>;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 my-8">
@@ -34,12 +30,12 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                 <div className="flex justify-between items-center mb-6">
 
                     <h2 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white">
-                        Top Selling Products
+                        {t('analyticsSplit.topSellingTitle')}
                     </h2>
                     <button
                         onClick={() => setCurrentPage("All Products")}
                         className="text-pink-500 text-xs md:text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all cursor-pointer">
-                        See All <HiOutlineArrowNarrowRight />
+                        {t('analyticsSplit.seeAll')} <HiOutlineArrowNarrowRight />
                     </button>
                 </div>
 
@@ -58,7 +54,7 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                                         {product.prodName}
                                     </h3>
                                     <p className="text-xs text-slate-400">
-                                        {product.totalSold} Sales
+                                        {t('analyticsSplit.salesCount', { count: product.totalSold })}
                                     </p>
                                 </div>
                             </div>
@@ -77,7 +73,7 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                 <div className="flex items-center gap-2 mb-6">
                     <HiOutlineExclamationCircle className="text-rose-500 w-6 h-6" />
                     <h2 className="text-sm md:text-lg font-bold text-slate-800 dark:text-white">
-                        Stock Alerts
+                        {t('analyticsSplit.stockAlertsTitle')}
                     </h2>
                 </div>
 
@@ -90,21 +86,22 @@ const AnalyticsSplit = ({ setCurrentPage }) => {
                                 <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
                                     {product.prodName}
                                 </h3>
+                                
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-center
                                     ${product.stockStatus === 'Critical' ? 'bg-rose-100 text-rose-600' : 'bg-orange-100 text-orange-600'}`}>
-                                    {product.stockStatus}
+                                    {product.stockStatus === 'Critical' ? t('analyticsSplit.statusCritical') : t('analyticsSplit.statusLow')}
                                 </span>
                             </div>
 
                             <div className="flex items-center justify-between">
                                 <p className="text-xs text-rose-600 font-medium">
-                                    Only {product.stock} units left
+                                    {t('analyticsSplit.unitsLeft', { count: product.stock })}
                                 </p>
 
                                 <button
                                     onClick={() => handleEditProduct(product)}
                                     className="text-[10px] font-bold text-slate-500 underline uppercase tracking-tighter">
-                                    Restock Now
+                                    {t('analyticsSplit.restockNow')}
                                 </button>
                             </div>
                         </div>

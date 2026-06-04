@@ -1,11 +1,12 @@
 
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { useGetCmsContent, useUpsertCmsContent } from '../hooks/useCms.js';
-import { useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const ToolbarButton = ({ onClick, active, children }) => (
     <button
@@ -23,6 +24,7 @@ const ToolbarButton = ({ onClick, active, children }) => (
 
 function CmsEditor({ cmsKey, title }) {
 
+    const { t } = useTranslation();
     const { data, isLoading } = useGetCmsContent(cmsKey);
     const { mutate, isPending } = useUpsertCmsContent();
 
@@ -55,7 +57,9 @@ function CmsEditor({ cmsKey, title }) {
 
     if (isLoading) return (
         <div className='flex items-center justify-center min-h-75'>
-            <p className='text-sm text-slate-400'>Loading...</p>
+            <p className='text-sm text-slate-400'>
+                {t('cmsEditor.loading')}
+            </p>
         </div>
     );
 
@@ -72,12 +76,13 @@ function CmsEditor({ cmsKey, title }) {
                     </h1>
 
                     <p className='text-pink-50 text-xs font-medium opacity-90'>
-                        Edit and publish this policy page content.
+                        {t('cmsEditor.subtitle')}
                     </p>
+
                     {data?.status && (
                         <span className={`mt-2 inline-block px-3 py-0.5 rounded-full text-xs font-bold
                             ${data.status === 'published' ? 'bg-green-400/20 text-green-100' : 'bg-yellow-400/20 text-yellow-100'}`}>
-                            {data.status === 'published' ? 'Published' : 'Draft'}
+                            {data.status === 'published' ? t('cmsEditor.statusPublished') : t('cmsEditor.statusDraft')}
                         </span>
                     )}
                 </div>
@@ -94,15 +99,15 @@ function CmsEditor({ cmsKey, title }) {
                         <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')}>S</ToolbarButton>
                         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })}>H2</ToolbarButton>
                         <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })}>H3</ToolbarButton>
-                        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}>• List</ToolbarButton>
-                        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}>1. List</ToolbarButton>
-                        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')}>" Quote</ToolbarButton>
-                        <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>Undo</ToolbarButton>
-                        <ToolbarButton onClick={() => editor.chain().focus().redo().run()}>Redo</ToolbarButton>
+                        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}>• {t('cmsEditor.toolbarBulletList')}</ToolbarButton>
+                        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}>{t('cmsEditor.toolbarOrderedList')}</ToolbarButton>
+                        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')}>{t('cmsEditor.toolbarBlockquote')}</ToolbarButton>
+                        <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>{t('cmsEditor.toolbarUndo')}</ToolbarButton>
+                        <ToolbarButton onClick={() => editor.chain().focus().redo().run()}>{t('cmsEditor.toolbarRedo')}</ToolbarButton>
 
                         {/* text color */}
                         <div className='flex items-center gap-1 ml-1'>
-                            <label className='text-[11px] text-slate-400 font-medium'>Color</label>
+                            <label className='text-[11px] text-slate-400 font-medium'>{t('cmsEditor.toolbarColor')}</label>
                             <input
                                 type="color"
                                 onInput={e => editor.chain().focus().setColor(e.target.value).run()}
@@ -126,15 +131,16 @@ function CmsEditor({ cmsKey, title }) {
                         onClick={() => handleSave('draft')}
                         className='w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-pink-500 hover:bg-pink-100 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
                     >
-                        {isPending ? 'Saving...' : 'Save as Draft'}
+                        {isPending ? t('cmsEditor.saving') : t('cmsEditor.saveDraft')}
                     </button>
+
                     <button
                         type="button"
                         disabled={isPending}
                         onClick={() => handleSave('published')}
                         className='w-full sm:w-auto md:px-10 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 dark:shadow-none hover:shadow-pink-200 transition-all cursor-pointer active:scale-95 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:shadow-none'
                     >
-                        {isPending ? 'Publishing...' : 'Publish'}
+                        {isPending ? t('cmsEditor.publishing') : t('cmsEditor.publish')}
                     </button>
                 </div>
             </div>

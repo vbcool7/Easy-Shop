@@ -1,11 +1,12 @@
 
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
-
 import { useBlogList } from '../hook/useBlog';
+import { useTranslation } from 'react-i18next';
 
 function Blog() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useBlogList();
@@ -15,23 +16,23 @@ function Blog() {
         <section className="bg-white">
 
             {/* Top Section */}
-            <div className="bg-linear-to-b from-pink-50 to-pink-50 py-12 md:py-24 lg:py-28 px-6 text-center overflow-hidden">
+            <div className="bg-linear-to-b from-pink-50 to-pink-50 py-12 md:py-24 lg:py-28 px-4 sm:px-5 lg:px-6 text-center overflow-hidden">
 
                 <div className="max-w-4xl mx-auto">
 
                     {/* Small Badge */}
-                    <span className="inline-block px-2 py-1 md:px-4 md:py-1.5 mb-6 text-[10px] md:text-xs font-bold tracking-widest text-pink-600 uppercase bg-white rounded-full shadow-sm border border-pink-100">
-                        Fresh Perspectives
+                    <span className="inline-block px-2 py-1 md:px-4 md:py-1.5 mb-6 text-[8px] md:text-[10px] font-bold tracking-widest text-pink-600 uppercase bg-white rounded-full shadow-sm border border-pink-100">
+                        {t('blog.freshPerspectives')}
                     </span>
 
                     {/* Main Heading */}
                     <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 tracking-tighter leading-tight">
-                        Our Latest <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-rose-400">Blogs</span>
+                        {t('blog.latestBlogs')} <span className="text-transparent bg-clip-text bg-linear-to-r from-pink-500 to-rose-400">{t('blog.blogs')}</span>
                     </h1>
 
                     {/* Subtext */}
                     <p className="text-gray-500 max-w-xl mx-auto text-sm md:text-lg lg:text-xl leading-relaxed font-light">
-                        Stay ahead of the curve with our curated <span className="text-gray-800">fashion tips</span> and <span className="text-gray-800">seasonal trends</span>.
+                        {t('blog.subtitle')} <span className="text-gray-800">{t('blog.fashionTips')}</span> {t('blog.and')} <span className="text-gray-800">{t('blog.seasonalTrends')}</span>.
                     </p>
 
                     {/* Floating Line (Optional) */}
@@ -74,7 +75,7 @@ function Blog() {
                             <div className="p-6 flex-1 flex flex-col justify-between">
                                 <div>
                                     <p className="text-pink-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                                        By {blog.authorCustomName || "EasyShop Team"}
+                                        {t('blog.by')} {blog.authorCustomName || t('blog.defaultAuthor')}
                                     </p>
 
                                     <h2 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-pink-500 transition-colors line-clamp-2">
@@ -88,7 +89,7 @@ function Blog() {
 
                                 <div className="mt-2 flex items-center justify-between">
                                     <button className="text-pink-600 font-semibold text-sm border-b-2 border-pink-600 hover:text-pink-400 hover:border-pink-400 transition-all cursor-pointer">
-                                        Read More
+                                        {t('blog.readMore')}
                                     </button>
                                     <span className="text-xs text-gray-400 font-medium">
                                         {blog.readTime || '3 min read'}
@@ -110,10 +111,10 @@ function Blog() {
                             {isFetchingNextPage ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-current border-t-transparent text-pink-500 animate-spin rounded-full group-hover:text-white" />
-                                    Loading...
+                                    {t('blog.loading')}
                                 </>
                             ) : (
-                                "Load More"
+                                t('blog.loadMore')
                             )}
                         </button>
                     </div>

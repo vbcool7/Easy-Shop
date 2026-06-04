@@ -6,9 +6,11 @@ import OrderDetailDrawer from './OrderDetailDrawer';
 import { useOrderList, useUpdateOrderStatus } from '../hooks/useOrders';
 import { useAdminUIStore } from '../store/useAdminAuthStore';
 import { getPaginationRange } from '../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Orders() {
 
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -86,8 +88,8 @@ function Orders() {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
+    if (isLoading) return <p className="p-10 text-center animate-pulse">{t('adminOrders.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('adminOrders.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -98,14 +100,14 @@ function Orders() {
                 <div>
                     <div className='flex items-center gap-2.5'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            Recent Orders
+                            {t('adminOrders.title')}
                         </h2>
                         <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-                            Total: {data?.count || 0}
+                            {t('adminOrders.totalBadge')} {data?.count || 0}
                         </span>
                     </div>
                     <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Manage and organize your products.
+                        {t('adminOrders.description')}
                     </p>
                 </div>
 
@@ -115,7 +117,7 @@ function Orders() {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search orders..."
+                        placeholder={t('adminOrders.searchPlaceholder')}
                         className="w-full sm:w-64 text-sm px-2 md:px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 bg-slate-50 dark:bg-slate-800 focus:outline-pink-400 focus:bg-white transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
                 </div>
@@ -126,15 +128,15 @@ function Orders() {
 
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50">
                         <tr className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
-                            <th className="px-6 py-4">Order ID</th>
-                            <th className="px-6 py-4">Product</th>
-                            <th className="px-6 py-4">Order Qty</th>
-                            <th className="px-6 py-4">Customer</th>
-                            <th className="px-6 py-4">Amount</th>
-                            <th className="px-6 py-4">Payment Method</th>
-                            <th className="px-6 py-4">Payment Status</th>
-                            <th className="px-6 py-4 text-center">Order Status</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
+                            <th className="px-6 py-4">{t('adminOrders.colOrderId')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colProduct')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colOrderQty')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colCustomer')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colAmount')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colPaymentMethod')}</th>
+                            <th className="px-6 py-4">{t('adminOrders.colPaymentStatus')}</th>
+                            <th className="px-6 py-4 text-center">{t('adminOrders.colOrderStatus')}</th>
+                            <th className="px-6 py-4 text-right">{t('adminOrders.colActions')}</th>
                         </tr>
                     </thead>
 
@@ -199,13 +201,14 @@ function Orders() {
 
                                     {/* order qty */}
                                     <td className="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">
-                                        {order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0} items
+                                        {/* {order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0} items */}
+                                        {t('adminOrders.itemsCount', { count: order.items?.reduce((total, item) => total + Number(item.quantity || 0), 0) || 0 })}
                                     </td>
 
                                     {/* Customer Info */}
                                     <td className="px-6 py-4">
                                         <div className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                            {order.userInfo?.name || "Guest"}
+                                            {order.userInfo?.name || t('adminOrders.guest')}
                                         </div>
                                     </td>
 
@@ -216,7 +219,6 @@ function Orders() {
 
                                     {/* Payment method */}
                                     <td className="px-6 py-4">
-                                        {/* Hum check kar rahe hain ki method valid hai ya nahi, default COD rakha hai */}
                                         {(() => {
                                             const style = paymentMethodStyles[order.paymentMethod] || paymentMethodStyles.COD;
 
@@ -263,15 +265,15 @@ function Orders() {
                                         <button
                                             onClick={() => openOrderDrawer(order)}
                                             className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:bg-pink-50 hover:text-pink-600 transition-all active:scale-95 cursor-pointer">
-                                            <span className="text-xs font-bold">Details</span>
+                                            <span className="text-xs font-bold">{t('adminOrders.details')}</span>
                                         </button>
                                     </td>
                                 </tr>
                             )
                         }) : (
                             <tr>
-                                <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
-                                    No orders found matching your search.
+                                <td colSpan="9" className="text-center py-10 text-slate-400 text-sm">
+                                    {t('adminOrders.emptySearch')}
                                 </td>
                             </tr>
                         )}
@@ -286,7 +288,7 @@ function Orders() {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                            {t('adminOrders.prev')}
                         </button>
 
                         {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -310,7 +312,7 @@ function Orders() {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                           {t('adminOrders.next')}
                         </button>
                     </div>
                 )}

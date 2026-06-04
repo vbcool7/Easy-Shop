@@ -4,12 +4,14 @@ import { useRef } from "react";
 import { io } from "socket.io-client";
 import { HiX } from "react-icons/hi";
 import { RiSendPlaneFill } from "react-icons/ri";
+import toast from "react-hot-toast";
 import API from '../api/axiosConfig.js';
 import useAuthStore from "../store/useAuthStore";
-import toast from "react-hot-toast";
+import { useTranslation } from 'react-i18next';
 
 function UserChat({ isOpen, setIsOpen, vendorId }) {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const userId = user?._id || user?.id;
 
@@ -52,6 +54,7 @@ function UserChat({ isOpen, setIsOpen, vendorId }) {
         initChat();
 
         socketRef.current.on("receive_message", (newMsg) => {
+            if (newMsg.senderId?.toString() === userId?.toString()) return;
             setMessagesList((prev) => [...prev, newMsg]);
         });
 
@@ -79,6 +82,11 @@ function UserChat({ isOpen, setIsOpen, vendorId }) {
             text: inputMessage
         };
 
+        setMessagesList((prev) => [...prev, {
+            ...msgData,
+            createdAt: new Date().toISOString()
+        }]);
+
         socketRef.current.emit("send_message", msgData);
         setInputMessage("");
     };
@@ -92,9 +100,11 @@ function UserChat({ isOpen, setIsOpen, vendorId }) {
             <div className="bg-pink-500 p-4 flex justify-between items-center text-white">
                 <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest">
-                        Chat with Seller
+                        {t('userChat.title')}
                     </h3>
-                    <p className="text-[9px] opacity-80 font-bold">Online</p>
+                    <p className="text-[9px] opacity-80 font-bold">
+                        {t('userChat.online')}
+                        </p>
                 </div>
                 <button
                     onClick={() =>
@@ -136,7 +146,7 @@ function UserChat({ isOpen, setIsOpen, vendorId }) {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                    placeholder="Type a message..."
+                    placeholder={t('userChat.placeholder')}
                     className="flex-1 text-[11px] font-bold p-3 bg-slate-50 rounded-xl outline-none focus:ring-1 focus:ring-pink-500/30"
                 />
                 <button

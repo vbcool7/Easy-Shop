@@ -58,17 +58,19 @@ const AdminLogin = () => {
             <div className="relative w-full max-w-lg transform transition-all animate-in fade-in zoom-in duration-300">
 
                 {/* Form Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border border-white">
+                <div className="bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-8 border border-white">
 
                     {/* Header Section */}
                     <div className="text-center mb-8">
                         <div className="inline-block p-3 rounded-2xl bg-pink-100 text-pink-600 mb-3">
                             <HiOutlineLockClosed size={28} />
                         </div>
-                        <h2 className="text-2xl font-extrabold text-gray-800">
+                        <h2 className="text-xl md:text-2xl font-extrabold text-gray-800">
                             Admin <span className="text-pink-600">Login</span>
                         </h2>
-                        <p className="text-gray-400 text-sm mt-1 font-medium">Restricted Access</p>
+                        <p className="text-gray-400 text-xs md:text-sm mt-1 font-medium">
+                            Restricted Access
+                            </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -113,7 +115,6 @@ const AdminLogin = () => {
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            // onClick={handleSubmit}
                             disabled={isLogging}
                             className={`w-full font-bold py-3.5 rounded-2xl mt-4 shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2
                             ${isLogging

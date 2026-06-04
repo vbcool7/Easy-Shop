@@ -8,9 +8,11 @@ import { useDeleteInfoSubCategory, useDeleteSubCategory, useSubCatList, useToggl
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 import { getPaginationRange } from '../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function SubCategories({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [page, setPage] = useState(1);
@@ -136,8 +138,8 @@ function SubCategories({ setCurrentPage }) {
         });
     };
 
-    if (isLoading) return <p className="p-10 text-center">Loading sub-categories...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching sub-categories!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('subCategories.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('subCategories.error')}</p>;
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -149,14 +151,14 @@ function SubCategories({ setCurrentPage }) {
                 <div>
                     <div className='flex items-center gap-2.5'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            Sub-Categories
+                            {t('subCategories.title')}
                         </h2>
                         <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-                            Total: {totalCount || 0}
+                            {t('subCategories.total')} : {totalCount || 0}
                         </span>
                     </div>
                     <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Manage and organize your sub-categories.
+                        {t('subCategories.description')}
                     </p>
                 </div>
 
@@ -166,14 +168,14 @@ function SubCategories({ setCurrentPage }) {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search sub-categories..."
+                        placeholder={t('subCategories.placeholder')}
                         className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
                     />
                     <button
                         onClick={() => setCurrentPage('add-sub-category')}
                         className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none transition-all active:scale-95 shrink-0 cursor-pointer"
                     >
-                        + Add New
+                        {t('subCategories.btnAdd')}
                     </button>
                 </div>
             </div>
@@ -183,13 +185,13 @@ function SubCategories({ setCurrentPage }) {
                 <table className="w-full text-left">
                     <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                         <tr>
-                            <th className="px-6 py-4 whitespace-nowrap">Sub-Category</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Category</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Department</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Items Count</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Show on Home</th>
-                            <th className="px-6 py-4 whitespace-nowrap">Status</th>
-                            <th className="px-6 py-4 whitespace-nowrap text-center">Action</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colSubCat')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colCat')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colDept')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colItemsCount')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colShowHome')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap">{t('subCategories.colStatus')}</th>
+                            <th className="px-6 py-4 whitespace-nowrap text-center">{t('subCategories.colAction')}</th>
                         </tr>
                     </thead>
 
@@ -225,7 +227,7 @@ function SubCategories({ setCurrentPage }) {
                                     </td>
 
                                     <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300">
-                                        {subCategory.productCount || 0} <span className="text-[10px] font-normal text-slate-400 ml-1">items</span>
+                                        {subCategory.productCount || 0} <span className="text-[10px] font-normal text-slate-400 ml-1">{t('subCategories.itemsLabel')}</span>
                                     </td>
 
                                     <td className="px-6 py-4">
@@ -234,13 +236,13 @@ function SubCategories({ setCurrentPage }) {
                                             disabled={isPending || (!subCategory.showOnHome && showOnHomeCount >= 7)}
                                             title={!subCategory.showOnHome && showOnHomeCount >= 7 ? "Remove one first" : ""}
                                             className={`px-3 py-1 rounded-full text-xs font-semibold transition-all
-                                                ${subCategory.showOnHome
+                                    ${subCategory.showOnHome
                                                     ? 'bg-pink-100 text-pink-600'
                                                     : showOnHomeCount >= 7
                                                         ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                                         : 'bg-gray-100 text-gray-500 hover:bg-pink-50 hover:text-pink-500'
                                                 }`}>
-                                            {subCategory.showOnHome ? 'On Home' : 'Add to Home'}
+                                            {subCategory.showOnHome ? t('subCategories.onHome') : t('subCategories.addToHome')}
                                         </button>
                                     </td>
 
@@ -249,16 +251,15 @@ function SubCategories({ setCurrentPage }) {
                                             onClick={() => !isPending && handleToggleStatus(subCategory._id)}
                                             disabled={isPending}
                                             className={`w-16 inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase border transition-all
-                                                ${isThisRowLoading ? 'opacity-50' : 'cursor-pointer'}
-                                                ${subCategory.isActive
+                                    ${isThisRowLoading ? 'opacity-50' : 'cursor-pointer'}
+                                    ${subCategory.isActive
                                                     ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100'
                                                     : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100'
-                                                }`}
-                                        >
+                                                }`}>
                                             {isThisRowLoading ? (
                                                 <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                                             ) : (
-                                                subCategory.isActive ? "Active" : "Inactive"
+                                                subCategory.isActive ? t('subCategories.active') : t('subCategories.inactive')
                                             )}
                                         </button>
                                     </td>
@@ -282,8 +283,8 @@ function SubCategories({ setCurrentPage }) {
                             );
                         }) : (
                             <tr>
-                                <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
-                                    No sub categories found matching your search.
+                                <td colSpan="7" className="text-center py-10 text-slate-400 text-sm">
+                                    {t('subCategories.noResults')}
                                 </td>
                             </tr>
                         )}
@@ -299,7 +300,7 @@ function SubCategories({ setCurrentPage }) {
                         disabled={page === 1}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Prev
+                        {t('subCategories.paginationPrev')}
                     </button>
 
                     {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -323,7 +324,7 @@ function SubCategories({ setCurrentPage }) {
                         disabled={page === totalPages}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Next
+                        {t('subCategories.paginationNext')}
                     </button>
                 </div>
             )}
@@ -351,11 +352,11 @@ function SubCategories({ setCurrentPage }) {
                     {/* heading */}
                     <div className="text-center">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Update Sub Category
+                            {t('subCategories.editTitle')}
                         </h3>
 
                         <p className="text-xs text-slate-400 mt-1">
-                            Manage stock levels and pricing
+                            {t('subCategories.editSubtitle')}
                         </p>
                     </div>
 
@@ -366,7 +367,7 @@ function SubCategories({ setCurrentPage }) {
                             <label
                                 htmlFor='catImage'
                                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                Sub Category Image
+                                {t('subCategories.editLabelImage')}
                             </label>
 
                             <div className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800  dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]">
@@ -381,10 +382,10 @@ function SubCategories({ setCurrentPage }) {
 
                                 <div className="flex gap-2 items-center">
                                     <button className="border border-pink-100 rounded-sm px-2 text-pink-500 bg-pink-50/30">
-                                        Choose File
+                                        {t('subCategories.editBtnChooseFile')}
                                     </button>
                                     <span className={`text-gray-600`}>
-                                        {file ? file.name : "No file chosen"}
+                                        {file ? file.name : t('subCategories.editNoFileChosen')}
                                     </span>
                                 </div>
                             </div>
@@ -393,11 +394,11 @@ function SubCategories({ setCurrentPage }) {
                         {/* items in category  (read-only) */}
                         <div className='flex flex-col gap-1.5 md:gap-2'>
                             <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                Total Products in Sub Category
+                                {t('subCategories.editLabelTotalProducts')}
                             </label>
 
                             <div className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-sm flex items-center justify-between">
-                                <span>Current Items</span>
+                                <span>{t('subCategories.editCurrentItems')}</span>
                                 <span className="font-bold text-pink-500">{selectedSubCategory?.productCount || 0}</span>
                             </div>
                         </div>
@@ -407,7 +408,7 @@ function SubCategories({ setCurrentPage }) {
                             <label
                                 htmlFor='subCatName'
                                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                Sub Category Name
+                                {t('subCategories.editLabelName')}
                             </label>
 
                             <input
@@ -415,7 +416,7 @@ function SubCategories({ setCurrentPage }) {
                                 name='subCatName'
                                 value={formData.subCatName}
                                 onChange={handleInputChange}
-                                placeholder="Sub Category Name"
+                                placeholder={t('subCategories.editLabelName')}
                                 className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all"
                             />
                         </div>
@@ -423,7 +424,7 @@ function SubCategories({ setCurrentPage }) {
                         {/* attr */}
                         <div className='flex flex-col gap-1.5 md:gap-2'>
                             <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                Attributes
+                                {t('subCategories.editLabelAttr')}
                             </label>
 
                             <div className="space-y-2">
@@ -451,7 +452,7 @@ function SubCategories({ setCurrentPage }) {
                                                 }}
                                                 className="accent-pink-500"
                                             />
-                                            Variant
+                                            {t('subCategories.editBtnVariant')}
                                         </label>
 
                                         {/* Type Selector — only if hasVariants */}
@@ -465,9 +466,9 @@ function SubCategories({ setCurrentPage }) {
                                                 }}
                                                 className="text-[11px] border border-slate-200 rounded-lg px-2 py-1 bg-white dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-pink-400"
                                             >
-                                                <option value="text">Text</option>
-                                                <option value="color">Color</option>
-                                                <option value="size">Size</option>
+                                                <option value="text">{t('subCategories.editTypeText')}</option>
+                                                <option value="color">{t('subCategories.editTypeColor')}</option>
+                                                <option value="size">{t('subCategories.editTypeSize')}</option>
                                             </select>
                                         )}
                                     </div>
@@ -477,7 +478,7 @@ function SubCategories({ setCurrentPage }) {
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        placeholder="Add new attribute..."
+                                        placeholder={t('subCategories.editPlaceholderAttr')}
                                         className="flex-1 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && e.target.value.trim()) {
@@ -509,7 +510,7 @@ function SubCategories({ setCurrentPage }) {
                                         }}
                                         className="px-4 py-2 bg-pink-500 text-white text-xs font-bold rounded-lg hover:bg-pink-600 transition-colors"
                                     >
-                                        Add
+                                       {t('subCategories.editBtnAdd')}
                                     </button>
                                 </div>
                             </div>
@@ -520,7 +521,7 @@ function SubCategories({ setCurrentPage }) {
                             <label
                                 htmlFor='description'
                                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                                Description
+                                {t('subCategories.editLabelDesc')}
                             </label>
 
                             <textarea
@@ -529,7 +530,7 @@ function SubCategories({ setCurrentPage }) {
                                 value={formData.description}
                                 onChange={handleInputChange}
                                 rows={3}
-                                placeholder="Type Description..."
+                                placeholder={t('subCategories.editPlaceholderDesc')}
                                 className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all resize-none"
                             />
                         </div>
@@ -542,7 +543,7 @@ function SubCategories({ setCurrentPage }) {
                             onClick={() => setIsEditOpen(false)}
                             className="inline-flex w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95 cursor-pointer"
                         >
-                            Discard
+                           {t('subCategories.editBtnDiscard')}
                         </button>
 
                         <button
@@ -550,7 +551,7 @@ function SubCategories({ setCurrentPage }) {
                             onClick={handleUpdate}
                             className="inline-flex w-full justify-center rounded-2xl bg-linear-to-br from-pink-500 to-pink-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-pink-100 hover:from-pink-600 hover:to-pink-700 transition-all sm:w-1/2 items-center gap-2 active:scale-95 cursor-pointer"
                         >
-                            {isUpdating ? "Saving..." : " Save Inventory"}
+                            {isUpdating ? t('subCategories.editSaving') : t('subCategories.editBtnSave')}
                         </button>
                     </div>
                 </div>
@@ -585,14 +586,11 @@ function SubCategories({ setCurrentPage }) {
                     {/* Text Content */}
                     <div className="text-center">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Remove Sub Category?
+                            {t('subCategories.deleteTitle')}
                         </h3>
 
                         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            {isInfoLoading
-                                ? "Checking subcategory data..."
-                                : deleteInfo?.message
-                            }
+                            {isInfoLoading ? t('subCategories.deleteLoading') : deleteInfo?.message}
                         </p>
                     </div>
 
@@ -603,7 +601,7 @@ function SubCategories({ setCurrentPage }) {
                             onClick={() => { setIsDeletedOpen(false); setSelectedSubCatId(null); }}
                             className="inline-flex w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95 cursor-pointer"
                         >
-                            No, Keep it
+                            {t('subCategories.deleteBtnNo')}
                         </button>
 
                         {deleteInfo?.canDelete && (
@@ -614,7 +612,7 @@ function SubCategories({ setCurrentPage }) {
                                 className="inline-flex w-full justify-center rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-100 hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 items-center gap-2 active:scale-95 cursor-pointer"
                             >
                                 <HiOutlineTrash />
-                                {isDeleting ? "Deleting..." : "Yes, Delete"}
+                                {isDeleting ? t('subCategories.deleteDeleting') : t('subCategories.deleteBtnYes')}
                             </button>
                         )}
                     </div>

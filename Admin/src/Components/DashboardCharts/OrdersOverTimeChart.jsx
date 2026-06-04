@@ -1,16 +1,20 @@
+
 import React, { useState } from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
     Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { useOrdersOverTime } from '../../hooks/useAdminStats';
+import { useTranslation } from 'react-i18next';
 
 function OrdersOverTimeChart() {
+
+    const { t } = useTranslation();
     const [days, setDays] = useState(30);
     const { data, isLoading, isError } = useOrdersOverTime(days);
 
     const chartData = data?.data?.map(item => ({
-        date: item.date || item._id, // fallback support for both formats
+        date: item.date || item._id,
         orders: item.orders || 0,
         revenue: item.revenue || 0
     })) || [];
@@ -18,7 +22,7 @@ function OrdersOverTimeChart() {
     if (isError) {
         return (
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 h-80 flex items-center justify-center text-red-500 text-sm border border-red-100">
-                Failed to load timeline data.
+                {t('ordersOverTime.error')}
             </div>
         );
     }
@@ -28,10 +32,10 @@ function OrdersOverTimeChart() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h3 className="text-base font-black text-slate-800 dark:text-white">
-                        Orders & Revenue Over Time
+                        {t('ordersOverTime.title')}
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
-                        Daily breakdown of orders and revenue
+                        {t('ordersOverTime.desc')}
                     </p>
                 </div>
                 <select
@@ -39,19 +43,19 @@ function OrdersOverTimeChart() {
                     onChange={(e) => setDays(Number(e.target.value))}
                     className="text-xs border border-pink-100 dark:border-slate-600 rounded-xl px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-300 cursor-pointer"
                 >
-                    <option value={7}>Last 7 days</option>
-                    <option value={30}>Last 30 days</option>
-                    <option value={90}>Last 90 days</option>
+                    <option value={7}>{t('ordersOverTime.days7')}</option>
+                    <option value={30}>{t('ordersOverTime.days30')}</option>
+                    <option value={90}>{t('ordersOverTime.days90')}</option>
                 </select>
             </div>
 
             {isLoading ? (
                 <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
-                    <span className="animate-pulse">Loading analytics...</span>
+                    <span className="animate-pulse">{t('ordersOverTime.loading')}</span>
                 </div>
             ) : chartData.length === 0 ? (
                 <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
-                    No data available for the selected period
+                    {t('ordersOverTime.noData')}
                 </div>
             ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -87,14 +91,14 @@ function OrdersOverTimeChart() {
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: 'document' === 'undefined' ? '#fff' : undefined, // dark style handles well natively
+                                backgroundColor: 'document' === 'undefined' ? '#fff' : undefined,
                                 borderRadius: '14px',
                                 border: 'none',
                                 boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
                                 fontSize: '12px'
                             }}
                             className="dark:bg-slate-900 dark:text-white"
-                            formatter={(value, name) => name === 'Revenue' ? [`₹${value}`, 'Revenue'] : [value, 'Orders']}
+                            formatter={(value, name) => name === 'Revenue' ? [`₹${value}`, t('ordersOverTime.revenue')] : [value, t('ordersOverTime.orders')]}
                         />
                         <Legend
                             wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
@@ -105,21 +109,21 @@ function OrdersOverTimeChart() {
                             yAxisId="left"
                             type="monotone"
                             dataKey="orders"
-                            stroke="#ec4899" 
+                            stroke="#ec4899"
                             strokeWidth={3}
                             dot={false}
                             activeDot={{ r: 6 }}
-                            name="Orders"
+                            name={t('ordersOverTime.orders')}
                         />
                         <Line
                             yAxisId="right"
                             type="monotone"
                             dataKey="revenue"
-                            stroke="#f43f5e" 
+                            stroke="#f43f5e"
                             strokeWidth={3}
                             dot={false}
                             activeDot={{ r: 6 }}
-                            name="Revenue"
+                            name={t('ordersOverTime.revenue')}
                         />
                     </LineChart>
                 </ResponsiveContainer>

@@ -4,9 +4,11 @@ import VendorAccountInfo from "../Components/VendorAccountInfo";
 import VendorBusinessInfo from "../Components/VendorBusinessInfo";
 import VendorPersonalInfo from "../Components/VendorPersonalInfo";
 import { useCatList } from "../hook/useVendor";
+import { useTranslation } from 'react-i18next';
 
 function VendorSignupPage() {
 
+    const { t } = useTranslation();
     const { data: categories = [], isLoading: isCatLoading, isError, error } = useCatList();
 
     const [step, setStep] = useState(1);
@@ -56,7 +58,11 @@ function VendorSignupPage() {
     const prevStep = () => setStep((prev) => prev - 1);
 
     // Steps Configuration
-    const stepsLabels = ["Personal Info", "Business Details", "Bank & Agreement"];
+    const stepsLabels = [
+        t('steps.Personal Info'),
+        t('steps.Business Details'),
+        t('steps.Bank & Agreement')
+    ];
 
     return (
         <div className="min-h-[70vh] bg-gray-50 py-10 px-4 lg:px-6">
@@ -92,7 +98,7 @@ function VendorSignupPage() {
                                 {/* Text Label: Mobile par wrap hoga aur Desktop par nowrap */}
                                 <div className={`hidden md:block absolute -bottom-8 md:-bottom-10 w-16 sm:w-20 md:w-32 px-2 md:px-6 text-center transition-all duration-300`}>
                                     <span className={`block text-[8px] sm:text-[10px] md:text-xs font-bold uppercase tracking-tighter sm:tracking-normal leading-[1.1]
-                                                 ${step >= stepNumber ? 'text-pink-500' : 'text-gray-400'}`}>
+                                    ${step >= stepNumber ? 'text-pink-500' : 'text-gray-400'}`}>
                                         {label}
                                     </span>
                                 </div>

@@ -4,6 +4,7 @@ import Order from '../Models/orderModelSchema.js';
 import Product from '../Models/productModelSchema.js';
 import mongoose from 'mongoose';
 import sendEmail from '../utils/sendEmail.js';
+import { createNotification } from '../utils/createNotifications.js';
 
 // user
 export const addReview = async (req, res) => {
@@ -27,13 +28,21 @@ export const addReview = async (req, res) => {
             });
         }
 
+        const product = await Product.findById(prod_id).select("vendorId prodName");
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            });
+        }
+
         const isReviewExists = await ReviewRating.findOne({ productId: prod_id, userId });
 
         if (isReviewExists) {
             isReviewExists.review = review;
             isReviewExists.rating = rating;
 
-            // Agar pehle verified nahi tha par ab order deliver ho gaya hai toh update kar dein
             if (deliveredOrder) isReviewExists.isVerifiedPurchase = true;
 
             await isReviewExists.save();
@@ -53,6 +62,14 @@ export const addReview = async (req, res) => {
         });
 
         await newReview.save();
+
+        await createNotification({
+            vendorId: product.vendorId,
+            type: 'NEW_REVIEW',
+            title: "New Review Received",
+            message: `A customer left a ${rating}-star review on "${product.prodName}"`,
+            relatedId: newReview._id
+        })
 
         res.status(201).json({
             success: true,
@@ -167,7 +184,7 @@ export const getProductReviews = async (req, res) => {
 
         if (reviews.length === 0) {
             return res.status(200).json({
-                success: false,
+                success: true,
                 message: "No reviews found for this product yet.",
                 data: []
             });
@@ -474,7 +491,7 @@ export const replyToReview = async (req, res) => {
             const productName = review.productId.prodName;
 
             const emailSubject = `New reply on your review for ${productName}! ✨`;
-            
+
             // Ek clean HTML template aapke mail ke liye
             const emailHtml = `
                 <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; padding: 20px; rounded: 12px;">

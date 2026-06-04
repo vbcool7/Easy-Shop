@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { HiOutlinePhotograph, HiOutlineX } from 'react-icons/hi';
 import { useAddBanner } from '../hooks/useBanner.js';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const ZONES = [
     { value: 'home_hero', label: 'Home Hero' },
@@ -12,6 +13,8 @@ const ZONES = [
 ];
 
 function AddBanner({ setCurrentPage }) {
+
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         zone: 'home_hero',
         badge: '',
@@ -104,10 +107,10 @@ function AddBanner({ setCurrentPage }) {
                 <div className='absolute -bottom-10 -left-10 h-24 w-24 bg-white/10 rounded-full blur-xl'></div>
                 <div className='relative z-10 text-center md:text-start'>
                     <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>
-                        Add New Banner
+                        {t('addBanner.title')}
                     </h1>
                     <p className='text-pink-50 text-xs font-medium opacity-90'>
-                        Upload and configure a new banner for your storefront.
+                        {t('addBanner.subtitle')}
                     </p>
                 </div>
             </div>
@@ -119,7 +122,7 @@ function AddBanner({ setCurrentPage }) {
                     {/* zone */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Banner Zone
+                            {t('addBanner.labelZone')}
                         </label>
                         <select
                             name='zone'
@@ -136,7 +139,7 @@ function AddBanner({ setCurrentPage }) {
                     {/* order */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Display Order
+                            {t('addBanner.labelOrder')}
                         </label>
                         <input
                             type='number'
@@ -151,14 +154,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* badge */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Badge Text <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelBadge')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='badge'
                             value={formData.badge}
                             onChange={handleInputChange}
-                            placeholder='e.g. Limited Offer'
+                            placeholder={t('addBanner.placeholderBadge')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -166,14 +169,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* offer text */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Offer Text <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelOfferText')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='offerText'
                             value={formData.offerText}
                             onChange={handleInputChange}
-                            placeholder='e.g. From $199 or Up to 40% off'
+                            placeholder={t('addBanner.placeholderOfferText')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -181,14 +184,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* heading main */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Heading (Main) <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelHeadingMain')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='headingMain'
                             value={formData.headingMain}
                             onChange={handleInputChange}
-                            placeholder='e.g. New or FRESH'
+                            placeholder={t('addBanner.placeholderHeadingMain')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -196,14 +199,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* heading accent */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Heading (Accent/Pink) <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelHeadingAccent')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='headingAccent'
                             value={formData.headingAccent}
                             onChange={handleInputChange}
-                            placeholder='e.g. Products or DROPS!'
+                            placeholder={t('addBanner.placeholderHeadingAccent')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -211,14 +214,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* paragraph */}
                     <div className='flex flex-col gap-1.5 md:gap-2 col-span-full'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Short Description <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelParagraph')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <textarea
                             name='paragraph'
                             value={formData.paragraph}
                             onChange={handleInputChange}
                             rows={2}
-                            placeholder='e.g. Style that speaks for you. Explore the latest trends.'
+                            placeholder={t('addBanner.placeholderParagraph')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px] resize-none'
                         />
                     </div>
@@ -226,14 +229,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* cta text */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            CTA Button Text <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelCtaText')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='ctaText'
                             value={formData.ctaText}
                             onChange={handleInputChange}
-                            placeholder='e.g. Shop Now'
+                            placeholder={t('addBanner.placeholderCtaText')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -241,14 +244,14 @@ function AddBanner({ setCurrentPage }) {
                     {/* cta link */}
                     <div className='flex flex-col gap-1.5 md:gap-2'>
                         <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            CTA Link <span className='text-slate-400 font-normal'>(optional)</span>
+                            {t('addBanner.labelCtaLink')} <span className='text-slate-400 font-normal'>{t('addBanner.optional')}</span>
                         </label>
                         <input
                             type='text'
                             name='ctaLink'
                             value={formData.ctaLink}
                             onChange={handleInputChange}
-                            placeholder='e.g. /products or https://...'
+                            placeholder={t('addBanner.placeholderCtaLink')}
                             className='p-2.5 md:p-3.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]'
                         />
                     </div>
@@ -256,7 +259,7 @@ function AddBanner({ setCurrentPage }) {
                     {/* image upload */}
                     <div className='flex flex-col gap-3 col-span-full mt-1'>
                         <label className='text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                            Banner Image <span className='text-pink-500'>(Required — 1920x600 recommended)</span>
+                            {t('addBanner.labelBannerImage')} <span className='text-pink-500'>{t('addBanner.labelBannerImageNote')}</span>
                         </label>
                         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start'>
                             <div className='relative h-35 md:h-44 border-2 border-dashed border-pink-100 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center bg-pink-50/10 hover:bg-pink-50/30 transition-all cursor-pointer'>
@@ -267,12 +270,17 @@ function AddBanner({ setCurrentPage }) {
                                     className='absolute inset-0 opacity-0 z-10 cursor-pointer'
                                 />
                                 <HiOutlinePhotograph className='text-3xl text-pink-400 mb-2' />
-                                <p className='text-xs text-pink-500 font-bold'>Upload Banner Image</p>
+                                <p className='text-xs text-pink-500 font-bold'>
+                                    {t('addBanner.uploadBannerImage')}
+                                </p>
                             </div>
 
                             {previewUrl && (
                                 <div className='relative h-35 md:h-44 rounded-2xl overflow-hidden border border-pink-100 shadow-sm col-span-2'>
-                                    <img src={previewUrl} alt='Preview' className='w-full h-full object-cover' />
+                                    <img
+                                        src={previewUrl}
+                                        alt='Preview'
+                                        className='w-full h-full object-cover' />
                                     <button
                                         type='button'
                                         onClick={removeImage}
@@ -295,8 +303,10 @@ function AddBanner({ setCurrentPage }) {
                             onChange={handleInputChange}
                             className='w-4 h-4 accent-pink-500'
                         />
-                        <label htmlFor='isActive' className='text-sm font-semibold text-slate-600 dark:text-slate-300 cursor-pointer'>
-                            Set as Active (visible on storefront immediately)
+                        <label
+                            htmlFor='isActive'
+                            className='text-sm font-semibold text-slate-600 dark:text-slate-300 cursor-pointer'>
+                            {t('addBanner.isActiveLabel')}
                         </label>
                     </div>
 
@@ -308,14 +318,15 @@ function AddBanner({ setCurrentPage }) {
                             onClick={() => setCurrentPage('banners')}
                             className='w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-pink-500 hover:bg-pink-100 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 disabled:hover:bg-transparent disabled:hover:text-slate-500'
                         >
-                            Cancel
+                            {t('addBanner.cancel')}
                         </button>
+
                         <button
                             type='submit'
                             disabled={isPending}
                             className='w-full sm:w-auto md:px-10 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-pink-500 to-pink-600 shadow-lg shadow-pink-100 dark:shadow-none hover:shadow-pink-200 transition-all cursor-pointer active:scale-95 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none'
                         >
-                            {isPending ? 'Uploading...' : 'Add Banner'}
+                            {isPending ? t('addBanner.submitting') : t('addBanner.submit')}
                         </button>
                     </div>
                 </form>

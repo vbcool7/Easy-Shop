@@ -10,11 +10,13 @@ import { useCart } from './CartContext';
 import UpiImg from '../assets/Images/UpiImg.png';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import { useCreateRazorpayOrder, usePlaceCartOrder, usePlaceDirectOrder, useVerifyPayment } from '../hook/useOrders';
 
 function PlaceOrderForm() {
 
+    const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { cartItems, clearCart } = useCart();
@@ -210,85 +212,85 @@ function PlaceOrderForm() {
 
                         <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-pink-500 rounded-full"></span>
-                            Shipping Address
+                            {t('placeOrder.shippingAddress')}
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                             {/* Full Name */}
                             <div className="md:col-span-2">
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Full Name</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.fullName')}</label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={shippingAddress.name}
                                     onChange={handleInputChange}
-                                    placeholder='e.g. Rahul Sharma'
+                                    placeholder={t('placeOrder.namePlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
 
                             {/* Phone Number */}
                             <div>
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Phone Number</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.phoneNumber')}</label>
                                 <input
                                     type="text"
                                     name="contact"
                                     value={shippingAddress.contact}
                                     onChange={handleInputChange}
-                                    placeholder='+91 XXXXX XXXXX'
+                                    placeholder={t('placeOrder.phonePlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
 
                             {/* Pincode */}
                             <div>
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Pincode</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.pincode')}</label>
                                 <input
                                     type="text"
                                     name="pincode"
                                     value={shippingAddress.pincode}
                                     onChange={handleInputChange}
-                                    placeholder='6-digit code'
+                                    placeholder={t('placeOrder.pincodePlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
 
                             {/* Address */}
                             <div className="md:col-span-2">
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Address (House No, Building, Street)</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.address')}</label>
                                 <input
                                     type="text"
                                     name="address"
                                     value={shippingAddress.address}
                                     onChange={handleInputChange}
-                                    placeholder='e.g. Flat 102, Green Apartments...'
+                                    placeholder={t('placeOrder.addressPlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
 
                             {/* City */}
                             <div className="md:col-span-2">
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">City / District</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.city')}</label>
                                 <input
                                     type="text"
                                     name="city"
                                     value={shippingAddress.city}
                                     onChange={handleInputChange}
-                                    placeholder='e.g. Mumbai'
+                                    placeholder={t('placeOrder.cityPlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
 
                             {/* state */}
                             <div className="md:col-span-2">
-                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">State</label>
+                                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{t('placeOrder.state')}</label>
                                 <input
                                     type="text"
                                     name="state"
                                     value={shippingAddress.state}
                                     onChange={handleInputChange}
-                                    placeholder='e.g. Maharastra'
+                                    placeholder={t('placeOrder.statePlaceholder')}
                                     className='w-full mt-1 text-sm md:text-base border border-gray-300 py-3 px-4 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all bg-gray-50/50'
                                 />
                             </div>
@@ -300,7 +302,7 @@ function PlaceOrderForm() {
 
                         <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                             <span className="w-1.5 h-6 md:w-2 md:h-8 bg-pink-500 rounded-full"></span>
-                            Payment Method
+                            {t('placeOrder.paymentMethod')}
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -316,8 +318,8 @@ function PlaceOrderForm() {
                                     {paymentMethod === 'COD' && <div className="w-2.5 h-2.5 bg-pink-500 rounded-full"></div>}
                                 </div>
                                 <div>
-                                    <p className="text-sm md:text-base font-bold text-gray-900">Cash on Delivery</p>
-                                    <p className="text-[10px] md:text-xs text-gray-500 font-medium">Pay when you receive</p>
+                                    <p className="text-sm md:text-base font-bold text-gray-900">{t('placeOrder.cod')}</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-medium">{t('placeOrder.codDesc')}</p>
                                 </div>
                             </div>
 
@@ -332,8 +334,8 @@ function PlaceOrderForm() {
                                     {paymentMethod === 'Online' && <div className="w-2.5 h-2.5 bg-pink-500 rounded-full"></div>}
                                 </div>
                                 <div>
-                                    <p className="text-sm md:text-base font-bold text-gray-900">Online Payment</p>
-                                    <p className="text-[10px] md:text-xs text-gray-500 font-medium">UPI, Cards, Netbanking</p>
+                                    <p className="text-sm md:text-base font-bold text-gray-900">{t('placeOrder.online')}</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500 font-medium">{t('placeOrder.onlineDesc')}</p>
                                 </div>
                             </div>
                         </div>
@@ -346,24 +348,24 @@ function PlaceOrderForm() {
                             disabled={isPending}
                             className={`w-full text-sm md:text-base bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-3xl mt-8 flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-pink-200
                             ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                            {isPending ? "Placing Order..." : "Confirm & Place Order"}
+                            {isPending ? t('placeOrder.placingOrder') : t('placeOrder.confirmOrder')}
                         </button>
 
                         {/* Security Note */}
                         <p className="text-center text-gray-400 text-[9px] md:text-[12px] mt-6 flex items-center justify-center gap-1">
-                            <IoLockClosed /> SSL SECURE PAYMENT GATEWAY
+                            <IoLockClosed /> {t('placeOrder.securePayment')}
                         </p>
                     </div>
                 </div>
 
-                {/* summary */}
+                {/* right - summary */}
                 <div className="w-full lg:w-[40%] order-1 lg:order-2">
                     <div className="bg-white p-5 md:p-8 rounded-4xl md:rounded-[2.5rem] sticky top-24 border border-pink-50 shadow-2xl shadow-pink-100/30">
 
-                        <h2 className="text-xl md:text-2xl font-extrabold mb-6 md:mb-8 text-gray-900 flex justify-between items-center">
-                            Order Summary
-                            <span className="text-[10px] md:text-xs font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500">
-                                {totalQuantity} Items
+                        <h2 className="text-xl md:text-2xl font-extrabold mb-6 md:mb-8 text-gray-900 flex justify-between items-start md:items-center gap-2">
+                            <span className="truncate">{t('placeOrder.orderSummary')}</span>
+                            <span className="text-[10px] md:text-xs font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500 whitespace-nowrap shrink-0">
+                                {totalQuantity} {t('placeOrder.items')}
                             </span>
                         </h2>
 
@@ -371,7 +373,7 @@ function PlaceOrderForm() {
                             {displayItems && displayItems.map((item) => (
                                 <div
                                     key={item._id || item.id || item.variantId}
-                                    className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                                    className="flex items-center gap-3 md:gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
 
                                     {/* image */}
                                     <div className="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100">
@@ -391,25 +393,25 @@ function PlaceOrderForm() {
                                         {/* prod info */}
                                         <div className="flex flex-wrap gap-1">
                                             {item.selectedColor && (
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
+                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600 truncate max-w-25">
                                                     {item.selectedColor}
                                                 </span>
                                             )}
 
                                             {item.selectedSize && (
-                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600">
-                                                    Size: {item.selectedSize}
+                                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded-lg text-slate-600 whitespace-nowrap">
+                                                    {t('placeOrder.size')}: {item.selectedSize}
                                                 </span>
                                             )}
 
-                                            <span className="text-[10px] font-bold bg-pink-100 px-2 py-1 rounded-lg text-pink-600 uppercase tracking-wider">
-                                                Qty: {item.quantity || 1}
+                                            <span className="text-[10px] font-bold bg-pink-100 px-2 py-1 rounded-lg text-pink-600 uppercase tracking-wider whitespace-nowrap">
+                                                {t('placeOrder.qty')}: {item.quantity || 1}
                                             </span>
                                         </div>
 
                                     </div>
 
-                                    <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                                    <p className="text-sm font-bold text-gray-900 whitespace-nowrap shrink-0">
                                         ₹{item.price * (item.quantity || 1)}
                                     </p>
                                 </div>
@@ -417,30 +419,30 @@ function PlaceOrderForm() {
                         </div>
 
                         <div className="space-y-3 md:space-y-4">
-                            <div className="flex justify-between items-center text-gray-500 font-medium text-xs md:text-sm">
-                                <span>Subtotal</span>
-                                <span className="text-gray-900">₹{subtotal.toFixed(2)}</span>
+                            
+                            <div className="flex justify-between items-center text-gray-500 font-medium text-xs md:text-sm gap-4">
+                                <span className="truncate">{t('placeOrder.subtotal')}</span>
+                                <span className="text-gray-900 whitespace-nowrap">₹{subtotal.toFixed(2)}</span>
                             </div>
 
-                            <div className="flex justify-between">
-                                <span>Shipping</span>
-                                <span className="text-green-500 font-bold text-sm underline cursor-help">
-                                    FREE
+                            <div className="flex justify-between items-center gap-4 text-xs md:text-sm text-gray-500 font-medium">
+                                <span className="truncate">{t('placeOrder.shipping')}</span>
+                                <span className="text-green-500 font-bold text-sm underline cursor-help whitespace-nowrap shrink-0">
+                                    {t('placeOrder.free')}
                                 </span>
                             </div>
 
                             <div className="border-t border-dashed border-gray-200 my-6 pt-6">
-                                <div className="flex justify-between items-center">
-
-                                    <div>
-                                        <p className="text-gray-400 text-[9px] md:text-[10px] uppercase tracking-widest font-black font-sans">
-                                            Grand Total
+                                
+                                <div className="flex justify-between items-center gap-4">
+                                    <div className="min-w-0">
+                                        <p className="text-gray-400 text-[9px] md:text-[10px] uppercase tracking-widest font-black font-sans truncate">
+                                            {t('placeOrder.grandTotal')}
                                         </p>
-                                        <p className="text-2xl md:text-4xl font-black text-gray-900 mt-1">
+                                        <p className="text-2xl md:text-4xl font-black text-gray-900 mt-1 whitespace-nowrap">
                                             ₹{finalTotal.toFixed(2)}
                                         </p>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
@@ -450,28 +452,33 @@ function PlaceOrderForm() {
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    placeholder="Coupon Code"
-                                    className="flex-1 bg-gray-50 border border-gray-200 px-4 py-3 rounded-2xl text-xs focus:outline-none focus:border-pink-500 focus:bg-white transition-all"
+                                    placeholder={t('placeOrder.couponPlaceholder')}
+                                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 px-4 py-3 rounded-2xl text-xs focus:outline-none focus:border-pink-500 focus:bg-white transition-all"
                                 />
-                                <button className="bg-gray-900 text-white text-[10px] font-bold px-4 rounded-2xl hover:bg-black transition-all">
-                                    APPLY
+            
+                                <button className="bg-gray-900 text-white text-[10px] font-bold px-4 py-3 rounded-2xl hover:bg-black transition-all shrink-0 whitespace-nowrap">
+                                    {t('placeOrder.apply')}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Place Order button */}
+                        {/* Place Order button - desktop */}
                         <div className='hidden lg:block'>
                             <button
                                 onClick={handlePlaceOrder}
                                 disabled={isPending}
                                 className={`w-full text-sm md:text-base bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-3xl mt-8 flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-pink-200
-                                  ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                                {isPending ? "Placing Order..." : "Confirm & Place Order"}
+                  ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                                
+                                <span className="px-2 text-center line-clamp-1">
+                                    {isPending ? t('placeOrder.placingOrder') : t('placeOrder.confirmOrder')}
+                                </span>
                             </button>
 
                             {/* Security Note */}
-                            <p className="text-center text-gray-400 text-[9px] mt-6 flex items-center justify-center gap-1">
-                                <IoLockClosed /> SSL SECURE PAYMENT GATEWAY
+                            <p className="text-center text-gray-400 text-[9px] mt-6 flex items-center justify-center gap-1 px-2">
+                                <span className="shrink-0"><IoLockClosed /></span>
+                                <span className="truncate">{t('placeOrder.securePayment')}</span>
                             </p>
                         </div>
                     </div>
@@ -491,13 +498,13 @@ function PlaceOrderForm() {
                             <div className="w-20 h-20 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
                                 <FaCheckCircle />
                             </div>
-                            <h2 className="text-2xl font-black text-gray-800 mb-2">Order Placed!</h2>
-                            <p className="text-gray-500 text-sm mb-8">We recieved your order successfully!</p>
+                            <h2 className="text-2xl font-black text-gray-800 mb-2">{t('placeOrder.orderPlaced')}</h2>
+                            <p className="text-gray-500 text-sm mb-8">{t('placeOrder.orderSuccess')}</p>
                             <button
                                 onClick={() => navigate('/')}
                                 className="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold hover:bg-pink-600 hadow-lg shadow-pink-200 cursor-pointer transition-all active:scale-95"
                             >
-                                Continue Shopping
+                                {t('placeOrder.continueShopping')}
                             </button>
                         </div>
                     </div>

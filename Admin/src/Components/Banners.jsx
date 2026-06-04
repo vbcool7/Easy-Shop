@@ -3,16 +3,18 @@ import { useState } from 'react';
 import { useGetBanners, useDeleteBanner, useUpdateBanner } from '../hooks/useBanner.js';
 import { HiOutlinePencil, HiOutlineTrash, HiOutlinePhotograph, HiOutlineX, HiOutlineExclamation } from 'react-icons/hi';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const ZONES = [
-    { value: 'home_hero', label: 'Home Hero' },
-    { value: 'home_mid', label: 'Home Mid' },
-    { value: 'category_top', label: 'Category Top' },
-    { value: 'vendor_top', label: 'Vendor Top' },
+    { value: 'home_hero',     label: 'Home Hero',      i18nKey: 'zoneHomeHero'     },
+    { value: 'home_mid',      label: 'Home Mid',       i18nKey: 'zoneHomeMid'      },
+    { value: 'category_top',  label: 'Category Top',   i18nKey: 'zoneCategoryTop'  },
+    { value: 'vendor_top',    label: 'Vendor Top',     i18nKey: 'zoneVendorTop'    },
 ];
 
 function Banners({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const [selectedZone, setSelectedZone] = useState('home_hero');
     const [editingBanner, setEditingBanner] = useState(null);
     const [editImage, setEditImage] = useState(null);
@@ -97,14 +99,18 @@ function Banners({ setCurrentPage }) {
                 <div className='absolute -bottom-10 -left-10 h-24 w-24 bg-white/10 rounded-full blur-xl'></div>
                 <div className='relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4'>
                     <div>
-                        <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>Banner Management</h1>
-                        <p className='text-pink-50 text-xs font-medium opacity-90'>Manage storefront banners by zone.</p>
+                        <h1 className='text-xl md:text-2xl font-bold text-white mb-1'>
+                            {t('adminBanners.title')}
+                        </h1>
+                        <p className='text-pink-50 text-xs font-medium opacity-90'>
+                            {t('adminBanners.subtitle')}
+                        </p>
                     </div>
                     <button
                         onClick={() => setCurrentPage('add-banner')}
                         className='md:px-3 py-1.5 md:py-2.5 bg-white text-pink-500 rounded-xl text-[13px] md:text-sm font-bold hover:bg-pink-50 transition-all active:scale-95'
                     >
-                        + Add Banner
+                        {t('adminBanners.addBanner')}
                     </button>
                 </div>
             </div>
@@ -119,12 +125,12 @@ function Banners({ setCurrentPage }) {
                             key={z.value}
                             onClick={() => setSelectedZone(z.value)}
                             className={`shrink-0 md:shrink flex-1 md:flex-none text-center px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-sm font-bold transition-all whitespace-nowrap
-                                ${selectedZone === z.value
+                            ${selectedZone === z.value
                                     ? 'bg-pink-500 text-white shadow-sm'
                                     : 'bg-slate-100 text-slate-500 hover:bg-pink-50 hover:text-pink-500'
                                 }`}
                         >
-                            {z.label}
+                            {t(`adminBanners.${z.i18nKey}`)}
                         </button>
                     ))}
                 </div>
@@ -132,18 +138,18 @@ function Banners({ setCurrentPage }) {
                 {/* banner list */}
                 <div className='p-4 md:p-6 space-y-4'>
                     {isLoading && (
-                        <p className='text-sm text-slate-400 text-center py-10'>Loading...</p>
+                        <p className='text-sm text-slate-400 text-center py-10'>{t('adminBanners.loading')}</p>
                     )}
 
                     {!isLoading && (!banners || banners.length === 0) && (
                         <div className='text-center py-16'>
                             <HiOutlinePhotograph className='text-5xl text-slate-200 mx-auto mb-3' />
-                            <p className='text-sm text-slate-400 font-medium'>No banners for this zone yet</p>
+                            <p className='text-sm text-slate-400 font-medium'>{t('adminBanners.emptyTitle')}</p>
                             <button
                                 onClick={() => setCurrentPage('add-banner')}
                                 className='mt-4 px-5 py-2 bg-pink-500 text-white rounded-xl text-xs font-bold hover:bg-pink-600 transition-all'
                             >
-                                + Add First Banner
+                                {t('adminBanners.addFirstBanner')}
                             </button>
                         </div>
                     )}
@@ -164,54 +170,48 @@ function Banners({ setCurrentPage }) {
 
                                     {/* status + order */}
                                     <div className='flex items-center gap-2'>
-                                        {/* toggle */}
                                         <button
                                             onClick={() => handleToggleActive(banner)}
                                             disabled={isUpdating}
                                             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50
-                                            ${banner.isActive ? 'bg-green-400' : 'bg-slate-200 dark:bg-slate-600'}`}
-                                            aria-label={banner.isActive ? 'Deactivate banner' : 'Activate banner'}
+                                        ${banner.isActive ? 'bg-green-400' : 'bg-slate-200 dark:bg-slate-600'}`}
+                                            aria-label={banner.isActive ? t('adminBanners.ariaDeactivate') : t('adminBanners.ariaActivate')}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200
-                                             ${banner.isActive ? 'translate-x-4' : 'translate-x-0'}`}
+                                         ${banner.isActive ? 'translate-x-4' : 'translate-x-0'}`}
                                             />
                                         </button>
                                         <span className={`text-[10px] font-bold ${banner.isActive ? 'text-green-500' : 'text-slate-400'}`}>
-                                            {banner.isActive ? 'Active' : 'Inactive'}
+                                            {banner.isActive ? t('adminBanners.statusActive') : t('adminBanners.statusInactive')}
                                         </span>
-                                        <span className='text-[11px] text-slate-400'>Order: {banner.order}</span>
+                                        <span className='text-[11px] text-slate-400'>{t('adminBanners.orderLabel')} {banner.order}</span>
                                     </div>
 
-                                    {/* badge */}
                                     {banner.badge &&
                                         <p className='text-[11px] text-pink-500 font-bold uppercase tracking-wider'>
                                             {banner.badge}
                                         </p>
                                     }
 
-                                    {/* heading */}
                                     {(banner.headingMain || banner.headingAccent) &&
                                         <p className='text-sm font-bold text-slate-700 dark:text-slate-200'>
                                             {banner.headingMain} <span className='text-pink-500'>{banner.headingAccent}</span>
                                         </p>
                                     }
 
-                                    {/* paragraph */}
                                     {banner.paragraph &&
                                         <p className='text-xs text-slate-400 line-clamp-2'>{banner.paragraph}</p>
                                     }
 
-                                    {/* offer text */}
                                     {banner.offerText &&
                                         <p className='text-xs font-semibold text-slate-500 dark:text-slate-400'>
-                                            Offer: {banner.offerText}
+                                            {t('adminBanners.offerLabel')} {banner.offerText}
                                         </p>
                                     }
 
-                                    {/* cta */}
                                     {banner.ctaText &&
                                         <p className='text-xs text-slate-400'>
-                                            Btn: <span className='font-bold text-slate-600 dark:text-slate-200'>{banner.ctaText}</span>
+                                            {t('adminBanners.btnLabel')} <span className='font-bold text-slate-600 dark:text-slate-200'>{banner.ctaText}</span>
                                             {banner.ctaLink && <span className='ml-1 text-slate-300'>→ {banner.ctaLink}</span>}
                                         </p>
                                     }
@@ -222,14 +222,14 @@ function Banners({ setCurrentPage }) {
                                         onClick={() => { setEditingBanner(banner); setEditPreview(banner.image); }}
                                         className='px-3 py-1.5 text-xs font-bold text-pink-500 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all'
                                     >
-                                        <HiOutlinePencil className='inline mr-1' />Edit
+                                        <HiOutlinePencil className='inline mr-1' />{t('adminBanners.editBtn')}
                                     </button>
                                     <button
                                         onClick={() => setBannerToDelete(banner._id)}
                                         disabled={isDeleting}
                                         className='px-3 py-1.5 text-xs font-bold text-red-400 bg-red-50 hover:bg-red-100 rounded-xl transition-all disabled:opacity-50'
                                     >
-                                        <HiOutlineTrash className='inline mr-1' />Delete
+                                        <HiOutlineTrash className='inline mr-1' />{t('adminBanners.deleteBtn')}
                                     </button>
                                 </div>
                             </div>
@@ -249,7 +249,9 @@ function Banners({ setCurrentPage }) {
                             <HiOutlineX size={18} className='text-slate-500' />
                         </button>
 
-                        <h2 className='text-lg font-bold text-slate-700 dark:text-slate-200 mb-5'>Edit Banner</h2>
+                        <h2 className='text-lg font-bold text-slate-700 dark:text-slate-200 mb-5'>
+                            {t('adminBanners.editModalTitle')}
+                        </h2>
 
                         <form onSubmit={handleEditSubmit} className='space-y-3'>
 
@@ -258,72 +260,68 @@ function Banners({ setCurrentPage }) {
                                 <img src={editPreview} alt='preview' className='w-full h-full object-cover' />
                                 <label className='absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer opacity-0 hover:opacity-100 transition-all'>
                                     <input type='file' accept='image/*' onChange={handleEditImageChange} className='hidden' />
-                                    <span className='text-white text-xs font-bold bg-black/50 px-3 py-1.5 rounded-xl'>Change Image</span>
+                                    <span className='text-white text-xs font-bold bg-black/50 px-3 py-1.5 rounded-xl'>
+                                        {t('adminBanners.changeImage')}
+                                    </span>
                                 </label>
                             </div>
 
-                            {/* badge */}
                             <input
                                 type='text'
                                 value={editingBanner.badge || ''}
                                 onChange={e => setEditingBanner({ ...editingBanner, badge: e.target.value })}
-                                placeholder='Badge Text (e.g. Limited Offer)'
+                                placeholder={t('adminBanners.placeholderBadge')}
                                 className={inputCls}
                             />
 
-                            {/* heading main + accent */}
                             <div className='grid grid-cols-2 gap-3'>
                                 <input
                                     type='text'
                                     value={editingBanner.headingMain || ''}
                                     onChange={e => setEditingBanner({ ...editingBanner, headingMain: e.target.value })}
-                                    placeholder='Heading Main'
+                                    placeholder={t('adminBanners.placeholderHeadingMain')}
                                     className={inputCls}
                                 />
                                 <input
                                     type='text'
                                     value={editingBanner.headingAccent || ''}
                                     onChange={e => setEditingBanner({ ...editingBanner, headingAccent: e.target.value })}
-                                    placeholder='Heading Accent (pink)'
+                                    placeholder={t('adminBanners.placeholderHeadingAccent')}
                                     className={inputCls}
                                 />
                             </div>
 
-                            {/* paragraph */}
                             <textarea
                                 value={editingBanner.paragraph || ''}
                                 onChange={e => setEditingBanner({ ...editingBanner, paragraph: e.target.value })}
-                                placeholder='Paragraph text'
+                                placeholder={t('adminBanners.placeholderParagraph')}
                                 rows={2}
                                 className={`${inputCls} resize-none`}
                             />
 
-                            {/* offer text */}
                             <input
                                 type='text'
                                 value={editingBanner.offerText || ''}
                                 onChange={e => setEditingBanner({ ...editingBanner, offerText: e.target.value })}
-                                placeholder='Offer Text (e.g. From $199 or Up to 40% off)'
+                                placeholder={t('adminBanners.placeholderOfferText')}
                                 className={inputCls}
                             />
 
-                            {/* cta */}
                             <input
                                 type='text'
                                 value={editingBanner.ctaText || ''}
                                 onChange={e => setEditingBanner({ ...editingBanner, ctaText: e.target.value })}
-                                placeholder='CTA Button Text'
+                                placeholder={t('adminBanners.placeholderCtaText')}
                                 className={inputCls}
                             />
                             <input
                                 type='text'
                                 value={editingBanner.ctaLink || ''}
                                 onChange={e => setEditingBanner({ ...editingBanner, ctaLink: e.target.value })}
-                                placeholder='CTA Link'
+                                placeholder={t('adminBanners.placeholderCtaLink')}
                                 className={inputCls}
                             />
 
-                            {/* order + active */}
                             <div className='flex items-center gap-3'>
                                 <input
                                     type='number'
@@ -332,7 +330,6 @@ function Banners({ setCurrentPage }) {
                                     min={0}
                                     className='w-24 p-3 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white'
                                 />
-    
                             </div>
 
                             <div className='flex gap-3 pt-2'>
@@ -341,14 +338,14 @@ function Banners({ setCurrentPage }) {
                                     onClick={() => { setEditingBanner(null); setEditImage(null); setEditPreview(''); }}
                                     className='flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all'
                                 >
-                                    Cancel
+                                    {t('adminBanners.editCancel')}
                                 </button>
                                 <button
                                     type='submit'
                                     disabled={isUpdating}
                                     className='flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-pink-500 to-pink-600 disabled:from-gray-300 disabled:to-gray-400 transition-all'
                                 >
-                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                                    {isUpdating ? t('adminBanners.editSaving') : t('adminBanners.editSave')}
                                 </button>
                             </div>
                         </form>
@@ -356,33 +353,32 @@ function Banners({ setCurrentPage }) {
                 </div>
             )}
 
-            {/*delte modal */}
+            {/* delete modal */}
             {bannerToDelete && (
                 <div className='fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-fade-in'>
                     <div className='bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-6 relative border border-slate-50 dark:border-slate-800'>
 
                         <div className='flex flex-col items-center text-center space-y-4'>
-                            {/* Alert Icon with premium gradient glow */}
                             <div className='p-3 bg-red-50 dark:bg-red-950/50 rounded-2xl text-red-500'>
                                 <HiOutlineExclamation size={32} />
                             </div>
-
                             <div className='space-y-1'>
-                                <h3 className='text-lg font-bold text-slate-800 dark:text-slate-100'>Delete Banner?</h3>
+                                <h3 className='text-lg font-bold text-slate-800 dark:text-slate-100'>
+                                    {t('adminBanners.deleteTitle')}
+                                </h3>
                                 <p className='text-sm text-slate-400 dark:text-slate-400 px-2'>
-                                    Are you sure you want to remove this banner? This action cannot be undone.
+                                    {t('adminBanners.deleteMessage')}
                                 </p>
                             </div>
                         </div>
 
-                        {/* Action buttons */}
                         <div className='flex gap-3 mt-6'>
                             <button
                                 type='button'
                                 onClick={() => setBannerToDelete(null)}
                                 className='flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-100 dark:border-slate-800'
                             >
-                                Cancel
+                                {t('adminBanners.deleteCancel')}
                             </button>
                             <button
                                 type='button'
@@ -390,7 +386,7 @@ function Banners({ setCurrentPage }) {
                                 disabled={isDeleting}
                                 className='flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-linear-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:scale-98 transition-all disabled:opacity-50 shadow-md shadow-red-100 dark:shadow-none'
                             >
-                                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                                {isDeleting ? t('adminBanners.deleteDeleting') : t('adminBanners.deleteConfirm')}
                             </button>
                         </div>
                     </div>

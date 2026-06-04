@@ -3,6 +3,7 @@ import React from 'react'
 import { useState } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
+import ProductsBanner from './ProductsBanner';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -22,10 +23,11 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import ProductsBanner from './ProductsBanner';
+import { useTranslation } from 'react-i18next';
 
 function Products() {
 
+    const { t } = useTranslation();
     const { catId, catName } = useParams();
     const { addToCart } = useCart();
     const { wishListItems, addToWishList } = useWishList();
@@ -100,10 +102,10 @@ function Products() {
     };
 
     if (isLoading && !allProducts) return <EasyShopLoader />;
-    if (isError) return <div className="p-20 text-center text-red-500">Error loading products</div>;
+    if (isError) return <div className="p-20 text-center text-red-500">{t('products.errorLoading')}</div>;
 
     if (!isLoading && (!allProducts || allProducts.length === 0)) {
-        return <div className="p-20 text-center">No products found</div>;
+        return <div className="p-20 text-center">{t('products.notFound')}</div>;
     }
 
     return (
@@ -139,7 +141,7 @@ function Products() {
                             className="lg:hidden flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-xs font-bold rounded-xl shadow-xs active:scale-95 transition-all cursor-pointer"
                         >
                             <HiOutlineFilter size={15} className="text-pink-500" />
-                            Filters
+                            {t('products.filters')}
                         </button>
                     </div>
 
@@ -253,7 +255,7 @@ function Products() {
                                                 onClick={(e) => handleAddToCart(e, product)}
                                                 className="w-full py-2 bg-pink-500 hover:bg-pink-600 text-white text-[13px] font-semibold tracking-wide rounded-lg cursor-pointer transition-colors shadow-sm uppercase"
                                             >
-                                                Add to Cart
+                                                {t('products.addToCart')}
                                             </button>
                                         </div>
                                     </div>
@@ -264,7 +266,7 @@ function Products() {
                                             onClick={(e) => { e.stopPropagation(); handleAddToCart(e, product); }}
                                             className="w-full py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-lg uppercase tracking-wide active:bg-pink-500"
                                         >
-                                            Add To Cart
+                                            {t('products.addToCart')}
                                         </button>
                                     </div>
                                 </div>
@@ -290,7 +292,7 @@ function Products() {
                         {/* Drawer Header Layout */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                             <h2 className="text-sm font-black uppercase text-gray-800 dark:text-slate-200">
-                                Refine Filters
+                                {t('products.refineFilters')}
                             </h2>
                             <button
                                 onClick={() => setIsMobileFilterOpen(false)}
@@ -317,7 +319,7 @@ function Products() {
                                 onClick={() => setIsMobileFilterOpen(false)}
                                 className="w-full py-3 rounded-xl text-xs font-bold text-white bg-pink-500 hover:bg-pink-600 text-center shadow-lg cursor-pointer uppercase tracking-wider"
                             >
-                                Apply Filters
+                                {t('products.applyFilters')}
                             </button>
                         </div>
                     </div>

@@ -1,14 +1,15 @@
 
-//updated
 import React, { useState } from 'react'
 import { HiOutlineLockClosed } from "react-icons/hi2";
 import { HiOutlineCheckCircle } from "react-icons/hi2";
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useResetPassword } from '../hook/useAuth';
 import toast from 'react-hot-toast';
+import { useResetPassword } from '../hook/useAuth';
+import { useTranslation } from 'react-i18next';
 
 function ResetPassword() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id, token } = useParams();
     const [searchParams] = useSearchParams();
@@ -59,11 +60,11 @@ function ResetPassword() {
                     {/* heading */}
                     <div className='mb-8 text-center md:text-left'>
                         <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                            Set New Password
+                            {t('resetPassword.title')}
                         </h2>
 
                         <p className="text-xs md:text-sm mt-2 text-gray-500 ">
-                            Set your new password below to regain access to your account
+                            {t('resetPassword.subtitle')}
                         </p>
                     </div>
 
@@ -75,7 +76,7 @@ function ResetPassword() {
                             <label
                                 htmlFor="password"
                                 className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                                New Password
+                                {t('resetPassword.newPassword')}
                             </label>
                             <div className='relative group'>
                                 <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -85,7 +86,7 @@ function ResetPassword() {
                                     name='password'
                                     value={formData.password}
                                     onChange={handleChange}
-                                    placeholder='Password'
+                                    placeholder={t('resetPassword.passwordPlaceholder')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -97,7 +98,7 @@ function ResetPassword() {
                             <label
                                 htmlFor="confirmPassword"
                                 className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                                Confirm Password
+                                {t('resetPassword.confirmPassword')}
                             </label>
                             <div className='relative group'>
                                 <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -107,7 +108,7 @@ function ResetPassword() {
                                     name='confirmPassword'
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    placeholder='Confirm Password'
+                                    placeholder={t('resetPassword.confirmPlaceholder')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -116,7 +117,7 @@ function ResetPassword() {
 
                         {/* Password Requirement Note */}
                         <p className="text-[11px] text-gray-400 ml-1">
-                            * Must include 8+ characters with letters and numbers.
+                            {t('resetPassword.requirement')}
                         </p>
 
                         {/* submit */}
@@ -127,7 +128,7 @@ function ResetPassword() {
                                     ${isResetting ? "text-gray-500 bg-gray-300 cursor-not-allowed" : "bg-pink-500 hover:bg-pink-600 text-white cursor-pointer"}
                                     `}
                             >
-                                {isResetting ? "Resetting..." : "Reset Password"}
+                                {isResetting ? t('resetPassword.resetting') : t('resetPassword.resetBtn')}
                             </button>
                         </div>
                     </div>
@@ -155,11 +156,10 @@ function ResetPassword() {
 
                     <div className="space-y-3">
                         <h2 className="text-2xl md:text-3xl font-black text-gray-800 tracking-tight">
-                            All Set!
+                            {t('resetPassword.allSet')}
                         </h2>
                         <p className="text-gray-500 text-xs md:text-sm px-6 leading-relaxed">
-                            Your password has been successfully updated. <br />
-                            Now you can log in with your new credentials.
+                            {t('resetPassword.successMsg')}
                         </p>
                     </div>
 
@@ -169,7 +169,7 @@ function ResetPassword() {
                             onClick={() => navigate('/login')}
                             className="w-1/2 text-xs md:text-sm bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-pink-50 transition-all active:scale-[0.98] cursor-pointer"
                         >
-                            Proceed to Login
+                            {t('resetPassword.proceedLogin')}
                         </button>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ import WithdrawModal from './WithdrawModal';
 import { useGetVendor } from '../../hook/useVendor';
 import { useWithdrawList, useWithdrawStats } from '../../hook/useWithdraws';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 const statusMenu = [
   { id: 1, status: "Completed" },
@@ -25,6 +26,7 @@ const statusMenu = [
 
 function Withdrawals() {
 
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
@@ -56,28 +58,28 @@ function Withdrawals() {
 
   const cards = [
     {
-      label: "Available Balance",
+      label: t('withdrawals.cardAvailable'),
       value: `₹${stats?.availableBalance?.toLocaleString() || '0'}`,
       icon: <HiOutlineCurrencyRupee />,
       color: "text-blue-600",
       bg: "bg-blue-50"
     },
     {
-      label: "Pending Settlement",
+      label: t('withdrawals.cardPending'),
       value: `₹${stats?.pendingSettlement?.toLocaleString() || '0'}`,
       icon: <HiOutlineClock />,
       color: "text-orange-600",
       bg: "bg-orange-50"
     },
     {
-      label: "Withdrawal In-Process", // Naya 4th Card
+      label: t('withdrawals.cardInProcess'),
       value: `₹${stats?.inProcess?.toLocaleString() || '0'}`,
       icon: <HiOutlineRefresh />,
       color: "text-indigo-600",
       bg: "bg-indigo-50"
     },
     {
-      label: "Total Withdrawn",
+      label: t('withdrawals.cardTotalWithdrawn'),
       value: `₹${stats?.totalWithdrawn?.toLocaleString() || '0'}`,
       icon: <HiOutlineExternalLink />,
       color: "text-emerald-600",
@@ -90,8 +92,8 @@ function Withdrawals() {
     setIsStatusOpen(false);
   };
 
-  if (isLoading) return <p className="p-10 text-center">Loading withdrawal requests...</p>;
-  if (isError) return <p className="p-10 text-center text-red-500">Error fetching withdrawal requests!</p>;
+  if (isLoading) return <p className="p-10 text-center">{t('withdrawals.loading')}</p>;
+  if (isError) return <p className="p-10 text-center text-red-500">{t('withdrawals.error')}</p>;
 
   return (
     <div className="space-y-6">
@@ -102,7 +104,7 @@ function Withdrawals() {
           <div
             key={i}
             className={`bg-white dark:bg-slate-900 p-4 md:p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:shadow-md transition-all truncate
-            ${stat.label === "Available Balance" ? 'ring-1 ring-transparent hover:ring-blue-100 dark:hover:ring-blue-900 cursor-pointer' : ''}`}
+            ${stat.label === t('withdrawals.cardAvailable') ? 'ring-1 ring-transparent hover:ring-blue-100 dark:hover:ring-blue-900 cursor-pointer' : ''}`}
           >
             <div className={`w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-xl 
               ${stat.bg} ${stat.color} flex items-center justify-center text-lg md:text-2xl`}>
@@ -128,17 +130,17 @@ function Withdrawals() {
           onClick={() => setIsActionOpen(true)}
           className="w-full sm:w-auto flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-pink-200 dark:shadow-none transition-all active:scale-95 cursor-pointer">
           <HiOutlinePlusCircle size={20} />
-          Request New Payout
+          {t('withdrawals.requestNewPayout')}
         </button>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
             <HiOutlineDocumentDownload size={18} className="text-pink-500" />
-            Export CSV
+            {t('withdrawals.exportCsv')}
           </button>
           <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
             <HiOutlinePrinter size={18} className="text-slate-400" />
-            Print
+            {t('withdrawals.print')}
           </button>
         </div>
       </div>
@@ -151,14 +153,14 @@ function Withdrawals() {
 
           <div className='flex gap-2 items-center'>
             <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-              Withdrawal History
+              {t('withdrawals.historyHeading')}
             </h2>
             <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-              Total : {count || 0}
+              {t('withdrawals.totalCounter', { total: count || 0 })}
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-5 lg:gap-3 w-full lg:w-auto">
+          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-5 lg:gap-3 w-full lg:w-auto mt-3 lg:mt-0">
 
             {/* Search Bar */}
             <div className="relative w-full lg:w-80 group">
@@ -167,7 +169,7 @@ function Withdrawals() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search Request ID..."
+                placeholder={t('withdrawals.searchPlaceholder')}
                 className="w-full pl-8 md:pl-11 pr-4 py-2 bg-slate-50 border border-pink-50 dark:bg-slate-800 dark:text-white focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
               />
             </div>
@@ -179,13 +181,12 @@ function Withdrawals() {
                 onChange={(e) => { setStatus(e.target.value); setPage(1); }}
                 className="w-full md:w-auto text-sm px-4 py-2 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
               >
-                <option value="">All Status</option>
-                <option value="Processing">Processing</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
+                <option value="">{t('withdrawals.filterAllStatus')}</option>
+                <option value="Processing">{t('withdrawals.statusProcessing')}</option>
+                <option value="Approved">{t('withdrawals.statusApproved')}</option>
+                <option value="Rejected">{t('withdrawals.statusRejected')}</option>
               </select>
             </div>
-
           </div>
         </div>
 
@@ -194,12 +195,12 @@ function Withdrawals() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-50 dark:border-slate-800 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
-                <th className="px-6 py-4">Request Id</th>
-                <th className="px-6 py-4">Amount</th>
-                <th className="px-6 py-4">Payout Method</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">UTR / Ref No.</th>
-                <th className="px-6 py-4 text-right">Action</th>
+                <th className="px-6 py-4">{t('withdrawals.thRequestId')}</th>
+                <th className="px-6 py-4">{t('withdrawals.thAmount')}</th>
+                <th className="px-6 py-4">{t('withdrawals.thPayoutMethod')}</th>
+                <th className="px-6 py-4">{t('withdrawals.thStatus')}</th>
+                <th className="px-6 py-4">{t('withdrawals.thUtrRef')}</th>
+                <th className="px-6 py-4 text-right">{t('withdrawals.thAction')}</th>
               </tr>
             </thead>
 
@@ -208,8 +209,8 @@ function Withdrawals() {
                 <tr>
                   <td colSpan={6} className="text-center py-10 text-slate-400 text-sm">
                     {search || status
-                      ? 'No withdrawals match your search or filter.'
-                      : 'No withdrawal requests found.'
+                      ? t('withdrawals.noResultsMatch')
+                      : t('withdrawals.noResultsFound')
                     }
                   </td>
                 </tr>
@@ -251,27 +252,30 @@ function Withdrawals() {
                     {/* 4. Status */}
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border
-                                    ${txn.status === 'Approved'
+                            ${txn.status === 'Approved'
                           ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                           : txn.status === 'Rejected'
                             ? 'bg-red-50 text-red-600 border-red-100'
                             : 'bg-orange-50 text-orange-600 border-orange-100'
                         }`}>
-                        {txn.status}
+                        {txn.status === 'Approved' && t('withdrawals.statusApproved')}
+                        {txn.status === 'Rejected' && t('withdrawals.statusRejected')}
+                        {txn.status === 'Processing' && t('withdrawals.statusProcessing')}
+                        {!['Approved', 'Rejected', 'Processing'].includes(txn.status) && txn.status}
                       </span>
                     </td>
 
                     {/* 5. UTR Number */}
                     <td className="px-6 py-4">
                       <span className={`text-xs font-mono
-                                    ${txn.utrNumber ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>
-                        {txn.utrNumber || 'N/A'}
+                            ${txn.utrNumber ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300'}`}>
+                        {txn.utrNumber || t('withdrawals.na')}
                       </span>
                     </td>
 
                     {/* 6. Action */}
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                      <button className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all cursor-pointer">
                         <HiOutlineDownload size={18} />
                       </button>
                     </td>
@@ -290,7 +294,7 @@ function Withdrawals() {
               disabled={page === 1}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Prev
+              {t('withdrawals.paginationPrev')}
             </button>
 
             {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -314,7 +318,7 @@ function Withdrawals() {
               disabled={page === totalPages}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Next
+              {t('withdrawals.paginationNext')}
             </button>
           </div>
         )}

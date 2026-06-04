@@ -10,9 +10,10 @@ import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi
 import { useProductList } from '../../hook/uesProducts';
 import UpdateProductDrawer from './UpdateProductDrawer';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function StockInventoryTable() {
-
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -40,8 +41,8 @@ function StockInventoryTable() {
 
     const handleEditProduct = (product) => setIsEditOpen(product);
 
-    if (isLoading) return <p className="p-10 text-center">Loading products...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching products!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('stockInventoryTable.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('stockInventoryTable.error')}</p>;
 
     return (
         <div>
@@ -53,7 +54,7 @@ function StockInventoryTable() {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search product..."
+                        placeholder={t('stockInventoryTable.searchPlaceholder')}
                         className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                     />
                 </div>
@@ -65,12 +66,12 @@ function StockInventoryTable() {
                     <table className="w-full text-left">
                         <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                             <tr>
-                                <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">Product</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Category</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Stock</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Approved?</th>
-                                <th className="px-6 py-4 whitespace-nowrap">Price</th>
-                                <th className="px-6 py-4 whitespace-nowrap text-center">Action</th>
+                                <th className="px-6 py-4 whitespace-nowrap min-w-50 lg:min-w-0">{t('stockInventoryTable.thProduct')}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('stockInventoryTable.thCategory')}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('stockInventoryTable.thStock')}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('stockInventoryTable.thApproved')}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('stockInventoryTable.thPrice')}</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center">{t('stockInventoryTable.thAction')}</th>
                             </tr>
                         </thead>
 
@@ -96,18 +97,26 @@ function StockInventoryTable() {
                                             <div className="flex flex-col gap-1.5">
                                                 <div className="flex items-center gap-1">
                                                     <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{product.stock}</span>
-                                                    <span className="text-[10px] text-slate-400 font-medium">units</span>
+                                                    <span className="text-[10px] text-slate-400 font-medium">{t('stockInventoryTable.units')}</span>
                                                 </div>
                                                 <span className={`w-fit px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all
                                                 ${getStockStatusStyle[product.stockStatus] || 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                                                    {product.stockStatus}
+                                                    {product.stockStatus === 'Out of Stock' && t('stockInventoryTable.statusOutOfStock')}
+                                                    {product.stockStatus === 'Critical' && t('stockInventoryTable.statusCritical')}
+                                                    {product.stockStatus === 'Low Stock' && t('stockInventoryTable.statusLowStock')}
+                                                    {product.stockStatus === 'Medium' && t('stockInventoryTable.statusMedium')}
+                                                    {product.stockStatus === 'High Stock' && t('stockInventoryTable.statusHighStock')}
+                                                    {!getStockStatusStyle[product.stockStatus] && product.stockStatus}
                                                 </span>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-center">
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium
                                             ${product.status === 'Approved' ? "text-green-700" : product.status === 'Pending' ? "text-amber-700" : "text-red-700"}`}>
-                                                {product.status}
+                                                {product.status === 'Approved' && t('stockInventoryTable.approvalApproved')}
+                                                {product.status === 'Pending' && t('stockInventoryTable.approvalPending')}
+                                                {product.status === 'Rejected' && t('stockInventoryTable.approvalRejected')}
+                                                {!['Approved', 'Pending', 'Rejected'].includes(product.status) && product.status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm font-bold text-pink-600 dark:text-white">
@@ -124,8 +133,8 @@ function StockInventoryTable() {
                                 )
                             }) : (
                                 <tr>
-                                    <td colSpan="8" className="text-center py-10 text-slate-400 text-sm">
-                                        No product inventory found matching your search.
+                                    <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
+                                        {t('stockInventoryTable.noProductsFound')}
                                     </td>
                                 </tr>
                             )}
@@ -141,7 +150,7 @@ function StockInventoryTable() {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                            {t('stockInventoryTable.paginationPrev')}
                         </button>
                         {getPaginationRange(page, totalPages).map((num, idx) =>
                             num === '...'
@@ -151,7 +160,7 @@ function StockInventoryTable() {
                                     onClick={() => setPage(num)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
                                         ${page === num ? 'bg-pink-500 text-white border-pink-500' : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'}`}
-                                >
+                                    style={{ contentVisibility: 'auto' }} >
                                     {num}
                                 </button>
                         )}
@@ -160,7 +169,7 @@ function StockInventoryTable() {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                            {t('stockInventoryTable.paginationNext')}
                         </button>
                     </div>
                 )}

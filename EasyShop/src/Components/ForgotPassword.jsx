@@ -1,15 +1,17 @@
 
-//updated
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { HiOutlineMail } from "react-icons/hi";
 import { HiOutlineCheckCircle } from "react-icons/hi2";
-import { useForgotPassword } from '../hook/useAuth';
 import toast from 'react-hot-toast';
+
+import { useForgotPassword } from '../hook/useAuth';
+import { useTranslation } from 'react-i18next';
 
 function ForgotPassword() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [searchParams] = useSearchParams();
@@ -79,10 +81,13 @@ function ForgotPassword() {
                     {/* heading */}
                     <div className='mb-8 text-center md:text-left'>
                         <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                            {role === 'vendor' ? 'Vendor Recovery' : 'User Recovery'}
+                            {role === 'vendor'
+                                ? t('forgotPassword.vendorRecovery')
+                                : t('forgotPassword.userRecovery')
+                            }
                         </h2>
                         <p className="text-xs md:text-sm mt-2 text-gray-500 ">
-                            Enter your registered email below to receive a password reset link.
+                            {t('forgotPassword.enterEmailDesc')}
                         </p>
                     </div>
 
@@ -94,7 +99,7 @@ function ForgotPassword() {
                             <label
                                 htmlFor='email'
                                 className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                                Email Address
+                                {t('forgotPassword.emailLabel')}
                             </label>
                             <div className='relative group'>
                                 <HiOutlineMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -103,7 +108,7 @@ function ForgotPassword() {
                                     name='email'
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder='Email'
+                                    placeholder={t('forgotPassword.emailPlaceholder')}
                                     className="w-full pl-10 md:pl-12 pr-4 py-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all"
                                     required
                                 />
@@ -116,7 +121,7 @@ function ForgotPassword() {
                                 onClick={() => navigate("/login")}
                                 className="w-full order-2 md:order-1 text-sm md:text-base bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 md:py-4 rounded-2xl shadow-lg shadow-pink-100 transition-all active:scale-[0.98] cursor-pointer"
                             >
-                                Back to Login
+                                {t('forgotPassword.backToLogin')}
                             </button>
 
                             <button
@@ -126,19 +131,19 @@ function ForgotPassword() {
                                     ${isForgettingPass ? "text-gray-500 bg-gray-300 cursor-not-allowed" : "bg-pink-500 hover:bg-pink-600 text-white cursor-pointer"}
                                     `}
                             >
-                                {isForgettingPass ? "Sending..." : "Send Reset Link"}
+                                {isForgettingPass ? t('forgotPassword.sending') : t('forgotPassword.sendResetLink')}
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* popu section */}
+            {/* popup section */}
             {isSubmitted && (
                 <div className="fixed inset-0 z-999 flex items-center justify-center px-4 lg:px-6">
                     <div
                         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-                        // onClick={() => setIsSubmitted(false)}
+                    // onClick={() => setIsSubmitted(false)}
                     ></div>
 
                     {/* Modal Content */}
@@ -151,29 +156,31 @@ function ForgotPassword() {
 
                         <div className="space-y-3">
                             <h2 className="text-2xl md:text-3xl font-medium text-slate-800 tracking-tight">
-                                Check Your Email
+                                {t('forgotPassword.checkEmail')}
                             </h2>
                             <p className="text-sm text-slate-500 leading-relaxed px-2">
-                                We've sent a password reset link to <br />
+                                {t('forgotPassword.sentLinkTo')} <br />
                                 <span className="font-bold text-slate-700 underline decoration-pink-200 decoration-4 underline-offset-2">{email}</span>
                             </p>
                         </div>
 
                         <div className="pt-4 space-y-3 border-t border-slate-50">
                             <p className="text-xs text-slate-400">
-                                Didn't receive the email? Check your spam folder or
+                                {t('forgotPassword.didNotReceive')}
                             </p>
 
                             <button
                                 onClick={handleResend}
                                 disabled={timer > 0 || isForgettingPass}
-                                className={`text-sm font-black transition-colors uppercase tracking-wider ${(timer > 0 || isForgettingPass) ? 'text-gray-400 cursor-not-allowed' : 'text-pink-500 hover:text-pink-600 cursor-pointer '
+                                className={`text-sm font-black transition-colors uppercase tracking-wider 
+                                    ${(timer > 0 || isForgettingPass) ? 'text-gray-400 cursor-not-allowed' : 'text-pink-500 hover:text-pink-600 cursor-pointer '
                                     }`}>
                                 {isForgettingPass
-                                    ? "Sending..." :
+                                    ? t('forgotPassword.sending') :
                                     timer > 0
-                                        ? `Resend in ${timer}s`
-                                        : " Resend Link"}
+                                        ? t('forgotPassword.resendIn', { timer })
+                                        : t('forgotPassword.resendLink')
+                                }
                             </button>
                         </div>
 
@@ -181,7 +188,7 @@ function ForgotPassword() {
                             onClick={() => navigate('/login')}
                             className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-slate-200 cursor-pointer text-sm"
                         >
-                            Back to Login
+                            {t('forgotPassword.backToLogin')}
                         </button>
                     </div>
                 </div>

@@ -6,9 +6,11 @@ import { HiOutlineEye, HiOutlineShoppingBag } from 'react-icons/hi';
 import { getPaginationRange } from '../../utils/getPaginationRange';
 import { useUserOrderHistory } from '../../hook/useOrders';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function UserProfileMyOrders() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
 
@@ -25,8 +27,8 @@ function UserProfileMyOrders() {
         Shipped: 'bg-purple-100 text-purple-600',
     };
 
-    if (isLoading) return <div className="py-20 text-center text-slate-400">Loading orders...</div>;
-    if (isError) return <div className="py-20 text-center text-red-400">Failed to load orders</div>;
+    if (isLoading) return <div className="py-20 text-center text-slate-400">{t('userProfile.ordersLoading')}</div>;
+    if (isError) return <div className="py-20 text-center text-red-400">{t('userProfile.ordersError')}</div>;
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -36,12 +38,12 @@ function UserProfileMyOrders() {
                 <table className="w-full text-left border-separate border-spacing-y-3 min-w-150">
                     <thead>
                         <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">
-                            <th className="pb-2 pl-4">Order ID</th>
-                            <th className="pb-2">Date</th>
-                            <th className="pb-2">Items</th>
-                            <th className="pb-2">Amount</th>
-                            <th className="pb-2">Status</th>
-                            <th className="pb-2 text-center">Action</th>
+                            <th className="pb-2 pl-4">{t('userProfile.colOrderId')}</th>
+                            <th className="pb-2">{t('userProfile.colDate')}</th>
+                            <th className="pb-2">{t('userProfile.colItems')}</th>
+                            <th className="pb-2">{t('userProfile.colAmount')}</th>
+                            <th className="pb-2">{t('userProfile.colStatus')}</th>
+                            <th className="pb-2 text-center">{t('userProfile.colAction')}</th>
                         </tr>
                     </thead>
 
@@ -67,7 +69,7 @@ function UserProfileMyOrders() {
 
                                 {/* items */}
                                 <td className="py-5 text-xs font-semibold text-slate-500">
-                                    {order.items.length} {order.items.length === 1 ? 'Item' : 'Items'}
+                                    {t('userProfile.itemCount', { count: order.items.length })}
                                 </td>
 
                                 {/* order amt */}
@@ -100,8 +102,12 @@ function UserProfileMyOrders() {
             {/* Empty State (If no orders) */}
             {orders.length === 0 && (
                 <div className="py-20 text-center">
-                    <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">No orders yet!</p>
-                    <button className="mt-4 text-pink-500 font-black text-xs uppercase hover:underline">Start Shopping</button>
+                    <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+                        {t('userProfile.ordersEmptyTitle')}
+                    </p>
+                    <button className="mt-4 text-pink-500 font-black text-xs uppercase hover:underline">
+                        {t('userProfile.ordersEmptyAction')}
+                    </button>
                 </div>
             )}
 
@@ -113,7 +119,7 @@ function UserProfileMyOrders() {
                         disabled={page === 1}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Prev
+                        {t('userProfile.prev')}
                     </button>
 
                     {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -137,7 +143,7 @@ function UserProfileMyOrders() {
                         disabled={page === totalPages}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                        Next
+                        {t('userProfile.next')}
                     </button>
                 </div>
             )}

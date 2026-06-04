@@ -7,9 +7,13 @@ import { Menu, Search, Sun, Bell, ChevronDown, User, LogOut, UserRoundCog, Shiel
 import useAdminAuthStore, { useAdminUIStore } from '../store/useAdminAuthStore';
 import { useAdminLogout, useAdminSearch } from '../hooks/useAdminAuth';
 import { useGetAdmin } from '../hooks/useAdminStats';
+import NotificationBellIcon from './NotificationBellIcon';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const Header = ({ onToggleSideBar, setCurrentPage }) => {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const dropdownRef = useRef(null);
     const searchRef = useRef(null);
@@ -24,15 +28,13 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
     const { data: searchData, isLoading: isSearchLoading } = useAdminSearch(debouncedQuery);
     const { openProductDrawer, openOrderDrawer } = useAdminUIStore();
 
-    const clearStore = useAdminAuthStore((state) => state.logout); // Zustand logout
+    const clearStore = useAdminAuthStore((state) => state.logout);
 
-    // Debounce
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Close on outside click
     useEffect(() => {
         const handler = (e) => {
             if (searchRef.current && !searchRef.current.contains(e.target)) {
@@ -43,7 +45,6 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // logout
     const handleLogout = () => {
         logoutAdmin(null, {
             onSuccess: (res) => {
@@ -58,11 +59,11 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
     };
 
     return (
-        <div className='bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-pink-50 dark:border-slate-800 p-4 lg:px-8 sticky top-0 z-40'>
-            <div className='flex items-center justify-between gap-2 lg:gap-4'>
+        <div className="sticky top-0 z-40 border-b border-pink-50 bg-white/80 p-3 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80 sm:p-4 lg:px-8">
+            <div className="flex min-w-0 items-center justify-between gap-2 lg:gap-4">
 
                 {/* Left: Branding & Sidebar Toggle */}
-                <div className='flex items-center space-x-4'>
+                <div className="flex shrink-0 items-center gap-2 sm:gap-4">
                     <button
                         onClick={onToggleSideBar}
                         className='p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-90'
@@ -72,25 +73,25 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
 
                     <div className='hidden lg:block'>
                         <h1 className='text-lg md:text-xl font-bold bg-linear-to-r from-pink-600 to-rose-400 bg-clip-text text-transparent'>
-                            Admin Panel
+                            {t('adminHeader.panel')}
                         </h1>
                         <p className='text-[11px] md:text-xs text-slate-400 font-medium tracking-wide uppercase'>
-                            EasyShop Central Control
+                            {t('adminHeader.central')}
                         </p>
                     </div>
                 </div>
 
                 {/* Center: Search Bar */}
-                <div className='flex-1 max-w-md hidden sm:block'>
+                <div className="hidden min-w-0 flex-1 sm:block lg:max-w-md">
                     <div className='relative group' ref={searchRef}>
                         <Search className='w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors' />
                         <input
                             type='text'
-                            placeholder='Search orders, products...'
+                            placeholder={t('adminHeader.placeholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setSearchOpen(true)}
-                            className='w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-pink-500/20 focus:border-pink-500 transition-all placeholder:text-slate-400'
+                            className="w-full min-w-0 rounded-2xl border border-slate-100 bg-slate-50 py-2.5 pl-11 pr-4 text-sm transition-all placeholder:text-slate-400 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500/20 dark:border-slate-700 dark:bg-slate-800/50"
                         />
 
                         {/* Dropdown */}
@@ -98,18 +99,18 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                             <div className='absolute top-full mt-2 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 overflow-hidden'>
 
                                 {isSearchLoading && (
-                                    <p className='text-xs text-slate-400 px-4 py-3'>Searching...</p>
+                                    <p className='text-xs text-slate-400 px-4 py-3'>{t('adminHeader.searching')}</p>
                                 )}
 
                                 {!isSearchLoading && searchData?.products?.length === 0 && searchData?.orders?.length === 0 && (
-                                    <p className='text-xs text-slate-400 px-4 py-3'>No results found</p>
+                                    <p className='text-xs text-slate-400 px-4 py-3'>{t('adminHeader.noResults')}</p>
                                 )}
 
                                 {/* Products */}
                                 {searchData?.products?.length > 0 && (
                                     <div>
                                         <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
-                                            Products
+                                            {t('adminHeader.products')}
                                         </p>
                                         {searchData.products.map((product) => (
                                             <div
@@ -133,7 +134,7 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                                                     <p className='text-[11px] text-slate-400'>₹{product.price}</p>
                                                 </div>
                                                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full
-                                    ${product.status === 'Approved' ? 'bg-green-50 text-green-600' :
+                                            ${product.status === 'Approved' ? 'bg-green-50 text-green-600' :
                                                         product.status === 'Pending' ? 'bg-yellow-50 text-yellow-600' :
                                                             'bg-red-50 text-red-500'}`}>
                                                     {product.status}
@@ -147,7 +148,7 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                                 {searchData?.orders?.length > 0 && (
                                     <div>
                                         <p className='text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-4 pt-3 pb-1'>
-                                            Orders
+                                            {t('adminHeader.orders')}
                                         </p>
                                         {searchData.orders.map((order) => (
                                             <div
@@ -167,7 +168,7 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                                                     <p className='text-[11px] text-slate-400'>₹{order.totalAmount}</p>
                                                 </div>
                                                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full
-                                    ${order.orderStatus === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                            ${order.orderStatus === 'Delivered' ? 'bg-green-50 text-green-600' :
                                                         order.orderStatus === 'Shipped' ? 'bg-blue-50 text-blue-600' :
                                                             order.orderStatus === 'Cancelled' ? 'bg-red-50 text-red-500' :
                                                                 'bg-yellow-50 text-yellow-600'}`}>
@@ -185,28 +186,25 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                 </div>
 
                 {/* Right Area: Actions & Profile */}
-                <div className='flex items-center space-x-2 lg:space-x-4'>
-
-                    {/* sun icon */}
+                <div className="flex shrink-0 items-center gap-1 sm:gap-2 lg:gap-4">
                     <button className='p-2.5 rounded-xl text-slate-500 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all'>
                         <Sun className='w-5 h-5 hover:rotate-45 transition-transform' />
                     </button>
 
-                    {/* notifications icon */}
+                    {/* lang switcher */}
+                    <LanguageSwitcher />
+
+                    {/* notification */}
                     <div className='relative'>
-                        <button className='p-2.5 rounded-xl text-slate-500 hover:bg-pink-50 dark:hover:bg-slate-800 transition-all'>
-                            <Bell className='w-5 h-5' />
-                            <span className='absolute top-2.5 right-2.5 w-2 h-2 bg-pink-500 rounded-full border-2 border-white shadow-sm'></span>
-                        </button>
+                        <NotificationBellIcon setCurrentPage={setCurrentPage} />
                     </div>
 
-                    {/* Profile Dropdown Section */}
+                    {/* profile */}
                     <div className='relative' ref={dropdownRef}>
                         <div
                             onClick={() => setOpen(!open)}
-                            className='flex items-center space-x-3 p-1 pr-3 rounded-2xl border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all cursor-pointer'
-                        >
-                            {/* Avatar */}
+                            className="flex items-center gap-2 rounded-2xl border border-transparent p-1 transition-all hover:border-pink-100 hover:bg-pink-50/50 sm:gap-3 sm:pr-3">
+
                             <div className='w-9 h-9 bg-linear-to-br from-pink-500 to-rose-400 rounded-xl flex justify-center items-center shadow-md shadow-pink-200'>
                                 {getAdmin?.profileAdmin ? (
                                     <img
@@ -217,8 +215,8 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                                 )}
                             </div>
 
-                            <div className='hidden md:block text-left'>
-                                <h4 className='text-xs font-bold text-slate-800 dark:text-white leading-tight uppercase'>
+                            <div className="hidden max-w-32 min-w-0 text-left lg:block">
+                                <h4 className="truncate text-xs font-bold uppercase leading-tight text-slate-800 dark:text-white">
                                     {getAdmin?.name || "Loading..."}
                                 </h4>
 
@@ -234,17 +232,16 @@ const Header = ({ onToggleSideBar, setCurrentPage }) => {
                                 ${open ? 'rotate-180' : ''}`} />
                         </div>
 
-                        {/* Dropdown Menu Overlay */}
                         {open && (
-                            <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-200/50 z-50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200">
-
-                                <div className='h-px bg-slate-100 dark:bg-slate-700 mx-2 my-1'></div>
-
+                            <div className="absolute right-0 z-50 mt-2 w-40 overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-xl shadow-slate-200/50 animate-in fade-in zoom-in duration-200 dark:border-slate-700 dark:bg-slate-800 sm:w-48">
                                 <button
                                     onClick={() => handleLogout()}
-                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors cursor-pointer font-semibold">
-                                    <LogOut className="w-4 h-4" />
-                                    {isPending ? "Loging out.." : "Logout"}
+                                    className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-semibold leading-tight text-red-500 transition-colors hover:bg-red-50 sm:gap-3 sm:px-4 sm:py-2.5 sm:text-sm"
+                                >
+                                    <LogOut className="h-4 w-4 shrink-0" />
+                                    <span className="wrap-break-words">
+                                        {isPending ? t('adminHeader.loggingOut') : t('adminHeader.logout')}
+                                    </span>
                                 </button>
                             </div>
                         )}

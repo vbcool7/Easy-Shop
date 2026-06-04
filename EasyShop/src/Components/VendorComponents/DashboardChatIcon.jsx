@@ -3,9 +3,11 @@ import React from 'react';
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 import useAuthStore from '../../store/useAuthStore';
 import { useVendorUnreadCount } from '../../hook/useChat';
+import { useTranslation } from 'react-i18next';
 
 function DashboardChatIcon({ setCurrentPage }) {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const vendorId = user?._id || user?.id;
     const { data: unreadCount } = useVendorUnreadCount(vendorId);
@@ -30,7 +32,7 @@ function DashboardChatIcon({ setCurrentPage }) {
 
                 {/* Tooltip on Hover */}
                 <span className="absolute right-16 bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Customer Support
+                    {t('dashboardChatIcon.tooltipText')}
                 </span>
             </button>
         </div>

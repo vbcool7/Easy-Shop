@@ -13,9 +13,11 @@ import { FaEye } from "react-icons/fa";
 
 import { useVendorCustomers, useVendorCustomerStats } from '../../hook/useUser';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Customers() {
-
+    
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -41,7 +43,7 @@ function Customers() {
 
     const cards = [
         {
-            label: 'Total Customers',
+            label: t('customers.statTotal'),
             value: customerStats?.totalCustomers || 0,
             growth: '+12.5%',
             icon: HiOutlineUserGroup,
@@ -49,15 +51,15 @@ function Customers() {
             bg: 'bg-blue-50'
         },
         {
-            label: 'Active Now',
+            label: t('customers.statActive'),
             value: customerStats?.activeNow || 0,
-            growth: 'Live',
+            growth: t('customers.growthLive'),
             icon: HiOutlineStatusOnline,
             color: 'text-emerald-500',
             bg: 'bg-emerald-50'
         },
         {
-            label: 'Avg. Spend',
+            label: t('customers.statSpend'),
             value: customerStats?.avgSpend
                 ? `₹${Number(customerStats.avgSpend).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
                 : '₹0',
@@ -68,8 +70,8 @@ function Customers() {
         },
     ];
 
-    if (isLoading) return <p className="p-10 text-center">Loading customers...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching customers!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('customers.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('customers.error')}</p>;
 
     return (
         <div className="space-y-6">
@@ -86,7 +88,7 @@ function Customers() {
                                 <stat.icon size={22} />
                             </div>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stat.growth.includes('+') ? 'bg-emerald-50 text-emerald-600' :
-                                stat.growth === 'Live' ? 'bg-blue-50 text-blue-600 animate-pulse' :
+                                stat.growth === t('customers.growthLive') ? 'bg-blue-50 text-blue-600 animate-pulse' :
                                     'bg-red-50 text-red-600'
                                 }`}>
                                 {stat.growth}
@@ -113,21 +115,20 @@ function Customers() {
 
                     <div className='flex gap-2 items-center'>
                         <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                            Customers
+                            {t('customers.tableTitle')}
                         </h2>
                         <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                            Total : {count}
+                            {t('customers.totalCounter', { total: count })}
                         </span>
                     </div>
 
-                    {/* Search Bar (Left Side) */}
                     <div className="relative w-full md:w-80 group">
                         <HiOutlineSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-colors" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search customer name, email..."
+                            placeholder={t('customers.searchPlaceholder')}
                             className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                         />
                     </div>
@@ -137,91 +138,52 @@ function Customers() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-50 dark:border-slate-800 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
-                                <th className="px-6 py-4 text-center w-16"># ID</th>
-                                <th className="px-6 py-4">Customer</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-center">Orders</th>
-                                <th className="px-6 py-4">Total Spend</th>
-                                <th className="px-6 py-4">Last Order</th>
-                                <th className="px-6 py-4 text-right">Action</th>
+                                <th className="px-6 py-4 text-center w-16">{t('customers.thId')}</th>
+                                <th className="px-6 py-4">{t('customers.thCustomer')}</th>
+                                <th className="px-6 py-4">{t('customers.thStatus')}</th>
+                                <th className="px-6 py-4 text-center">{t('customers.thOrders')}</th>
+                                <th className="px-6 py-4">{t('customers.thSpend')}</th>
+                                <th className="px-6 py-4">{t('customers.thLastOrder')}</th>
+                                <th className="px-6 py-4 text-right">{t('customers.thAction')}</th>
                             </tr>
                         </thead>
 
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {customerList.length > 0 ? customerList?.map((customer, idx) => {
+                            {customerList.length > 0 ? customerList?.map((customer) => {
                                 return (
-                                    <tr
-                                        key={customer._id}
-                                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group"
-                                    >
-                                        {/* 1. Index */}
+                                    <tr key={customer._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
                                         <td className="px-6 py-4 text-center">
-                                            <span className="text-xs font-bold text-slate-400">
-                                                #{customer._id.slice(-6).toUpperCase()}
-                                            </span>
+                                            <span className="text-xs font-bold text-slate-400">#{customer._id.slice(-6).toUpperCase()}</span>
                                         </td>
-
-                                        {/* 2. Customer Profile */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <img
-                                                    src={customer.profilePhoto || '/default-avatar.png'} // Fallback image
-                                                    alt={customer.name}
-                                                    className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover"
-                                                />
+                                                <img  
+                                                src={customer.profilePhoto || 'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png'} 
+                                                 alt={customer.name} 
+                                                 className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover" />
                                                 <div className="min-w-0">
-                                                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
-                                                        {customer.name}
-                                                    </h4>
-                                                    <p className="text-[10px] text-slate-400 truncate">
-                                                        {customer.email}
-                                                    </p>
+                                                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{customer.name}</h4>
+                                                    <p className="text-[10px] text-slate-400 truncate">{customer.email}</p>
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {/* 3. Status Badge */}
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border 
-                                        ${customer.isActive
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                    : 'bg-blue-50 text-blue-600 border-blue-100'
-                                                }`}>
-                                                {customer.isActive ? 'Active' : 'Inactive'}
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase border ${customer.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                                {customer.isActive ? t('customers.statusActive') : t('customers.statusInactive')}
                                             </span>
                                         </td>
-
-                                        {/* 4. Total Orders */}
                                         <td className="px-6 py-4 text-center">
-                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                                                {customer.totalOrders}
-                                            </span>
+                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{customer.totalOrders}</span>
                                         </td>
-
-                                        {/* 5. Total Spend */}
                                         <td className="px-6 py-4">
-                                            <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                ₹{customer.totalSpend || 0}
-                                            </span>
-                                            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">
-                                                {customer.state || 'India'}
-                                            </p>
+                                            <span className="text-sm font-black text-slate-800 dark:text-white">₹{customer.totalSpend || 0}</span>
+                                            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-tighter">{customer.state || 'India'}</p>
                                         </td>
-
-                                        {/* 6. Last Order Date */}
                                         <td className="px-6 py-4 text-xs font-medium text-slate-500">
-                                            {new Date(customer.lastOrderDate).toLocaleDateString('en-GB', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
+                                            {new Date(customer.lastOrderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </td>
-
-                                        {/* 7. Action Button */}
                                         <td className="relative px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => setIsSelectedCustomerId(customer._id)}
-                                                className="p-2 hover:bg-pink-50 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-pink-500 transition-all cursor-pointer">
+                                            <button onClick={() => setIsSelectedCustomerId(customer._id)} className="p-2 hover:bg-pink-50 dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-pink-500 transition-all cursor-pointer">
                                                 <FaEye size={18} />
                                             </button>
                                         </td>
@@ -230,7 +192,7 @@ function Customers() {
                             }) : (
                                 <tr>
                                     <td colSpan="7" className="text-center py-10 text-slate-400 text-sm">
-                                        No customers found matching your search.
+                                        {t('customers.noResultsFound')}
                                     </td>
                                 </tr>
                             )}
@@ -241,42 +203,22 @@ function Customers() {
                 {/* pagination */}
                 {totalPages > 1 && (
                     <div className="flex justify-center items-center gap-2 py-4 px-6 border-t border-pink-50 dark:border-slate-800">
-                        <button
-                            onClick={() => setPage(p => Math.max(p - 1, 1))}
-                            disabled={page === 1}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
-                            Prev
+                        <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            {t('customers.paginationPrev')}
                         </button>
-
                         {getPaginationRange(page, totalPages).map((num, idx) =>
-                            num === '...'
-                                ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span>
-                                : <button
-                                    key={num}
-                                    onClick={() => setPage(num)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                                        ${page === num
-                                            ? 'bg-pink-500 text-white border-pink-500'
-                                            : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
-                                        }`}
-                                >
+                            num === '...' ? <span key={`dot-${idx}`} className="px-2 py-1.5 text-xs text-slate-400">...</span> :
+                                <button key={num} onClick={() => setPage(num)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${page === num ? 'bg-pink-500 text-white border-pink-500' : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'}`}>
                                     {num}
                                 </button>
                         )}
-
-                        <button
-                            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
-                            disabled={page === totalPages}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
-                            Next
+                        <button onClick={() => setPage(p => Math.min(p + 1, totalPages))} disabled={page === totalPages} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            {t('customers.paginationNext')}
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* view profile */}
             <CustomerProfileDrawer
                 customerId={isSelectedCustomerId}
                 isOpen={!!isSelectedCustomerId}

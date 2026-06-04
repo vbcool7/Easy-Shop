@@ -3,9 +3,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import EasyShopLoader from "./EasyShopLoader";
 import { AiFillStar } from "react-icons/ai";
 import { useSearchResults } from "../hook/uesProducts";
+import { useTranslation } from 'react-i18next';
 
 function SearchResults() {
 
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const query = searchParams.get('query') || "";
     const navigate = useNavigate();
@@ -20,9 +22,11 @@ function SearchResults() {
             {/* Header section */}
             {results && results.length > 0 && (
                 <h2 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-4">
-                    Results for <span className="text-pink-500">"{query}"</span>
+                    {t('searchResults.resultsFor')} <span className="text-pink-500">"{query}"</span>
                     <span className="text-gray-400 text-sm font-normal ml-2">
-                        ({results.length} {results.length === 1 ? 'product' : 'products'} found)
+                        ({results.length} {results.length === 1
+                            ? t('searchResults.product')
+                            : t('searchResults.products')} {t('searchResults.found')})
                     </span>
                 </h2>
             )}
@@ -33,24 +37,24 @@ function SearchResults() {
                     <div className="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center text-5xl mb-6 text-pink-500">
                         🔍
                     </div>
-                    <h3 className="text-2xl font-black text-gray-800 mb-2">
-                        No results for "{query}"
+                    <h3 className="text-xl md:text-2xl font-black text-gray-800 mb-2 px-4">
+                        {t('searchResults.noResults')} "{query}"
                     </h3>
-                    <p className="text-gray-400 text-sm max-w-sm mb-8 leading-relaxed">
-                        Try different keywords, check the spelling, or browse our latest collection.
+                    <p className="text-gray-400 text-sm max-w-sm mb-8 leading-relaxed px-4">
+                        {t('searchResults.noResultsDesc')}
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-none sm:w-auto px-4">
                         <button
                             onClick={() => navigate(-1)}
-                            className="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+                            className="w-full sm:w-auto px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
                         >
-                            Go Back
+                            {t('searchResults.goBack')}
                         </button>
                         <button
                             onClick={() => navigate('/')}
-                            className="px-6 py-2.5 bg-pink-500 text-white rounded-xl text-sm font-bold hover:bg-pink-600 active:scale-95 transition-all shadow-md shadow-pink-100 cursor-pointer"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-pink-500 text-white rounded-xl text-sm font-bold hover:bg-pink-600 active:scale-95 transition-all shadow-md shadow-pink-100 cursor-pointer"
                         >
-                            Browse All Products
+                            {t('searchResults.browseAll')}
                         </button>
                     </div>
                 </div>
@@ -76,7 +80,7 @@ function SearchResults() {
                                         {product.prodName}
                                     </h3>
                                     <p className="text-xs text-gray-400 mt-1 line-clamp-2 leading-relaxed">
-                                        {product.description || "Bring elegance to your wardrobe with this beautiful collection."}
+                                        {product.description || t('searchResults.defaultDesc')}
                                     </p>
                                 </div>
 

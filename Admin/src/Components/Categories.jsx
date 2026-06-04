@@ -8,9 +8,11 @@ import { useCatList, useDeleteCategory, useDeleteInfoCategory, useToggleCatStatu
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 import { getPaginationRange } from '../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Categories({ setCurrentPage }) {
 
+  const { t } = useTranslation();
   const [searchVal, setSearchVal] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -143,8 +145,8 @@ function Categories({ setCurrentPage }) {
     });
   };
 
-  if (isLoading) return <p className="p-10 text-center">Loading categories...</p>;
-  if (isError) return <p className="p-10 text-center text-red-500">Error fetching categories!</p>;
+  if (isLoading) return <p className="p-10 text-center">{t('adminCategories.loading')}</p>;
+  if (isError) return <p className="p-10 text-center text-red-500">{t('adminCategories.error')}</p>;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -156,14 +158,14 @@ function Categories({ setCurrentPage }) {
         <div>
           <div className='flex items-center gap-2.5'>
             <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-              Categories
+              {t('adminCategories.title')}
             </h2>
             <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-              Total: {catData?.count || 0}
+              {t('adminCategories.totalBadge')} {catData?.count || 0}
             </span>
           </div>
           <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Manage and organize your product categories.
+            {t('adminCategories.description')}
           </p>
         </div>
 
@@ -173,14 +175,14 @@ function Categories({ setCurrentPage }) {
             type="text"
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            placeholder="Search categories..."
+            placeholder={t('adminCategories.searchPlaceholder')}
             className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
           />
           <button
             onClick={() => setCurrentPage('add-category')}
             className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none transition-all active:scale-95 shrink-0 cursor-pointer"
           >
-            + Add New
+            {t('adminCategories.addNew')}
           </button>
         </div>
       </div>
@@ -190,12 +192,12 @@ function Categories({ setCurrentPage }) {
         <table className="w-full text-left">
           <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
             <tr>
-              <th className="px-6 py-4 whitespace-nowrap">Category</th>
-              <th className="px-6 py-4 whitespace-nowrap">Department</th>
-              <th className="px-6 py-4 whitespace-nowrap">License Required</th>
-              <th className="px-6 py-4 whitespace-nowrap">Items Count</th>
-              <th className="px-6 py-4 whitespace-nowrap">Status</th>
-              <th className="px-6 py-4 whitespace-nowrap text-center">Action</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('adminCategories.colCategory')}</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('adminCategories.colDepartment')}</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('adminCategories.colLicense')}</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('adminCategories.colItemsCount')}</th>
+              <th className="px-6 py-4 whitespace-nowrap">{t('adminCategories.colStatus')}</th>
+              <th className="px-6 py-4 whitespace-nowrap text-center">{t('adminCategories.colAction')}</th>
             </tr>
           </thead>
 
@@ -233,20 +235,20 @@ function Categories({ setCurrentPage }) {
                     {category.requiresCertificate ? (
                       <div className="flex flex-col gap-1">
                         <span className="inline-flex items-center w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-200 uppercase">
-                          Required
+                          {t('adminCategories.licenseRequired')}
                         </span>
                         <span className="text-[11px] text-slate-500 font-medium">
                           {category.certificateLabel}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-slate-400 italic">Not Required</span>
+                      <span className="text-[11px] text-slate-400 italic">{t('adminCategories.licenseNotRequired')}</span>
                     )}
                   </td>
 
                   {/* Product Count */}
                   <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300">
-                    {category.productCount || 0} <span className="text-[10px] font-normal text-slate-400 ml-1">items</span>
+                    {category.productCount || 0} <span className="text-[10px] font-normal text-slate-400 ml-1">{t('adminCategories.items')}</span>
                   </td>
 
                   {/* Status */}
@@ -265,7 +267,7 @@ function Categories({ setCurrentPage }) {
                       {isThisRowLoading ? (
                         <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                       ) : (
-                        category.isActive ? "Active" : "Inactive"
+                        category.isActive ? t('adminCategories.statusActive') : t('adminCategories.statusInactive')
                       )}
                     </button>
                   </td>
@@ -292,7 +294,7 @@ function Categories({ setCurrentPage }) {
             }) : (
               <tr>
                 <td colSpan="6" className="text-center py-10 text-slate-400 text-sm">
-                  No categories found matching your search.
+                  {t('adminCategories.emptySearch')}
                 </td>
               </tr>
             )}
@@ -308,7 +310,7 @@ function Categories({ setCurrentPage }) {
             disabled={page === 1}
             className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-all"
           >
-            Prev
+            {t('adminCategories.prev')}
           </button>
 
           {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -332,7 +334,7 @@ function Categories({ setCurrentPage }) {
             disabled={page === totalPages}
             className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 disabled:opacity-40 hover:bg-slate-50 transition-all"
           >
-            Next
+            {t('adminCategories.next')}
           </button>
         </div>
       )}
@@ -360,11 +362,11 @@ function Categories({ setCurrentPage }) {
           {/* heading */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-              Update Category
+              {t('adminCategories.editTitle')}
             </h3>
 
             <p className="text-xs text-slate-400 mt-1">
-              Manage stock levels and pricing
+              {t('adminCategories.editDescription')}
             </p>
           </div>
 
@@ -375,7 +377,7 @@ function Categories({ setCurrentPage }) {
               <label
                 htmlFor='catImage'
                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                Category Image
+                {t('adminCategories.editImageLabel')}
               </label>
 
               <div className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800  dark:text-white text-sm transition-all placeholder:text-[11px] md:placeholder:text-[14px]">
@@ -390,10 +392,10 @@ function Categories({ setCurrentPage }) {
 
                 <div className="flex gap-2 items-center">
                   <button className="border border-pink-100 rounded-sm px-2 text-pink-500 bg-pink-50/30">
-                    Choose File
+                    {t('adminCategories.editChooseFile')}
                   </button>
                   <span className={`text-gray-600`}>
-                    {file ? file.name : "No file chosen"}
+                    {file ? file.name : t('adminCategories.editNoFile')}
                   </span>
                 </div>
               </div>
@@ -402,11 +404,11 @@ function Categories({ setCurrentPage }) {
             {/* items in category  (read-only) */}
             <div className='flex flex-col gap-1.5 md:gap-2'>
               <label className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                Total Products in Category
+                {t('adminCategories.editTotalProducts')}
               </label>
 
               <div className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-sm flex items-center justify-between">
-                <span>Current Items</span>
+                <span>{t('adminCategories.editCurrentItems')}</span>
                 <span className="font-bold text-pink-500">{selectedCategory?.productCount || 0}</span>
               </div>
             </div>
@@ -416,7 +418,7 @@ function Categories({ setCurrentPage }) {
               <label
                 htmlFor='catName'
                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                Category Name
+                {t('adminCategories.editCategoryName')}
               </label>
 
               <input
@@ -424,7 +426,7 @@ function Categories({ setCurrentPage }) {
                 name='catName'
                 value={formData.catName}
                 onChange={handleInputChange}
-                placeholder="Product Name"
+                placeholder={t('adminCategories.editCategoryNamePlaceholder')}
                 className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all"
               />
             </div>
@@ -434,7 +436,7 @@ function Categories({ setCurrentPage }) {
               <label
                 htmlFor='department'
                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                Department
+                {t('adminCategories.editDepartment')}
               </label>
 
               <input
@@ -442,7 +444,7 @@ function Categories({ setCurrentPage }) {
                 name='department'
                 value={formData.department}
                 onChange={handleInputChange}
-                placeholder="Department"
+                placeholder={t('adminCategories.editDepartmentPlaceholder')}
                 className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all"
               />
             </div>
@@ -450,7 +452,7 @@ function Categories({ setCurrentPage }) {
             {/* required license */}
             <div className="flex flex-col gap-3 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50  mt-2">
               <div className="flex items-center justify-between">
-                <label className="text-[13px] font-semibold text-slate-600">Require License?</label>
+                <label className="text-[13px] font-semibold text-slate-600">{t('adminCategories.editRequireLicense')}</label>
                 <input
                   type="checkbox"
                   name="requiresCertificate"
@@ -466,7 +468,7 @@ function Categories({ setCurrentPage }) {
                   name="certificateLabel"
                   value={formData.certificateLabel}
                   onChange={handleInputChange}
-                  placeholder="e.g. BIS License"
+                  placeholder={t('adminCategories.editLicensePlaceholder')}
                   className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50  text-xs focus:ring-2 focus:ring-pink-400 outline-none"
                 />
               )}
@@ -477,7 +479,7 @@ function Categories({ setCurrentPage }) {
               <label
                 htmlFor='description'
                 className='text-[13px] md:text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1'>
-                Description
+                {t('adminCategories.editDescription2')}
               </label>
 
               <textarea
@@ -486,7 +488,7 @@ function Categories({ setCurrentPage }) {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                placeholder="Type Description..."
+                placeholder={t('adminCategories.editDescriptionPlaceholder')}
                 className="p-2.5 rounded-lg md:rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white text-sm transition-all resize-none"
               />
             </div>
@@ -499,7 +501,7 @@ function Categories({ setCurrentPage }) {
               onClick={() => setIsEditOpen(false)}
               className="inline-flex w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95 cursor-pointer"
             >
-              Discard
+              {t('adminCategories.editDiscard')}
             </button>
 
             <button
@@ -507,7 +509,7 @@ function Categories({ setCurrentPage }) {
               onClick={handleUpdate}
               className="inline-flex w-full justify-center rounded-2xl bg-linear-to-br from-pink-500 to-pink-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-pink-100 hover:from-pink-600 hover:to-pink-700 transition-all sm:w-1/2 items-center gap-2 active:scale-95 cursor-pointer"
             >
-              {isUpdating ? "Saving..." : " Save Inventory"}
+              {isUpdating ? t('adminCategories.editSaving') : t('adminCategories.editSave')}
             </button>
           </div>
         </div>
@@ -548,12 +550,12 @@ function Categories({ setCurrentPage }) {
           {/* Text Content */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-              Remove Category?
+              {t('adminCategories.deleteTitle')}
             </h3>
 
             <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
               {isInfoLoading
-                ? "Checking category data..."
+                ? t('adminCategories.deleteChecking')
                 : deleteInfo?.message
               }
             </p>
@@ -569,7 +571,7 @@ function Categories({ setCurrentPage }) {
               }}
               className="inline-flex w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95 cursor-pointer"
             >
-              No, Keep it
+              {t('adminCategories.deleteKeep')}
             </button>
 
             {deleteInfo?.canDelete && (
@@ -580,7 +582,7 @@ function Categories({ setCurrentPage }) {
                 className="inline-flex w-full justify-center rounded-2xl bg-linear-to-br from-red-500 to-red-600 px-3 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-100 hover:from-red-600 hover:to-red-700 transition-all sm:w-1/2 items-center gap-2 active:scale-95 cursor-pointer"
               >
                 <HiOutlineTrash />
-                {isDeleting ? "Deleting..." : "Yes, Delete"}
+                {isDeleting ? t('adminCategories.deleteDeleting') : t('adminCategories.deleteConfirm')}
               </button>
             )}
           </div>

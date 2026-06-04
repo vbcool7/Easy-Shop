@@ -29,9 +29,11 @@ import UserChat from './UserChat';
 import { useProductDetail } from '../hook/uesProducts';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function ProductDetail() {
 
+    const { t } = useTranslation();
     const location = useLocation();
     const initialSelectedColor = location.state?.selectColor;
 
@@ -190,7 +192,7 @@ function ProductDetail() {
             toast.error("Selected variant is out of stock");
             return;
         }
-        
+
         // stock available check 
         const cartItem = cartItems.find(item =>
             (item._id || item.id) === (product._id || product.id) &&
@@ -322,7 +324,7 @@ function ProductDetail() {
     };
 
     if (isLoading) return <EasyShopLoader />;
-    if (isError || !product) return <div className="p-20 text-center">Product Not Found!</div>;
+    if (isError || !product) return <div className="p-20 text-center">{t('productDetail.notFound')}</div>;
 
     return (
         <section className="w-full pb-5 pt-2 px-4 lg:px-6">
@@ -437,7 +439,7 @@ function ProductDetail() {
                     </div>
 
                     <p className='text-sm md:text-[15px] text-gray-500'>
-                        inclusive of all taxes
+                        {t('productDetail.inclusiveTax')}
                     </p>
 
                     <hr className='my-1 md:my-2 border-gray-300' />
@@ -446,7 +448,7 @@ function ProductDetail() {
                     {hasColorVariant && (
                         <div className="mb-3">
                             <p className="text-sm font-semibold text-gray-800 mb-2">
-                                Color: <span className="text-pink-500 font-bold">{selectedColor}</span>
+                                {t('productDetail.color')}: <span className="text-pink-500 font-bold">{selectedColor}</span>
                             </p>
 
                             <div className="flex flex-wrap gap-2">
@@ -460,7 +462,7 @@ function ProductDetail() {
                                             onClick={() => !isOutOfStock && handleColorSelect(color)}
                                             disabled={isOutOfStock}
                                             className={`px-4 py-1.5 rounded-full text-xs font-bold border-2 transition-all
-                            ${isOutOfStock
+                                                ${isOutOfStock
                                                     ? "border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed"
                                                     : selectedColor === color
                                                         ? "border-pink-500 bg-pink-50 text-pink-600 cursor-pointer"
@@ -470,7 +472,7 @@ function ProductDetail() {
                                             {isOutOfStock ? (
                                                 <span className="flex items-center gap-1">
                                                     <span className="line-through">{color}</span>
-                                                    <span className="text-[8px] text-red-400 font-black">Out</span>
+                                                    <span className="text-[8px] text-red-400 font-black">{t('productDetail.outOfStock')}</span>
                                                 </span>
                                             ) : color}
                                         </button>
@@ -484,11 +486,11 @@ function ProductDetail() {
                     {hasSize && (
                         <div className="mb-3">
                             <p className="text-sm font-semibold text-gray-800 mb-2">
-                                Size: <span className="text-pink-500 font-bold">{selectedSize || "Select Size"}</span>
+                                {t('productDetail.size')}: <span className="text-pink-500 font-bold">{selectedSize || t('productDetail.selectSize')}</span>
 
                                 {selectedSize && currentStock > 0 && currentStock <= 5 && (
                                     <span className="ml-2 text-orange-500 text-xs font-bold">
-                                        Only {currentStock} left!
+                                        {t('productDetail.onlyLeft', { count: currentStock })}
                                     </span>
                                 )}
                             </p>
@@ -514,7 +516,7 @@ function ProductDetail() {
                                             {isOutOfStock ? (
                                                 <span className="flex flex-col items-center leading-tight">
                                                     <span className="line-through">{size}</span>
-                                                    <span className="text-[8px] text-red-400 font-black">Out</span>
+                                                    <span className="text-[8px] text-red-400 font-black">{t('productDetail.outOfStock')}</span>
                                                 </span>
                                             ) : size}
                                         </button>
@@ -527,7 +529,7 @@ function ProductDetail() {
                     {/* quantity section */}
                     <div className="mt-1 md:mt-0 flex flex-row items-start md:flex-col gap-2 md:gap-0">
                         <span className="text-[16px] md:text-xl text-black font-semibold">
-                            Quantity
+                            {t('productDetail.quantity')}
                         </span>
 
                         <div className="flex items-center justify-between w-28 md:w-32 text-gray-700 border-2 border-gray-200 rounded-lg py-1 px-1 md:py-2 md:px-2 md:my-4">
@@ -552,10 +554,10 @@ function ProductDetail() {
 
                         <p className="text-[11px] text-gray-400 font-medium">
                             {canShowStock
-                                ? `${currentStock} in stock`
+                                ? t('productDetail.inStock', { count: currentStock })
                                 : hasSize
-                                    ? "Select size to see stock"
-                                    : "Select variant to see stock"}
+                                    ? t('productDetail.selectSizeStock')
+                                    : t('productDetail.selectVariantStock')}
                         </p>
                     </div>
 
@@ -570,7 +572,7 @@ function ProductDetail() {
                                 className='flex-1 py-3.5 flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white rounded-md active:scale-95 transition-all font-bold uppercase text-sm'
                             >
                                 <IoBagHandleOutline className='text-xl' />
-                                <span>Add to Bag</span>
+                                <span>{t('productDetail.addToBag')}</span>
                             </button>
 
                             <button
@@ -578,7 +580,7 @@ function ProductDetail() {
                                 className='flex-1 py-3.5 flex items-center justify-center gap-2 border border-pink-500 text-pink-500 rounded-md hover:bg-pink-50 active:scale-95 transition-all font-bold uppercase text-sm'
                             >
                                 <BiPurchaseTagAlt className='text-xl' />
-                                <span>Buy Now</span>
+                                <span>{t('productDetail.buyNow')}</span>
                             </button>
                         </div>
 
@@ -589,7 +591,7 @@ function ProductDetail() {
                                 className='w-full py-3.5 flex items-center justify-center gap-2 bg-pink-500 text-white rounded-md active:scale-95 transition-all font-bold uppercase text-sm shadow-sm'
                             >
                                 <IoBagHandleOutline className='text-lg' />
-                                Add to Bag
+                                {t('productDetail.addToBag')}
                             </button>
 
                             <button
@@ -597,7 +599,7 @@ function ProductDetail() {
                                 className='w-full py-3.5 flex items-center justify-center gap-2 border border-pink-500 text-pink-500 rounded-md active:scale-95 transition-all font-bold uppercase text-sm'
                             >
                                 <BiPurchaseTagAlt className='text-lg' />
-                                Buy Now
+                                {t('productDetail.buyNow')}
                             </button>
                         </div>
                     </div>
@@ -609,20 +611,20 @@ function ProductDetail() {
                         className="w-full mt-4 flex items-center justify-center gap-2 py-3 px-6 border-2 border-pink-500 text-pink-500 font-bold rounded-lg transition-all duration-300 hover:bg-pink-500 hover:text-white hover:shadow-lg hover:shadow-pink-200 active:scale-[0.98] group cursor-pointer">
                         <IoChatbubblesOutline className="text-lg md:text-xl group-hover:scale-110 transition-transform" />
                         <span className="tracking-wide uppercase text-xs md:text-sm">
-                            Chat with Seller
+                            {t('productDetail.chatWithSeller')}
                         </span>
                     </button>
 
                     {/* delivery info */}
                     <div className='my-4 md:my-2'>
                         <span className="text-[16px] md:text-xl text-black font-semibold">
-                            Ship To
+                            {t('productDetail.shipTo')}
                         </span>
 
                         <div className='flex overflow-hidden pt-3 md:pt-4'>
                             <input
                                 type="text"
-                                placeholder='Enter a pin code'
+                                placeholder={t('productDetail.pincodePlaceholder')}
                                 value={pincode}
                                 onChange={(e) => setPincode(e.target.value)}
                                 className='px-3 py-2.5 md:py-2 border border-gray-400 outline-none w-full text-sm placeholder:text-gray-400 rounded-l-md focus:border-pink-500 transition-colors'
@@ -630,7 +632,7 @@ function ProductDetail() {
                             <button
                                 onClick={handleCheck}
                                 className='bg-pink-500 hover:bg-pink-600 px-5 py-2.5 md:py-2 text-white text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer rounded-r-md shrink-0'>
-                                Check
+                                {t('productDetail.check')}
                             </button>
                         </div>
                     </div>
@@ -642,21 +644,21 @@ function ProductDetail() {
                             <div className='flex items-start md:items-center gap-3'>
                                 <CiDeliveryTruck className='text-2xl md:text-3xl text-gray-600 shrink-0' />
                                 <h1 className='text-sm md:text-md text-gray-700 leading-tight'>
-                                    Delivery by <strong>{estimatedDate}</strong>
+                                    {t('productDetail.deliveryBy')} <strong>{estimatedDate}</strong>
                                 </h1>
                             </div>
 
                             <div className='flex items-start md:items-center gap-3'>
                                 <PiMoneyWavyLight className='text-2xl md:text-3xl text-gray-600 shrink-0' />
                                 <h1 className='text-sm md:text-md text-gray-700 leading-tight'>
-                                    Cash on Delivery | <span className='text-green-600 font-semibold'>Available</span>
+                                    {t('productDetail.cod')} | <span className='text-green-600 font-semibold'>{t('productDetail.codAvailable')}</span>
                                 </h1>
                             </div>
 
                             <div className='flex items-start md:items-center gap-3'>
                                 <TbRefresh className='text-2xl md:text-3xl text-gray-600 shrink-0' />
                                 <h1 className='text-sm md:text-md text-gray-700 leading-tight'>
-                                    7 Days Return and Replacement available
+                                    {t('productDetail.returnPolicy')}
                                 </h1>
                             </div>
                         </div>
@@ -667,7 +669,7 @@ function ProductDetail() {
                     {/* seller info */}
                     <div className='my-2'>
                         <span className="text-[16px] md:text-xl text-black font-semibold">
-                            Sold By
+                           {t('productDetail.soldBy')}
                         </span>
 
                         <div
@@ -688,7 +690,7 @@ function ProductDetail() {
                                 className='flex justify-between items-center py-3 cursor-pointer group'
                             >
                                 <span className="text-[16px] md:text-xl text-black font-semibold group-hover:text-pink-500 transition-colors">
-                                    Product Details
+                                   {t('productDetail.productDetails')}
                                 </span>
                                 <div className="text-xl text-gray-600">
                                     {isSpecificationOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
@@ -706,7 +708,7 @@ function ProductDetail() {
                                             </div>
                                             <div className='w-[60%]'>
                                                 <p className='text-xs md:text-sm text-gray-700 font-medium px-2'>
-                                                    {Array.isArray(value) ? value.join(', ') : value}
+                                                    {Array.isArray(value) ? value.join(', ') : typeof value === 'object' ? value.values?.join(', ') : value}
                                                 </p>
                                             </div>
                                         </div>
@@ -742,7 +744,7 @@ function ProductDetail() {
                                 }
                             })}
                             className='mt-2 py-2.5 text-sm md:text-md border-2 border-pink-500 rounded-xl text-pink-500 font-bold hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer uppercase'>
-                            Visit Shop
+                           {t('productDetail.visitShop')}
                         </button>
                     </div>
 
@@ -752,6 +754,8 @@ function ProductDetail() {
             {/*===== review products ======*/}
             <ProductDetailReview
                 prodId={prodId}
+                averageRating={product?.averageRating}
+                totalReviews={product?.totalReviews}
             />
 
             {/*====== similar products ========*/}
@@ -783,7 +787,7 @@ function ProductDetail() {
                         {/* icon and heading */}
                         <div className='flex justify-between'>
                             <h1 className='text-[23px] font-semibold'>
-                                Seller Information
+                               {t('productDetail.sellerInfo')}
                             </h1>
                             <IoCloseSharp
                                 onClick={() => setIsSellerInfoOpen(false)}
@@ -805,7 +809,7 @@ function ProductDetail() {
                         <div className='pt-6 border-t border-gray-100 mt-4'>
 
                             <div className='mb-4'>
-                                <p className='text-md font-semibold text-gray-900'>Seller Code :</p>
+                                <p className='text-md font-semibold text-gray-900'>{t('productDetail.sellerCode')}</p>
                                 <p className='text-gray-500 font-mono text-sm'>
                                     {/* Vendor DB ki ID access kar rahe hain */}
                                     {product?.vendorId?._id?.slice(-6).toUpperCase() || '---'}
@@ -815,7 +819,7 @@ function ProductDetail() {
                             {/* Seller Contact & Address */}
                             <div className='mb-2'>
                                 <p className='text-md font-semibold text-gray-900'>
-                                    Sold By & Contact Address:
+                                    {t('productDetail.soldByContact')}
                                 </p>
                                 <p className='text-pink-600 font-medium mb-1'>
                                     {product?.vendorId?.shopName || product?.vendorId?.name}
@@ -829,10 +833,10 @@ function ProductDetail() {
 
                             <div className='pt-6 text-[16px]'>
                                 <p className='text-pink-600 font-semibold'>
-                                    Email : {product.vendorId.businessEmail}
+                                    {t('productDetail.email')} {product.vendorId.businessEmail}
                                 </p>
                                 <p className='text-pink-600 font-semibold'>
-                                    Contact : {product.vendorId.businessContact}
+                                    {t('productDetail.contact')} {product.vendorId.businessContact}
                                 </p>
                             </div>
 

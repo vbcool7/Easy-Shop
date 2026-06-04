@@ -7,9 +7,11 @@ import confetti from 'canvas-confetti';
 import { useVendorSignup } from '../hook/useAuth';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function VendorAccountInfo({ prev, formData, setFormData }) {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [checkedTerms, setCheckedTerms] = useState(false);
@@ -35,7 +37,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
             setFormData(prev => ({ ...prev, [name]: files[0] }));
         }
     };
-    
+
     // validation
     const required =
         formData.accHolder &&
@@ -77,7 +79,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
         accNumber: "",
         ifsc: "",
         bankDocumentUpload: null,
-        otp:""
+        otp: ""
     };
 
     // submit
@@ -138,10 +140,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 // Zustand store mein user aur token bharo
                 login(res.vendor, res.token);
 
-                // Form reset to empty strings/null
                 setFormData(initialVendorState);
-
-                // Success modal
                 setIsSubmitted(true);
 
             },
@@ -155,13 +154,13 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
             {/* heading */}
             <div className='mb-8 text-center md:text-left'>
                 <h1 className='text-xl md:text-2xl font-bold text-gray-800 tracking-tight'>
-                    Account Information
+                    {t('vendorSignup.accountInfo')}
                 </h1>
 
                 <div className='w-12 h-1 bg-pink-500 rounded-full mt-1 mx-auto md:ml-0'></div>
 
                 <p className='text-gray-500 text-xs md:text-sm mt-2'>
-                    Final Step: Security & Login
+                    {t('vendorSignup.accountSubtitle')}
                 </p>
             </div>
 
@@ -172,7 +171,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='accHolder'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Account Holder Name</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.accHolder')}</label>
                     <input
                         inputMode="numeric"
                         name="accHolder"
@@ -186,7 +185,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='bank'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Bank Name</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.bankName')}</label>
                     <input
                         type="text"
                         name="bank"
@@ -200,7 +199,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='accNumber'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Account Number</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.accNumber')}</label>
                     <input
                         type="text"
                         name="accNumber"
@@ -214,7 +213,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className='flex flex-col gap-1.5'>
                     <label
                         htmlFor='ifsc'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">IFSC Code</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.ifsc')}</label>
                     <input
                         type="text"
                         name="ifsc"
@@ -228,7 +227,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className='relative flex flex-col gap-1.5'>
                     <label
                         htmlFor='bankDocumentUpload'
-                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">Bank Verification Document</label>
+                        className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">{t('vendorSignup.bankDoc')}</label>
 
                     <div className="relative">
                         {/* Input ko 'peer' banaya aur z-index diya taaki click pakde */}
@@ -244,16 +243,16 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                         {/* Niche wale div mein 'peer-focus' add kiya hai */}
                         <div className="w-full p-3 text-sm md:text-base bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl flex gap-2 items-center outline-none transition-all peer-focus:border-pink-500">
                             <button className="text-sm md:text-base border border-pink-100 rounded-sm px-2 text-pink-600 bg-pink-50 pointer-events-none">
-                                Upload
+                                {t('vendorSignup.upload')}
                             </button>
                             <span className='flex-1 text-sm md:text-base text-gray-500 truncate'>
-                                {formData.bankDocumentUpload ? formData.bankDocumentUpload.name : "No file chosen"}
+                                {formData.bankDocumentUpload ? formData.bankDocumentUpload.name : t('vendorSignup.noFile')}
                             </span>
                         </div>
                     </div>
 
                     <p className="text-xs md:text-sm text-gray-500 mt-1">
-                        Upload Cancelled Cheque or Passbook Front Page.
+                        {t('vendorSignup.bankDocHint')}
                     </p>
                 </div>
             </div>
@@ -270,12 +269,12 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                         className='accent-pink-500 cursor-pointer' />
 
                     <p className='text-xs md:text-[15px] text-gray-600'>
-                        I agree to the <span
+                        {t('vendorSignup.terms1Start')} <span
                             onClick={() => setIsTermsOpen(!isTermsOpen)}
                             className="text-pink-600 font-semibold hover:underline cursor-pointer">
-                            Terms of Service </span>and <span
+                            {t('vendorSignup.termsOfService')} </span>{t('vendorSignup.and')} <span
                                 onClick={() => setIsPolicyOpen(!isPolicyOpen)}
-                                className="text-pink-600 font-semibold hover:underline cursor-pointer"> Privacy Policy </span>of the platform.
+                                className="text-pink-600 font-semibold hover:underline cursor-pointer"> {t('vendorSignup.privacyPolicy')} </span>{t('vendorSignup.terms1End')}
                     </p>
                 </div>
 
@@ -288,10 +287,10 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                         className='accent-pink-500 cursor-pointer' />
 
                     <p className='text-xs md:text-[15px] text-gray-600'>
-                        I have read and I accept the <span
+                        {t('vendorSignup.terms2Start')} <span
                             onClick={() => setIsAggrementOpen(!isAggrementOpen)}
                             className="text-pink-600 font-semibold hover:underline cursor-pointer">
-                            Seller Agreement </span> regarding commissions, payouts, and return policies.</p>
+                            {t('vendorSignup.sellerAgreement')} </span> {t('vendorSignup.terms2End')}</p>
                 </div>
             </div>
 
@@ -300,19 +299,19 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <button
                     onClick={prev}
                     className="w-full text-start sm:w-auto text-gray-500 hover:text-pink-500 px-6 py-3 hover:bg-pink-50 rounded-xl font-bold transition-all cursor-pointer text-sm md:text-base">
-                    ← Back
+                    {t('vendorSignup.back')}
                 </button>
 
                 <button
                     onClick={() => handleSubmit()}
-                    disabled={!required || isRegistering} 
+                    disabled={!required || isRegistering}
                     className={`w-full md:w-auto px-8 py-3 rounded-xl font-bold shadow-lg transition-all not-only-of-type:
                         ${required && !isRegistering
                             ? "bg-pink-500 text-white shadow-pink-200 hover:bg-pink-600 hover:scale-105 active:scale-95 cursor-pointer"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
                         }`}
                 >
-                    {isRegistering ? "Submitting..." : "Submit"}
+                    {isRegistering ? t('vendorSignup.submitting') : t('vendorSignup.submit')}
                 </button>
             </div>
 
@@ -321,7 +320,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4 lg:px-6">
                     <div
                         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-                        // onClick={() => setIsSubmitted(false)}
+                    // onClick={() => setIsSubmitted(false)}
                     ></div>
 
                     {/* Modal Content */}
@@ -334,10 +333,10 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
 
                         <div className="space-y-3">
                             <h2 className="text-2xl md:text-3xl font-semibold text-slate-800 tracking-tight leading-tight">
-                                Welcome Aboard, Partner!
+                                {t('vendorSignup.welcomeTitle')}
                             </h2>
                             <p className="text-sm text-slate-500 leading-relaxed px-2 italic">
-                                "Registration complete! Let's build your brand together."
+                                {t('vendorSignup.welcomeDesc')}
                             </p>
                         </div>
 
@@ -347,19 +346,19 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                                 onClick={() => navigate('/vendor_dashboard')}
                                 className="w-full text-sm md:text-base bg-slate-900 hover:bg-black text-white font-bold py-3 md:py-4 rounded-2xl transition-all active:scale-95 shadow-xl shadow-slate-200 cursor-pointer"
                             >
-                                Go to Dashboard
+                                {t('vendorSignup.goToDashboard')}
                             </button>
 
                             <button
                                 onClick={() => navigate('/vendor_profile')}
                                 className="w-full text-sm md:text-base bg-white border-2 border-slate-100 text-slate-600 font-bold py-3 rounded-2xl transition-all hover:bg-slate-50 cursor-pointer"
                             >
-                                Complete My Profile
+                                {t('vendorSignup.completeProfile')}
                             </button>
                         </div>
 
                         <p className="text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                            Verification email has been sent to your inbox
+                            {t('vendorSignup.verificationEmail')}
                         </p>
                     </div>
                 </div>
@@ -377,7 +376,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                     {/* Fixed Header with Close Button */}
                     <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white rounded-t-3xl sticky top-0 z-10">
                         <h1 className="text-pink-500 text-xl md:text-3xl font-bold">
-                            Terms of Service
+                            {t('vendorSignup.termsTitle')}
                         </h1>
                         <button
                             onClick={() => setIsTermsOpen(false)}
@@ -473,7 +472,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                     {/* Fixed Header with Close Button */}
                     <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white rounded-t-3xl sticky top-0 z-10">
                         <h1 className="text-pink-500 text-xl md:text-3xl font-bold">
-                            Seller Agreement
+                            {t('vendorSignup.agreementTitle')}
                         </h1>
                         <button
                             onClick={() => setIsAggrementOpen(false)}
@@ -568,7 +567,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                     {/* Fixed Header with Close Button */}
                     <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white rounded-t-3xl sticky top-0 z-10">
                         <h1 className="text-pink-500 text-xl md:text-3xl font-bold">
-                            Privacy Policy
+                            {t('vendorSignup.policyTitle')}
                         </h1>
                         <button
                             onClick={() => setIsPolicyOpen(false)}
@@ -645,7 +644,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                             onClick={() => setIsPolicyOpen(false)}
                             className="bg-pink-500 text-white px-8 py-2.5 rounded-xl font-bold text-sm hover:bg-pink-600 transition-all"
                         >
-                            I Understand
+                            {t('vendorSignup.iUnderstand')}
                         </button>
                     </div>
                 </div>

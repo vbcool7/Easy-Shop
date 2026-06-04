@@ -64,8 +64,6 @@ export const addSubCategory = async (req, res) => {
             }
         }
 
-        console.log("Parsed Attributes:", parsedAttributes);
-
         const newSubCategory = new SubCategory({
             catId: cat_id,
             subCatName,

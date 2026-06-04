@@ -10,6 +10,7 @@ import Withdraw from '../Models/withdrawModelSchema.js';
 import Blog from '../Models/blogModelSchema.js';
 
 import { deleteCloudinaryFiles, deleteOldFileFromCloudinary } from '../utils/cloudinaryUtils.js';
+import { createNotification } from '../utils/createNotifications.js';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -515,25 +516,28 @@ export const updateProductStatus = async (req, res) => {
         const { status } = req.body;
 
         const validStatuses = ['Pending', 'Approved', 'Rejected'];
-
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid status"
-            });
+            return res.status(400).json({ success: false, message: "Invalid status" });
         }
 
-        const product = await Product.findByIdAndUpdate(
-            product_id,
-            { status },
-            { new: true }
-        );
-
+        const product = await Product.findById(product_id);
         if (!product)
-            return res.status(404).json({
-                success: false,
-                message: "Product not found"
+            return res.status(404).json({ success: false, message: "Product not found" });
+
+        product.status = status;
+        await product.save();
+
+        if (product.vendorId && ['Approved', 'Rejected'].includes(status)) {
+            await createNotification({
+                vendorId: product.vendorId,
+                type: "PRODUCT_UPDATE",
+                title: "Product Status Update",
+                message: status === 'Approved'
+                    ? `Your product "${product.prodName}" has been approved and is now live.`
+                    : `Your product "${product.prodName}" has been rejected. Please review and resubmit.`,
+                relatedId: product._id,
             });
+        }
 
         return res.status(200).json({
             success: true,
@@ -543,10 +547,7 @@ export const updateProductStatus = async (req, res) => {
 
     } catch (err) {
         console.log("Error :", err);
-        return res.status(500).json({
-            success: false,
-            message: "Server Error Occur"
-        });
+        return res.status(500).json({ success: false, message: "Server Error Occur" });
     }
 };
 
@@ -1146,6 +1147,21 @@ export const toggleTransactionStatus = async (req, res) => {
         transaction.status = status;
         await transaction.save();
 
+        // Notify vendor
+        const txMessages = {
+            Completed: `Your transaction of ₹${transaction.netEarning} has been completed and credited to your balance.`,
+            Cancelled: `Your transaction of ₹${transaction.netEarning} has been cancelled.`,
+            Pending: `Your transaction status has been updated to Pending.`,
+        };
+
+        await createNotification({
+            vendorId: transaction.vendorId,
+            type: "TRANSACTION_UPDATE",
+            title: "Transaction Update",
+            message: txMessages[status],
+            relatedId: transaction._id,
+        });
+
         res.status(200).json({
             success: true,
             message: `Transaction marked as ${status}`,
@@ -1242,6 +1258,21 @@ export const toggleWithdrawStatus = async (req, res) => {
         if (adminNote) withdraw.adminNote = adminNote;
 
         await withdraw.save();
+
+        // Notify vendor
+        const wdMessages = {
+            Processing: `Your withdrawal request of ₹${withdraw.amount} is being processed.`,
+            Approved: `Your withdrawal request of ₹${withdraw.amount} has been approved.${utrNumber ? ` UTR: ${utrNumber}` : ''}`,
+            Rejected: `Your withdrawal request of ₹${withdraw.amount} has been rejected and refunded to your balance.${adminNote ? ` Reason: ${adminNote}` : ''}`,
+        };
+
+        await createNotification({
+            vendorId: withdraw.vendorId,
+            type: "WITHDRAWAL_UPDATE",
+            title: "Withdrawal Update",
+            message: wdMessages[status],
+            relatedId: withdraw._id,
+        });
 
         res.status(200).json({
             success: true,

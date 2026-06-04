@@ -1,5 +1,4 @@
 
-//updated
 import React from 'react'
 import "swiper/css";
 import "swiper/css/autoplay";
@@ -10,32 +9,35 @@ import { useNavigate } from 'react-router-dom';
 
 import { useCatList } from '../hook/useCategories';
 
+import { useTranslation } from 'react-i18next';
+
 function HomeTopCategory() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const { data: categories, isLoading, isError } = useCatList();
 
-    if (isLoading) return <p className="text-center py-10">Loading Collections...</p>;
-    if (isError) return <p className="text-center py-10 text-red-500">Something went wrong!</p>;
+    if (isLoading) return <p className="text-center py-10">{t('home.loadingCollections')}</p>;
+    if (isError) return <p className="text-center py-10 text-red-500">{t('home.somethingWrong')}</p>;
 
-    // Sirf active categories filter karein
+    // filter only active cat
     const activeCats = categories?.filter(cat => cat.isActive) || [];
 
     return (
-        <section className="w-full bg-white py-10 md:py-16 px-4 lg:px-6">
-            <div className="max-w-6xl mx-auto">
-
+        <section className="w-full bg-white px-4 sm:px-5 lg:px-6 md:py-16 py-10">
+            <div className="mx-auto max-w-6xl">
+                
                 {/* heading */}
-                <div className="flex flex-col items-center mb-8 md:mb-12">
-                    <h2 className="text-2xl md:text-4xl font-bold text-gray-800 tracking-tight">
-                        Top New Categories
+                <div className="mb-8 flex flex-col items-center text-center md:mb-12">
+                    <h2 className="max-w-88 wrap-break-words text-center text-2xl font-bold leading-tight tracking-tight text-gray-800 sm:max-w-120 md:max-w-3xl md:text-4xl">
+                        {t('home.topCategories')}
                     </h2>
 
-                    <div className="w-20 h-1 md:h-1.5 bg-pink-500 rounded-full mt-2 md:mt-3"></div>
+                    <div className="mt-3 h-1 w-20 rounded-full bg-pink-500 md:h-1.5"></div>
 
-                    <p className="text-gray-500 mt-4 text-[12px] md:text-sm uppercase tracking-widest">
-                        Discover our latest collection
+                    <p className="mt-4 max-w-[20rem] wrap-break-words text-center text-[11px] uppercase leading-relaxed tracking-widest text-gray-500 sm:max-w-2xl sm:text-xs md:text-sm">
+                        {t('home.discoverCollection')}
                     </p>
                 </div>
 
@@ -48,50 +50,61 @@ function HomeTopCategory() {
                             dynamicBullets: true,
                         }}
                         slidesPerView={2}
-                        spaceBetween={20}
+                        spaceBetween={12}
                         loop={true}
                         autoplay={{ delay: 3000, disableOnInteraction: false }}
                         breakpoints={{
-                            640: { slidesPerView: 3 },
-                            1024: { slidesPerView: 5 },
-                            1280: { slidesPerView: 6 },
+                            480: {
+                                slidesPerView: 2,
+                                spaceBetween: 16,
+                            },
+                            640: {
+                                slidesPerView: 3,
+                                spaceBetween: 18,
+                            },
+                            1024: {
+                                slidesPerView: 5,
+                                spaceBetween: 20,
+                            },
+                            1280: {
+                                slidesPerView: 6,
+                                spaceBetween: 20,
+                            },
                         }}
-                        className="pb-14">
-
-                        {activeCats.slice(0,8).map((category, index) => (
-                            <SwiperSlide 
-                            key={index}>
+                        className="pb-14"
+                    >
+                        {activeCats.slice(0, 8).map((category, index) => (
+                            <SwiperSlide key={index}>
                                 <div
-                                    onClick={() => navigate(`/all_products/${category._id}/${category.catName}`)}
-                                    className="group flex flex-col items-center cursor-pointer">
-
+                                    onClick={() =>
+                                        navigate(`/all_products/${category._id}/${category.catName}`)
+                                    }
+                                    className="group flex min-w-0 cursor-pointer flex-col items-center text-center"
+                                >
                                     {/* Circle Container with Animation */}
-                                    <div className="relative w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-y-3 border-gray-50 shadow-md group-hover:border-pink-500 transition-all duration-500">
-
-                                        {/* Image */}
+                                    <div className="relative aspect-square w-28 overflow-hidden rounded-full border-y-3 border-gray-50 shadow-md transition-all duration-500 group-hover:border-pink-500 xs:w-32 sm:w-36 md:w-40 lg:w-44">
                                         <img
                                             src={category.catImage}
                                             alt={category.catName}
-                                            className='w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-500'
+                                            className="h-full w-full rounded-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                     </div>
 
                                     {/* Name Section */}
-                                    <div className="mt-6 text-center">
-                                        <p className="text-gray-800 font-bold text-md group-hover:text-pink-600 transition-colors uppercase tracking-wide">
+                                    <div className="mt-5 flex min-h-17 w-full max-w-44 flex-col items-center text-center">
+                                        <p className="max-w-full wrap-break-words text-center text-sm font-bold uppercase leading-snug tracking-wide text-gray-800 transition-colors group-hover:text-pink-600 sm:text-base">
                                             {category.catName}
                                         </p>
-                                        <span className="text-[11px] text-gray-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            SHOP NOW &rarr;
+
+                                        <span className="mt-1 text-[11px] font-medium text-gray-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                            {t('home.shopNow')}
                                         </span>
                                     </div>
-
                                 </div>
                             </SwiperSlide>
                         ))}
                     </Swiper>
                 </div>
-
             </div>
         </section>
     )

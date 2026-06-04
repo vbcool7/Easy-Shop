@@ -6,9 +6,11 @@ import { HiOutlineExclamation, HiOutlineX } from 'react-icons/hi';
 
 import { useDeleteReview, useReviewList, useUpdateReviewStatus } from '../hooks/useReviews';
 import { getPaginationRange } from '../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 const ReviewTable = () => {
 
+    const { t } = useTranslation();
     const [statusFilter, setStatusFilter] = useState('');
     const [page, setPage] = useState(1);
 
@@ -47,8 +49,8 @@ const ReviewTable = () => {
         });
     };
 
-    if (isLoading) return <div className="p-10 text-center font-bold text-pink-500">Loading Reviews...</div>;
-    if (isError) return <div className="p-10 text-center text-red-500">Error loading reviews.</div>;
+    if (isLoading) return <div className="p-10 text-center font-bold text-pink-500">{t('adminReviews.loading')}</div>;
+    if (isError) return <div className="p-10 text-center text-red-500">{t('adminReviews.error')}</div>;
 
     return (
         <div className="p-6 bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
@@ -57,15 +59,15 @@ const ReviewTable = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <div className="flex items-center gap-2.5">
-                        <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                            Product Reviews
+                        <h3 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
+                            {t('adminReviews.title')}
                         </h3>
                         <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-                            Total: {totalCount}
+                            {t('adminReviews.totalBadge')} {totalCount}
                         </span>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium">
-                        Manage and moderate customer feedback
+                    <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        {t('adminReviews.description')}
                     </p>
                 </div>
 
@@ -74,10 +76,10 @@ const ReviewTable = () => {
                     onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                     className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-pink-500/20"
                 >
-                    <option value="">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
+                    <option value="">{t('adminReviews.allStatus')}</option>
+                    <option value="Pending">{t('adminReviews.statusPending')}</option>
+                    <option value="Approved">{t('adminReviews.statusApproved')}</option>
+                    <option value="Rejected">{t('adminReviews.statusRejected')}</option>
                 </select>
             </div>
 
@@ -87,11 +89,11 @@ const ReviewTable = () => {
 
                     <thead>
                         <tr className="border-b border-slate-100 dark:border-slate-800">
-                            <th className="pb-4 pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-55">User / Customer</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-50">Product & Vendor</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-62.5">Rating & Comment</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-30 text-center">Status</th>
-                            <th className="pb-4 pr-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20 text-right">Action</th>
+                            <th className="pb-4 pl-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-55">{t('adminReviews.colCustomer')}</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-50">{t('adminReviews.colProduct')}</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-62.5">{t('adminReviews.colRating')}</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-30 text-center">{t('adminReviews.colStatus')}</th>
+                            <th className="pb-4 pr-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20 text-right">{t('adminReviews.colAction')}</th>
                         </tr>
                     </thead>
 
@@ -164,11 +166,11 @@ const ReviewTable = () => {
                                         disabled={isUpdating}
                                         onChange={(e) => toggleStatus({ review_id: review._id, status: e.target.value })}
                                         className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border cursor-pointer outline-none transition-all appearance-none text-center min-w-21.25
-                                         ${statusStyles[review.status] || statusStyles.pending}`}
+                                     ${statusStyles[review.status] || statusStyles.pending}`}
                                     >
-                                        <option value="Pending">Pending</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="Rejected">Rejected</option>
+                                        <option value="Pending">{t('adminReviews.statusPending')}</option>
+                                        <option value="Approved">{t('adminReviews.statusApproved')}</option>
+                                        <option value="Rejected">{t('adminReviews.statusRejected')}</option>
                                     </select>
                                 </td>
 
@@ -185,7 +187,7 @@ const ReviewTable = () => {
                         )) : (
                             <tr>
                                 <td colSpan="5" className="text-center py-10 text-slate-400 text-sm">
-                                    No user found matching your search.
+                                    {t('adminReviews.emptySearch')}
                                 </td>
                             </tr>
                         )}
@@ -199,7 +201,7 @@ const ReviewTable = () => {
                                 disabled={page === 1}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                Prev
+                                {t('adminReviews.prev')}
                             </button>
                             {getPaginationRange(page, totalPages).map((num, idx) =>
                                 num === '...'
@@ -208,7 +210,7 @@ const ReviewTable = () => {
                                         key={num}
                                         onClick={() => setPage(num)}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                                            ${page === num
+                                        ${page === num
                                                 ? 'bg-pink-500 text-white border-pink-500'
                                                 : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
                                             }`}
@@ -221,7 +223,7 @@ const ReviewTable = () => {
                                 disabled={page === totalPages}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                Next
+                                {t('adminReviews.next')}
                             </button>
                         </div>
                     )}
@@ -231,7 +233,7 @@ const ReviewTable = () => {
             {/* delete popup */}
             <div
                 className={`fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm z-100 px-4 transition-all duration-300 
-                    ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+                ${isDeletedOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
             >
                 <div
                     onClick={() => setIsDeletedOpen(false)}
@@ -241,7 +243,7 @@ const ReviewTable = () => {
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={`relative transform transition-all duration-300 rounded-[2.5rem] bg-white dark:bg-slate-900 p-8 shadow-2xl w-full max-w-md border border-pink-50 dark:border-slate-800
-                        ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
+                    ${isDeletedOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"}`}
                 >
                     <button
                         onClick={() => setIsDeletedOpen(false)}
@@ -256,11 +258,14 @@ const ReviewTable = () => {
 
                     <div className="text-center">
                         <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                            Remove Review/Rating
+                            {t('adminReviews.deleteTitle')}
                         </h3>
                         <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
-                            Are you sure you want to delete <span className="font-bold text-slate-700 dark:text-white">" {"this review"}"</span>?
-                            This action cannot be undone.
+                            {t('adminReviews.deleteMessagePrefix')}{' '}
+                            <span className="font-bold text-slate-700 dark:text-white">
+                                "{t('adminReviews.deleteReviewLabel')}"
+                            </span>
+                            {t('adminReviews.deleteMessageSuffix')}
                         </p>
                     </div>
 
@@ -270,7 +275,7 @@ const ReviewTable = () => {
                             onClick={() => setIsDeletedOpen(false)}
                             className="w-full justify-center rounded-2xl bg-white px-3 py-3.5 text-sm font-bold text-slate-600 border border-slate-100 hover:bg-slate-50 transition-all sm:w-1/2 active:scale-95"
                         >
-                            No, Keep it
+                            {t('adminReviews.deleteKeep')}
                         </button>
 
                         <button
@@ -284,12 +289,11 @@ const ReviewTable = () => {
                             ) : (
                                 <HiOutlineTrash size={18} />
                             )}
-                            {isDeleting ? "Deleting..." : "Yes, Delete"}
+                            {isDeleting ? t('adminReviews.deleteDeleting') : t('adminReviews.deleteConfirm')}
                         </button>
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };

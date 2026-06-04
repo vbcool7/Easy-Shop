@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema(
         vendorId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Vendor',
-            required: function () { return this.role === 'vendor'; }, // Sirf Vendor ke liye mandatory
+            required: function () { return this.role === 'vendor'; }, // mandatory only for vendor 
             index: true
         },
 
@@ -82,7 +82,7 @@ const productSchema = new mongoose.Schema(
 
         attributes: {
             type: Map,
-            of: mongoose.Schema.Types.Mixed // Mixed matlab String, Number, ya Array kuch bhi aa sakta hai
+            of: mongoose.Schema.Types.Mixed // Mixed means String, Number, or Array anything
         },
 
         prodImage: {
@@ -103,7 +103,7 @@ const productSchema = new mongoose.Schema(
         addedBy: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            refPath: 'role' // Ye dynamically user ya admin ko refer karega
+            refPath: 'role' 
         },
 
         role: {
@@ -115,7 +115,7 @@ const productSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ['Pending', 'Approved', 'Rejected'],
-            default: 'Pending' // Admin ke products auto-approve honge, vendor ke check honge
+            default: 'Pending' 
         },
 
         isNewArrival: {

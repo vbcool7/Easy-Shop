@@ -9,9 +9,11 @@ import { HiOutlineExclamation, HiOutlineTrash, HiOutlineX } from 'react-icons/hi
 import EditBlogDrawer from './EditBlogDrawer';
 import { useToggleBlogVisibility, useVendorBlogList } from '../../hook/useBlog';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Blogs({ setCurrentPage }) {
 
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
@@ -42,8 +44,8 @@ function Blogs({ setCurrentPage }) {
     setIsEditOpen(blog)
   };
 
-  if (isLoading) return <p className="p-10 text-center">Loading blogs...</p>;
-  if (isError) return <p className="p-10 text-center text-red-500">Error fetching blogs!</p>;
+  if (isLoading) return <p className="p-10 text-center">{t('vendorBlogs.loading')}</p>;
+  if (isError) return <p className="p-10 text-center text-red-500">{t('vendorBlogs.error')}</p>;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl md:rounded-3xl border border-pink-50 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -54,14 +56,14 @@ function Blogs({ setCurrentPage }) {
         <div>
           <div className='flex items-center gap-2.5'>
             <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-              All Published Blogs
+              {t('vendorBlogs.allBlogsHeading')}
             </h2>
             <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 md:py-1 rounded-full text-[11px] md:text-xs font-bold">
-              Total: {count}
+              {t('vendorBlogs.totalCounter', { total: count })}
             </span>
           </div>
           <p className="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Manage, edit, or remove seasonal articles and style trends.
+            {t('vendorBlogs.subHeadingNotice')}
           </p>
         </div>
 
@@ -71,7 +73,7 @@ function Blogs({ setCurrentPage }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search blogs..."
+            placeholder={t('vendorBlogs.searchPlaceholder')}
             className="w-full sm:w-64 text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-xs placeholder:text-xs md:placeholder:text-[13px] dark:text-white"
           />
 
@@ -80,17 +82,17 @@ function Blogs({ setCurrentPage }) {
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
             className="w-full sm:w-auto text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 dark:text-white transition-all"
           >
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
+            <option value="">{t('vendorBlogs.filterAllStatus')}</option>
+            <option value="Pending">{t('vendorBlogs.statusPending')}</option>
+            <option value="Approved">{t('vendorBlogs.statusApproved')}</option>
+            <option value="Rejected">{t('vendorBlogs.statusRejected')}</option>
           </select>
 
           <button
             onClick={() => setCurrentPage('create-blog')}
             className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 dark:from-pink-600 dark:to-pink-700 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 dark:hover:shadow-none transition-all active:scale-95 shrink-0 cursor-pointer"
           >
-            + Add New
+            {t('vendorBlogs.addNewBtn')}
           </button>
         </div>
       </div>
@@ -103,11 +105,11 @@ function Blogs({ setCurrentPage }) {
             {/* Table Head */}
             <thead className="text-xs uppercase bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800">
               <tr>
-                <th scope="col" className="px-6 py-4">Blog Info</th>
-                <th scope="col" className="px-6 py-4">Category</th>
-                <th scope="col" className="px-6 py-4">Date Created</th>
-                <th scope="col" className="px-6 py-4 text-center">Status</th>
-                <th scope="col" className="px-6 py-4 text-center">Actions</th>
+                <th scope="col" className="px-6 py-4">{t('vendorBlogs.thBlogInfo')}</th>
+                <th scope="col" className="px-6 py-4">{t('vendorBlogs.thCategory')}</th>
+                <th scope="col" className="px-6 py-4">{t('vendorBlogs.thDateCreated')}</th>
+                <th scope="col" className="px-6 py-4 text-center">{t('vendorBlogs.thStatus')}</th>
+                <th scope="col" className="px-6 py-4 text-center">{t('vendorBlogs.thActions')}</th>
               </tr>
             </thead>
 
@@ -118,12 +120,12 @@ function Blogs({ setCurrentPage }) {
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="text-center">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        No Blogs Found
+                        {t('vendorBlogs.noBlogsHeading')}
                       </p>
                       <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                         {search || status
-                          ? 'No blogs match your search or filter.'
-                          : 'You have never created any Blog yet.'
+                          ? t('vendorBlogs.noBlogsMatchFilter')
+                          : t('vendorBlogs.noBlogsCreatedYet')
                         }
                       </p>
                     </div>
@@ -147,7 +149,7 @@ function Blogs({ setCurrentPage }) {
                           {blog.title}
                         </p>
                         <p className="text-[11px] text-slate-400 font-normal mt-0.5">
-                          {blog.readTime || '3 min read'}
+                          {blog.readTime || t('vendorBlogs.defaultReadTime')}
                         </p>
                       </div>
                     </td>
@@ -183,7 +185,10 @@ function Blogs({ setCurrentPage }) {
                           className={`w-1.5 h-1.5 rounded-full animate-pulse
                           ${blog.status === 'Approved' ? 'bg-emerald-500' : blog.status === 'Pending' ? 'bg-amber-500' : 'bg-rose-500'}`}
                         />
-                        {blog.status}
+                        {blog.status === 'Approved' && t('vendorBlogs.badgeApproved')}
+                        {blog.status === 'Pending' && t('vendorBlogs.badgePending')}
+                        {blog.status === 'Rejected' && t('vendorBlogs.badgeRejected')}
+                        {!['Approved', 'Pending', 'Rejected'].includes(blog.status) && blog.status}
                       </span>
                     </td>
 
@@ -205,17 +210,17 @@ function Blogs({ setCurrentPage }) {
                               ? 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100'
                               : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
                             }`}
-                          title={blog.isActive ? "Click to Hide from Home" : "Click to Show on Home"}
+                          title={blog.isActive ? t('vendorBlogs.titleHide') : t('vendorBlogs.titleShow')}
                         >
                           {blog.isActive ? (
                             <>
                               <HiOutlineEye size={16} className={isToggling ? "animate-spin" : ""} />
-                              <span>Active</span>
+                              <span>{t('vendorBlogs.actionActive')}</span>
                             </>
                           ) : (
                             <>
                               <HiOutlineEyeOff size={16} className={isToggling ? "animate-spin" : ""} />
-                              <span>Inactive</span>
+                              <span>{t('vendorBlogs.actionInactive')}</span>
                             </>
                           )}
                         </button>
@@ -236,7 +241,7 @@ function Blogs({ setCurrentPage }) {
               disabled={page === 1}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Prev
+              {t('vendorBlogs.paginationPrev')}
             </button>
 
             {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -246,7 +251,7 @@ function Blogs({ setCurrentPage }) {
                   key={num}
                   onClick={() => setPage(num)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                                  ${page === num
+                    ${page === num
                       ? 'bg-pink-500 text-white border-pink-500'
                       : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
                     }`}
@@ -260,7 +265,7 @@ function Blogs({ setCurrentPage }) {
               disabled={page === totalPages}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Next
+              {t('vendorBlogs.paginationNext')}
             </button>
           </div>
         )}

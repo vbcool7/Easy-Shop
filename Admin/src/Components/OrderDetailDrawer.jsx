@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { FiX, FiPackage, FiTruck, FiMapPin, FiCreditCard } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 function OrderDetailDrawer({ order, isOpen, onClose }) {
 
-    if (!isOpen || !order) return null;
+    const {t} = useTranslation();
 
     const statusColors = {
         Delivered: 'text-emerald-500',
@@ -22,6 +23,8 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
         return item.productInfo?.prodImage;
     };
 
+    if (!isOpen || !order) return null;
+    
     return (
         <div
             onClick={onClose}
@@ -33,10 +36,10 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
                         <h2 className="text-xl font-black text-slate-800 dark:text-white">
-                            Order Details
+                            {t('orderDetailDrawer.title')}
                         </h2>
                         <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">
-                            ID: #{order._id}
+                            {t('orderDetailDrawer.idLabel')} #{order._id}
                         </p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors">
@@ -51,7 +54,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                         <div className="flex items-center gap-2 mb-4">
                             <FiPackage className="text-pink-500" />
                             <h3 className="font-bold text-slate-700 dark:text-slate-200">
-                                Order Items
+                                {t('orderDetailDrawer.sectionItems')}
                             </h3>
                         </div>
                         <div className="space-y-3">
@@ -84,14 +87,14 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
 
                                             {item.selectedSize && (
                                                 <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                                    Size: {item.selectedSize}
+                                                    {t('orderDetailDrawer.sizeLabel')} {item.selectedSize}
                                                 </span>
                                             )}
                                         </div>
 
                                         {/* qty */}
                                         <p className="text-xs text-slate-400">
-                                            Qty: {item.quantity} x  ₹{item.price}
+                                            {t('orderDetailDrawer.qtyLabel')} {item.quantity} x  ₹{item.price}
                                         </p>
                                     </div>
 
@@ -112,11 +115,11 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                             <div className="flex items-center gap-2 mb-2 text-blue-600">
                                 <FiMapPin size={14} />
                                 <span className="text-[11px] font-black uppercase">
-                                    Shipping To
+                                    {t('orderDetailDrawer.sectionShipping')}
                                 </span>
                             </div>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                                {order.userInfo?.name || order.shippingAddress?.name || "Guest"}
+                                {order.userInfo?.name || order.shippingAddress?.name || t('orderDetailDrawer.guest')}
                             </p>
 
                             <div className="text-[11px] text-slate-500 leading-relaxed mt-1">
@@ -125,7 +128,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                                     {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
                                 </p>
                                 <p className="mt-1 font-semibold text-slate-600">
-                                    Contact: {order.shippingAddress?.contact}
+                                    {t('orderDetailDrawer.contactLabel')} {order.shippingAddress?.contact}
                                 </p>
                             </div>
                         </div>
@@ -133,19 +136,21 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                         <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-900/20">
                             <div className="flex items-center gap-2 mb-2 text-emerald-600">
                                 <FiCreditCard size={14} />
-                                <span className="text-[11px] font-black uppercase">Payment</span>
+                                <span className="text-[11px] font-black uppercase">
+                                    {t('orderDetailDrawer.sectionPayment')}
+                                    </span>
                             </div>
                             <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                                 {order.paymentMethod}
                             </p>
                             <p className={`text-[10px] font-bold mt-1 
                                 ${order.paymentStatus === 'Completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                ● {order.paymentStatus} - payment
+                                ● {order.paymentStatus} - {t('orderDetailDrawer.paymentSuffix')}
                             </p>
 
                             <p className={`text-[10px] font-bold mt-1 
                                 ${statusColors[order.orderStatus] || 'text-slate-500'}`}>
-                                ● {order.orderStatus} - order
+                                ● {order.orderStatus} - {t('orderDetailDrawer.orderSuffix')}
                             </p>
                         </div>
                     </section>
@@ -154,17 +159,17 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                     <section className="bg-slate-900 dark:bg-slate-800 text-white p-6 rounded-3xl shadow-xl shadow-slate-200 dark:shadow-none">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between text-slate-400">
-                                <span>Subtotal</span>
+                                <span>{t('orderDetailDrawer.subtotal')}</span>
                                 <span>₹{order.items.reduce((a, b) => a + (b.price * b.quantity), 0)} </span>
                             </div>
 
                             <div className="flex justify-between text-slate-400">
-                                <span>Shipping Fee</span>
-                                <span className="text-emerald-400">FREE</span>
+                                <span>{t('orderDetailDrawer.shippingFee')}</span>
+                                <span className="text-emerald-400">{t('orderDetailDrawer.shippingFree')}</span>
                             </div>
 
                             <div className="pt-4 border-t border-slate-700 flex justify-between items-end">
-                                <span className="font-bold">Grand Total</span>
+                                <span className="font-bold">{t('orderDetailDrawer.grandTotal')}</span>
                                 <span className="text-2xl font-black text-pink-500">
                                     ₹{order.totalAmount}
                                 </span>

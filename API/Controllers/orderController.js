@@ -12,6 +12,9 @@ import sendEmail from '../utils/sendEmail.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
+import { createNotification } from '../utils/createNotifications.js';
+import { createAdminNotification } from '../utils/createAdminNotifications.js';
+
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -220,7 +223,7 @@ export const placeCartOrder = async (req, res) => {
         for (const item of cart.items) {
             const product = item.productId;
 
-            // Check product delete toh nahi ho gaya ya stock kam toh nahi hai
+            // Check product delete + low stock
             if (!product) {
                 return res.status(404).json({
                     success: false,
@@ -271,14 +274,19 @@ export const placeCartOrder = async (req, res) => {
             totalAmount += product.price * item.quantity;
         }
 
-        // 3. Naya Order Create karo
+        const productNameMap = {};
+        for (const item of cart.items) {
+            productNameMap[item.productId._id.toString()] = item.productId.prodName;
+        }
+
+        // 3. Create new order
         const newOrder = new Order({
             userId,
             items: orderItems,
             totalAmount,
             shippingAddress,
-            paymentMethod: 'COD',        // only COD reaches here now
-            paymentStatus: 'Pending',    // COD is always pending
+            paymentMethod: 'COD',
+            paymentStatus: 'Pending',
             orderStatus: 'Processing'
         });
 
@@ -301,8 +309,77 @@ export const placeCartOrder = async (req, res) => {
             );
         }
 
-        // 5. Cart Empty kar do
+        // create notification - low stock
+        const productIds = newOrder.items.map(item => item.productId);
+
+        const updatedProducts = await Product.find(
+            { _id: { $in: productIds } }
+        ).select("stock prodName vendorId variants");
+
+        for (const prod of updatedProducts) {
+            // top-level stock check
+            if (prod.stock <= 20 && prod.stock > 0) {
+                await createNotification({
+                    vendorId: prod.vendorId,
+                    type: "LOW_STOCK",
+                    title: "Low Stock Alert",
+                    message: `"${prod.prodName}" is running low on stock (${prod.stock} remaining)`,
+                    relatedId: prod._id
+                });
+
+                await createAdminNotification({
+                    type: "LOW_STOCK",
+                    title: "Low Stock Alert",
+                    message: `"${prod.prodName}" is running low on stock (${prod.stock} remaining)`,
+                    relatedId: prod._id
+                });
+                continue; // already notified, skip variant check
+            }
+
+            // variant-level check
+            for (const variant of prod.variants || []) {
+                if (variant.stock <= 20 && variant.stock > 0) {
+                    const variantLabel = [variant.color, variant.size].filter(Boolean).join(' / ') || 'Default';
+
+                    await createNotification({
+                        vendorId: prod.vendorId,
+                        type: "LOW_STOCK",
+                        title: "Low Stock Alert",
+                        message: `"${prod.prodName}" variant (${variantLabel}) is running low (${variant.stock} remaining)`,
+                        relatedId: prod._id
+                    });
+
+                    await createAdminNotification({
+                        type: "LOW_STOCK",
+                        title: "Low Stock Alert",
+                        message: `"${prod.prodName}" variant (${variantLabel}) is running low (${variant.stock} remaining)`,
+                        relatedId: prod._id
+                    });
+                    break; // one notification per product is enough
+                }
+            }
+        }
+
+        // 5. Cart Empty
         await Cart.findOneAndDelete({ userId });
+
+        // 6. Create notification for order place
+        for (const item of newOrder.items) {
+            await createNotification({
+                vendorId: item.vendorId,
+                type: 'NEW_ORDER',
+                title: 'New Order Received',
+                message: `You have a new order for "${productNameMap[item.productId.toString()]}" (Qty: ${item.quantity})`,
+                relatedId: newOrder._id
+            })
+        }
+
+        await createAdminNotification({
+            type: 'NEW_ORDER',
+            title: 'New Order Placed',
+            message: `A new order of ₹${newOrder.totalAmount} has been placed`,
+            relatedId: newOrder._id
+        });
 
         res.status(201).json({
             success: true,
@@ -328,7 +405,6 @@ export const placeDirectOrder = async (req, res) => {
 
         const { quantity, shippingAddress, paymentMethod, selectedColor, selectedSize } = req.body;
 
-        // Check if shippingAddress exists before checking its properties
         if (!shippingAddress || !shippingAddress.name || !shippingAddress.contact || !shippingAddress.pincode || !shippingAddress.address || !shippingAddress.city || !shippingAddress.state) {
             return res.status(400).json({
                 success: false,
@@ -386,8 +462,8 @@ export const placeDirectOrder = async (req, res) => {
 
             totalAmount: product.price * quantity,
             shippingAddress,
-            paymentMethod: 'COD',        // only COD reaches here now
-            paymentStatus: 'Pending',    // COD is always pending
+            paymentMethod: 'COD',
+            paymentStatus: 'Pending',
             orderStatus: 'Processing'
         });
 
@@ -407,6 +483,64 @@ export const placeDirectOrder = async (req, res) => {
                 }
             }
         );
+
+        // create notification - low stock
+        const updatedProduct = await Product.findById(prod_id).select("stock prodName vendorId variants");
+
+        if (updatedProduct.stock <= 20 && updatedProduct.stock > 0) {
+            await createNotification({
+                vendorId: updatedProduct.vendorId,
+                type: "LOW_STOCK",
+                title: "Low Stock Alert",
+                message: `"${updatedProduct.prodName}" is running low on stock (${updatedProduct.stock} remaining)`,
+                relatedId: updatedProduct._id
+            });
+            await createAdminNotification({
+                type: "LOW_STOCK",
+                title: "Low Stock Alert",
+                message: `"${updatedProduct.prodName}" is running low on stock (${updatedProduct.stock} remaining)`,
+                relatedId: updatedProduct._id
+            });
+        } else {
+            const updatedVariant = updatedProduct.variants.find(v => v._id.equals(variant._id));
+
+            if (updatedVariant && updatedVariant.stock <= 20 && updatedVariant.stock > 0) {
+                const variantLabel = [updatedVariant.color, updatedVariant.size].filter(Boolean).join(' / ') || 'Default';
+
+                await createNotification({
+                    vendorId: updatedProduct.vendorId,
+                    type: "LOW_STOCK",
+                    title: "Low Stock Alert",
+                    message: `"${updatedProduct.prodName}" variant (${variantLabel}) is running low (${updatedVariant.stock} remaining)`,
+                    relatedId: updatedProduct._id
+                });
+
+                await createAdminNotification({
+                    type: "LOW_STOCK",
+                    title: "Low Stock Alert",
+                    message: `"${updatedProduct.prodName}" variant (${variantLabel}) is running low (${updatedVariant.stock} remaining)`,
+                    relatedId: updatedProduct._id
+                });
+            }
+        }
+
+
+
+        // create notification - order place
+        await createNotification({
+            vendorId: product.vendorId,
+            type: "NEW_ORDER",
+            title: "New Order Received",
+            message: `You have received a new order for ${product.prodName} (Qty: ${quantity})`,
+            relatedId: newOrder._id
+        });
+
+        await createAdminNotification({
+            type: 'NEW_ORDER',
+            title: 'New Order Placed',
+            message: `A new order of ₹${newOrder.totalAmount} has been placed`,
+            relatedId: newOrder._id
+        });
 
         await Cart.findOneAndUpdate(
             { userId },

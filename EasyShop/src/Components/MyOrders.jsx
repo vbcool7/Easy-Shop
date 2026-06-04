@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { IoIosSearch } from "react-icons/io";
 import { IoIosArrowDown } from "react-icons/io";
 import { IoIosArrowUp } from "react-icons/io";
@@ -9,10 +10,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { getPaginationRange } from '../utils/getPaginationRange';
 import { useUserOrderHistory } from '../hook/useOrders';
-import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function MyOrders() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [page, setPage] = useState(1);
@@ -60,11 +62,11 @@ function MyOrders() {
     {
         isFetching && (
             <div className="text-center text-xs text-pink-400 font-semibold mb-4 uppercase tracking-widest">
-                Updating...
+                {t('myOrders.updating')}
             </div>
         )
     }
-    if (isError) return <div className="py-20 text-center text-red-400">Failed to load orders</div>;
+    if (isError) return <div className="py-20 text-center text-red-400">{t('myOrders.failedLoad')}</div>;
 
     return (
         <section className='w-full min-h-[70vh] py-8 md:py-16 px-4 lg:px-6'>
@@ -72,7 +74,7 @@ function MyOrders() {
             {/* heading */}
             <div className="flex flex-col items-center mb-12">
                 <h1 className='text-2xl md:text-3xl text-pink-500 font-bold tracking-tight'>
-                    My Orders
+                    {t('myOrders.title')}
                 </h1>
                 <div className="h-1 w-15 md:w-20 bg-pink-500 rounded-full mt-2 opacity-30"></div>
             </div>
@@ -87,7 +89,7 @@ function MyOrders() {
                     <div className="flex items-center gap-2">
                         <FiFilter className="text-pink-500" />
                         <span className="font-bold text-gray-800 uppercase text-sm tracking-wide">
-                            Filters & Sorting
+                            {t('myOrders.filtersAndSorting')}
                         </span>
                     </div>
                     <IoIosArrowDown className="text-gray-400" />
@@ -102,7 +104,7 @@ function MyOrders() {
 
                     {/* Mobile Header */}
                     <div className="flex lg:hidden justify-between items-center mb-6 border-b pb-4">
-                        <h2 className="font-black text-xl text-gray-800 uppercase">Filters</h2>
+                        <h2 className="font-black text-xl text-gray-800 uppercase">{t('myOrders.filters')}</h2>
                         <button
                             onClick={() => setShowMobileFilters(false)}
                             className="p-2 bg-gray-50 rounded-full active:scale-90 transition-all"
@@ -115,19 +117,19 @@ function MyOrders() {
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <h1 className="hidden lg:block font-bold text-gray-800 text-sm uppercase tracking-widest">
-                                Filter
+                                {t('myOrders.filter')}
                             </h1>
                             {orderStatus && (
                                 <button
                                     onClick={clearAll}
                                     className="text-xs text-pink-500 font-semibold uppercase hover:underline cursor-pointer"
-                                >Clear all</button>
+                                >{t('myOrders.clearAll')}</button>
                             )}
                         </div>
 
                         {orderStatus && (
                             <div className="mt-3 text-sm text-gray-600">
-                                Status: {orderStatus}
+                                {t('myOrders.statusLabel')}: {orderStatus}
                             </div>
                         )}
                     </div>
@@ -138,7 +140,7 @@ function MyOrders() {
                             onClick={() => setIsStatusOpen(!isStatusOpen)}
                             className="flex justify-between items-center cursor-pointer group">
                             <h1 className="font-bold text-sm text-gray-700 group-hover:text-pink-500 transition-colors uppercase">
-                                ORDER STATUS
+                                {t('myOrders.orderStatusHeader')}
                             </h1>
                             {isStatusOpen ? <IoIosArrowUp className="text-xl" /> : <IoIosArrowDown className="text-xl" />}
                         </div>
@@ -171,7 +173,7 @@ function MyOrders() {
                             onClick={() => setShowMobileFilters(false)}
                             className="flex-1 py-4 bg-pink-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-pink-100 active:scale-95 transition-all"
                         >
-                            Apply Filters
+                            {t('myOrders.applyFilters')}
                         </button>
                     </div>
                 </div>
@@ -186,12 +188,14 @@ function MyOrders() {
                                 type="text"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                placeholder="Search by order ID or product name"
+                                placeholder={t('myOrders.searchPlaceholder')}
                                 className="w-full h-12 pl-5 pr-40 bg-white border border-gray-100 rounded-2xl outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-50 transition-all text-sm font-medium text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:shadow-md"
                             />
                             <div className="absolute right-1 top-1 bottom-1 px-5 flex items-center gap-2 bg-pink-500 hover:bg-pink-600 active:scale-95 text-white rounded-xl transition-all cursor-pointer">
                                 <IoIosSearch className="text-xl" />
-                                <span className="hidden sm:block font-bold text-sm tracking-wide">Search</span>
+                                <span className="hidden sm:block font-bold text-sm tracking-wide">
+                                    {t('myOrders.searchButton')}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -206,7 +210,7 @@ function MyOrders() {
                                 {/* Top Section / Header - Details and Status here in single line */}
                                 <div className="flex justify-between items-center pb-4 mb-6 border-b border-gray-50">
                                     <div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Order ID</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('myOrders.orderId')}</p>
                                         <h3 className="text-sm font-black text-pink-500">
                                             #{order._id.slice(-6).toUpperCase()}
                                         </h3>
@@ -222,7 +226,7 @@ function MyOrders() {
                                             onClick={() => navigate(`/order_track/${order._id}`)}
                                             className="py-1.5 px-4 bg-gray-900 text-white rounded-xl text-[11px] font-bold uppercase hover:bg-gray-800 transition-colors cursor-pointer"
                                         >
-                                            Details
+                                            {t('myOrders.detailsButton')}
                                         </button>
                                     </div>
                                 </div>
@@ -255,17 +259,17 @@ function MyOrders() {
                                                     <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2 mt-1.5">
                                                         {item.selectedColor && (
                                                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                                                Color: <span className="font-bold text-gray-800">{item.selectedColor}</span>
+                                                                {t('myOrders.color')}: <span className="font-bold text-gray-800">{item.selectedColor}</span>
                                                             </span>
                                                         )}
                                                         {item.selectedSize && (
                                                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-pink-50 text-pink-600 border border-pink-100">
-                                                                Size: <span className="font-bold text-pink-700">{item.selectedSize}</span>
+                                                                {t('myOrders.size')}: <span className="font-bold text-pink-700">{item.selectedSize}</span>
                                                             </span>
                                                         )}
                                                     </div>
                                                     <p className="text-xs text-gray-500 mt-2">
-                                                        Qty: <span className="font-medium text-gray-700">{item.quantity}</span> •
+                                                        {t('myOrders.qty')}: <span className="font-medium text-gray-700">{item.quantity}</span> •
                                                         <span className="font-bold text-gray-800 ml-1">₹{item.price}</span>
                                                     </p>
                                                 </div>
@@ -280,12 +284,12 @@ function MyOrders() {
                                                         onClick={() => navigate(`/review_rating/${order._id}/${item.productId._id}`)}
                                                         className="w-full sm:w-36 py-2 px-4 bg-pink-500 text-white rounded-xl text-[11px] font-bold uppercase shadow-md shadow-pink-100 hover:bg-pink-600 transition-colors cursor-pointer"
                                                     >
-                                                        Write a Review
+                                                        {t('myOrders.writeReview')}
                                                     </button>
                                                 ) : (
                                                     // Optional Placeholder 
                                                     <span className="text-[10px] text-gray-400 font-medium italic block sm:w-36 text-center sm:text-right">
-                                                        Review available after delivery
+                                                        {t('myOrders.reviewUnavailable')}
                                                     </span>
                                                 )}
                                             </div>
@@ -297,11 +301,11 @@ function MyOrders() {
                     ) : (
                         <div className="py-20 text-center text-gray-400">
                             <p className="font-bold uppercase text-sm tracking-widest">
-                                {search || orderStatus ? 'No orders match your search' : 'No orders yet'}
+                                {search || orderStatus ? t('myOrders.noOrdersMatch') : t('myOrders.noOrdersYet')}
                             </p>
                             {(search || orderStatus) && (
                                 <button onClick={clearAll} className="mt-4 text-pink-500 font-bold text-xs uppercase hover:underline">
-                                    Clear filters
+                                    {t('myOrders.clearFilters')}
                                 </button>
                             )}
                         </div>
@@ -315,7 +319,7 @@ function MyOrders() {
                                 disabled={page === 1}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                Prev
+                                {t('myOrders.prev')}
                             </button>
 
                             {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -339,7 +343,7 @@ function MyOrders() {
                                 disabled={page === totalPages}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                Next
+                                {t('myOrders.next')}
                             </button>
                         </div>
                     )}

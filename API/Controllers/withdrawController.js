@@ -4,6 +4,7 @@ import Transaction from '../Models/transactionModelSchema.js';
 import Vendor from '../Models/vendorModelSchema.js';
 
 import mongoose from 'mongoose';
+import { createAdminNotification } from '../utils/createAdminNotifications.js';
 
 // withdraw stats
 export const getWithdrawStats = async (req, res) => {
@@ -120,6 +121,14 @@ export const createWithdrawRequest = async (req, res) => {
             }
         });
 
+        // notify admin
+        await createAdminNotification({
+            type: 'PAYOUT_REQUEST',
+            title: 'New Payout Request',
+            message: `${vendor.storeName} has requested a payout of ₹${amount}`,
+            relatedId: withdrawal._id
+        });
+
         // 4. Deduct Balance from Vendor (Important!)
         vendor.availableBalance -= amount;
         await vendor.save();
@@ -130,7 +139,7 @@ export const createWithdrawRequest = async (req, res) => {
             data: withdrawal
         });
 
-    } catch (error) {
+    } catch (err) {
         console.log("Error :", err);
         res.status(500).json({
             success: false,

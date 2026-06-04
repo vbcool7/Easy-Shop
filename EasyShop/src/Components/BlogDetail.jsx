@@ -10,9 +10,11 @@ import { useMemo } from 'react';
 import EasyShopLoader from '../Components/EasyShopLoader';
 
 import { useBlogDetail, useRelatedBlogs } from '../hook/useBlog';
+import { useTranslation } from 'react-i18next';
 
 function BlogDetail() {
 
+    const { t } = useTranslation();
     const { blogId } = useParams();
     const navigate = useNavigate();
 
@@ -20,8 +22,6 @@ function BlogDetail() {
 
     const { data } = useRelatedBlogs(blogId);
     const relatedBlogs = data?.relatedBlogs || [];
-
-    console.log(relatedBlogs);
 
     const shareLinks = [
         { name: 'Facebook', icon: <FaFacebook />, color: 'hover:bg-blue-600' },
@@ -37,7 +37,7 @@ function BlogDetail() {
     if (isError || !blogDetail) {
         return (
             <div className="text-center py-20 text-red-500 font-medium">
-                Blog Details could not be loaded. Please try again.
+                {t('blog.blogError')}
             </div>
         );
     }
@@ -71,7 +71,7 @@ function BlogDetail() {
                         <div className="relative">
                             <img
                                 src={blogDetail.authorId?.storeLogo || Logo}
-                                alt={blogDetail.authorCustomName || "EasyShop Author"}
+                                alt={blogDetail.authorCustomName || t('blog.defaultAuthorName')}
                                 className='w-14 h-14 md:w-18 md:h-18 object-contain rounded-full bg-white p-2 border border-pink-200 shadow-md'
                                 onError={(e) => {
                                     e.target.src = Logo;
@@ -83,7 +83,7 @@ function BlogDetail() {
 
                         <div className='flex flex-col'>
                             <h4 className='text-gray-900 font-bold text-md md:text-lg leading-none'>
-                                {blogDetail.authorCustomName || "EasyShop Team"}
+                                {blogDetail.authorCustomName || t('blog.defaultAuthorName')}
                             </h4>
 
                             <div className="flex items-center gap-2 text-gray-500 text-xs md:text-sm mt-2">
@@ -96,7 +96,7 @@ function BlogDetail() {
                                 <span className="w-1 h-1 bg-pink-300 rounded-full"></span>
 
                                 <span>
-                                    {blogDetail.readTime || '3 min read'}
+                                    {blogDetail.readTime || `3 ${t('blog.minRead')}`}
                                 </span>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ function BlogDetail() {
                     {blogDetail.trendsList && blogDetail.trendsList.length > 0 && (
                         <div className="mt-12">
                             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-6 tracking-tight">
-                                Latest Trends & Highlights
+                                {t('blog.latestTrends')}
                             </h2>
 
                             <div className="space-y-4">
@@ -169,13 +169,16 @@ function BlogDetail() {
 
                 {/* Share Section */}
                 <div className="flex flex-col md:flex-row items-center justify-between border-y border-gray-100 py-6 my-5 md:my-12 gap-4">
-                    <h5 className="text-gray-900 font-bold uppercase tracking-widest text-xs">Share this story</h5>
+                    <h5 className="text-gray-900 font-bold uppercase tracking-widest text-xs">
+                        {t('blog.shareStory')}
+                    </h5>
                     <div className="flex gap-4">
                         {shareLinks.map((links, index) => (
                             <button
                                 key={index}
                                 className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 hover:bg-pink-500 hover:text-white transition-all duration-300 cursor-pointer text-md shadow-sm"
-                                title={`Share on ${links}`}
+                                // title={`Share on ${links}`}
+                                title={`${t('blog.shareOn')} ${links.name}`}
                             >
                                 {links.icon}
                             </button>
@@ -189,7 +192,7 @@ function BlogDetail() {
                 <div className="flex justify-between items-end md:mb-10">
                     <div>
                         <h3 className="text-2xl md:text-3xl font-black text-gray-900 mt-2">
-                            Related Stories
+                            {t('blog.relatedStories')}
                         </h3>
                     </div>
 
@@ -198,7 +201,7 @@ function BlogDetail() {
                         <button
                             onClick={() => navigate('/blog')}
                             className="hidden md:flex text-pink-600 font-bold text-sm hover:underline cursor-pointer">
-                            View All →
+                            {t('blog.viewAll')}
                         </button>
                     )}
                 </div>
@@ -208,7 +211,7 @@ function BlogDetail() {
                     <button
                         onClick={() => navigate('/blog')}
                         className="md:hidden w-full my-3 text-pink-600 font-bold text-sm text-end hover:underline cursor-pointer">
-                        View All →
+                        {t('blog.viewAll')}
                     </button>
                 )}
 
@@ -252,16 +255,16 @@ function BlogDetail() {
                             </svg>
                         </div>
                         <h5 className="text-gray-800 font-bold text-lg mb-1">
-                            No Related Blogs Found
+                            {t('blog.noRelatedTitle')}
                         </h5>
                         <p className="text-gray-500 text-sm max-w-sm mb-5">
-                            We couldn't find any similar stories in this category right now. Explore our main feed for more updates.
+                            {t('blog.noRelatedDesc')}
                         </p>
                         <button
                             onClick={() => navigate('/blog')}
                             className="px-5 py-2 text-xs bg-pink-500 text-white font-bold rounded-full hover:bg-pink-600 transition-all shadow-xs active:scale-95 cursor-pointer"
                         >
-                            Explore All Blogs
+                            {t('blog.exploreAllBlogs')}
                         </button>
                     </div>
                 )}
@@ -269,14 +272,16 @@ function BlogDetail() {
 
             {/* comment post */}
             <div className="max-w-3xl mx-auto my-16 md:my-18 px-4">
-                <h4 className="text-xl font-bold mb-6 text-gray-900">Leave a Reply</h4>
+                <h4 className="text-xl font-bold mb-6 text-gray-900">
+                    {t('blog.leaveReply')}
+                </h4>
                 <textarea
-                    className="w-full p-6 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-pink-200 outline-none text-gray-600 transition-all"
-                    placeholder="What are your thoughts on this trend?"
+                    className="w-full p-6 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-pink-200 outline-none text-gray-600 transition-all resize-none"
+                    placeholder={t('blog.thoughtsPlaceholder')}
                     rows="4"
                 ></textarea>
                 <button className="mt-4 bg-gray-900 text-white px-6 py-2 md:px-8 md:py-3 rounded-full font-bold hover:bg-pink-600 transition-all active:scale-95 cursor-pointer">
-                    Post Comment
+                    {t('blog.postComment')}
                 </button>
             </div>
 

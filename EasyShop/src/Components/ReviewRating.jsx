@@ -4,13 +4,15 @@ import { IoIosStar } from "react-icons/io";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import confetti from 'canvas-confetti';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import { useOrderDetail } from '../hook/useOrders';
 import { useAddReview } from '../hook/useReview';
-import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function ReviewRating() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { orderId, productId } = useParams();
 
@@ -58,23 +60,23 @@ function ReviewRating() {
         });
     };
 
-    if (isLoading) return <div className="py-20 text-center text-slate-400">Loading order detail...</div>;
-    if (isError) return <div className="py-20 text-center text-red-400">Failed to load order detail</div>;
+    if (isLoading) return <div className="py-20 text-center text-slate-400">{t('reviewRating.loading')}</div>;
+    if (isError) return <div className="py-20 text-center text-red-400">{t('reviewRating.failedLoad')}</div>;
 
     return (
         <section className='w-full min-h-[70vh] md:pb-6 px-4 lg:px-6'>
 
             {/* top section */}
             <div className='max-w-6xl mx-auto'>
-                <div className="flex flex-col md:flex-row items-center justify-between px-6 py-4 bg-white rounded-xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 gap-4 bg-white rounded-xl md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
 
                     {/* heading */}
-                    <div className="mb-4 md:mb-0 text-center md:text-left">
-                        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                            Ratings & <span className="text-pink-500">Reviews</span>
+                    <div className="text-center md:text-left shrink-0">
+                        <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
+                            {t('reviewRating.titleStart')} <span className="text-pink-500">{t('reviewRating.titleEnd')}</span>
                         </h1>
                         <p className="text-xs md:text-sm mt-1 text-gray-400 font-medium">
-                            Share your experience with this product
+                            {t('reviewRating.subtitle')}
                         </p>
                     </div>
 
@@ -82,21 +84,19 @@ function ReviewRating() {
                     {orderDetail?.items?.filter(item => item.productId?._id === productId).map((item, index) => (
                         <div
                             key={index}
-                            className="flex items-center gap-4 bg-gray-50/50 p-2 md:p-3 rounded-xl md:rounded-3xl border border-dashed border-gray-200 w-full md:w-auto justify-center md:justify-end">
-                            <div className="text-right">
-                                <h2 className="text-[12px] text-pink-500 font-medium md:font-extrabold uppercase tracking-tight">
+                            className="flex items-center gap-3 bg-gray-50/50 p-2 md:p-3 rounded-xl md:rounded-3xl border border-dashed border-gray-200 w-full md:w-auto">
+                            <div className="flex-1 text-right min-w-0">
+                                <h2 className="text-[11px] md:text-[12px] text-pink-500 font-bold uppercase tracking-tight truncate max-w-40 md:max-w-50 ml-auto">
                                     {item.productId?.prodName}
                                 </h2>
-                                <p className="text-[12px] md:text-[14px] text-gray-500">
-                                    Qty: {item.quantity} <span className="mx-1 text-gray-300">•</span>
-                                    <span className="font-black text-gray-800">
-                                        ₹{item.price}
-                                    </span>
+                                <p className="text-[11px] md:text-[13px] text-gray-500 mt-0.5">
+                                    {t('reviewRating.qty')}: {item.quantity} <span className="mx-1 text-gray-300">•</span>
+                                    <span className="font-black text-gray-800">₹{item.price}</span>
                                 </p>
                             </div>
 
                             {/* Product Image */}
-                            <div className='w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-lg shadow-gray-100 shrink-0'>
+                            <div className='w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 border-white shadow-lg shadow-gray-100 shrink-0'>
                                 <img
                                     src={
                                         item.productId?.attributes?.Color?.images?.[item.selectedColor]?.[0]
@@ -118,37 +118,37 @@ function ReviewRating() {
                 <div className="order-2 md:order-0 w-full md:w-[32%] h-fit bg-white p-4 md:p-6 rounded-xl md:rounded-[2.5rem] border border-gray-100 shadow-sm">
                     <div className="pb-4 border-b border-gray-100">
                         <h2 className="text-[16px] md:text-[18px] font-black text-gray-900 tracking-tight uppercase">
-                            Review <span className="text-pink-500">Guide</span>
+                            {t('reviewRating.guideTitleStart')} <span className="text-pink-500">{t('reviewRating.guideTitleEnd')}</span>
                         </h2>
                     </div>
 
                     {/* Point 1 */}
                     <div className="py-4 md:py-6 border-b border-gray-50 group">
                         <h3 className="text-[16px] font-bold text-gray-800 group-hover:text-pink-500 transition-colors">
-                            Have you used it?
+                            {t('reviewRating.guide1Title')}
                         </h3>
                         <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
-                            Your review should be based on your personal experience with the product's quality and usage.
+                            {t('reviewRating.guide1Desc')}
                         </p>
                     </div>
 
                     {/* Point 2 */}
                     <div className="py-4 md:py-6 border-b border-gray-50 group">
                         <h3 className="text-[16px] font-bold text-gray-800 group-hover:text-pink-500 transition-colors">
-                            Why it matters?
+                            {t('reviewRating.guide2Title')}
                         </h3>
                         <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
-                            Your feedback helps other shoppers make the right choice. Be a hero for the community!
+                            {t('reviewRating.guide2Desc')}
                         </p>
                     </div>
 
                     {/* Point 3 */}
                     <div className="py-4 md:py-6 group">
                         <h3 className="text-[16px] font-bold text-gray-800 group-hover:text-pink-500 transition-colors">
-                            Be Honest & Factual
+                            {t('reviewRating.guide3Title')}
                         </h3>
                         <p className="text-[13px] text-gray-500 mt-2 leading-relaxed">
-                            Stick to facts and share your honest opinion. Facing issues? Contact our <span className="text-pink-500 font-semibold cursor-pointer underline">Help Centre</span> directly.
+                            {t('reviewRating.guide3Desc')} <span className="text-pink-500 font-semibold cursor-pointer underline">{t('reviewRating.helpCentre')}</span> directly.
                         </p>
                     </div>
                 </div>
@@ -159,7 +159,7 @@ function ReviewRating() {
                     {/* Rating Section */}
                     <div className="py-4 border-b border-gray-100">
                         <h1 className="text-[16px] md:text-[20px] font-semibold text-gray-900 tracking-tight">
-                            Rate this Product
+                            {t('reviewRating.rateProduct')}
                         </h1>
 
                         <div className="py-4 text-[25px] md:text-[45px] flex flex-wrap items-center gap-1 md:gap-3  text-pink-500">
@@ -183,13 +183,13 @@ function ReviewRating() {
 
                             {/* Dynamic Label with better spacing */}
                             <p className="text-[14px] md:text-[16px] font-bold ml-2 md:ml-4 whitespace-nowrap">
-                                {clickIndex === 1 ? <span className="text-red-500">Very Bad 😞</span>
-                                    : clickIndex === 2 ? <span className="text-orange-500">Bad 😐</span>
-                                        : clickIndex === 3 ? <span className="text-yellow-500">Good 🙂</span>
-                                            : clickIndex === 4 ? <span className="text-green-500">Very Good 😊</span>
-                                                : clickIndex === 5 ? <span className="text-green-600">Excellent 😍</span>
+                                {clickIndex === 1 ? <span className="text-red-500">{t('reviewRating.veryBad')}</span>
+                                    : clickIndex === 2 ? <span className="text-orange-500">{t('reviewRating.bad')}</span>
+                                        : clickIndex === 3 ? <span className="text-yellow-500">{t('reviewRating.good')}</span>
+                                            : clickIndex === 4 ? <span className="text-green-500">{t('reviewRating.veryGood')}</span>
+                                                : clickIndex === 5 ? <span className="text-green-600">{t('reviewRating.excellent')}</span>
                                                     : <span className="text-gray-300">
-                                                        Select Rating
+                                                        {t('reviewRating.selectRating')}
                                                     </span>}
                             </p>
                         </div>
@@ -199,7 +199,7 @@ function ReviewRating() {
                     <div className="py-6">
 
                         <h1 className="text-[16px] md:text-[20px] font-semibold text-gray-900 tracking-tight">
-                            Review this product
+                            {t('reviewRating.reviewProduct')}
                         </h1>
 
                         <div className="mt-4">
@@ -207,20 +207,20 @@ function ReviewRating() {
                                 name='review'
                                 value={reviewText}
                                 onChange={(e) => setReviewText(e.target.value)}
-                                placeholder="Description..."
+                                placeholder={t('reviewRating.placeholder')}
                                 className="text-[13px] md:text-[15px] w-full h-36 md:h-45 p-3 md:p-5 bg-gray-50 border-2 border-gray-200 outline-none resize-none rounded-3xl focus:border focus:border-pink-500 focus:bg-white transition-all text-gray-700"
                             />
                         </div>
                     </div>
 
                     {/* Submit Button */}
-                    <div className="w-full mt-6 md:flex md:justify-end">
+                    <div className="w-full mt-5 md:flex md:justify-end">
                         <button
                             onClick={handleSubmitReview}
                             disabled={isPending}
-                            className="w-full md:w-auto px-10 py-4 bg-pink-500 text-white rounded-2xl font-bold text-[16px] md:text-[18px] hover:bg-pink-600 shadow-lg shadow-pink-100 active:scale-95 transition-all duration-150 uppercase tracking-wider cursor-pointer"
+                            className="w-full md:w-auto px-10 py-2 bg-pink-500 text-white rounded-2xl font-semibold text-[16px] md:text-[18px] hover:bg-pink-600 shadow-lg shadow-pink-100 active:scale-95 transition-all duration-150 uppercase tracking-wider cursor-pointer"
                         >
-                            {isPending ? "Submitting..." : "Submit Review"}
+                            {isPending ? t('reviewRating.submitting') : t('reviewRating.submitReview')}
                         </button>
                     </div>
                 </div>
@@ -249,10 +249,10 @@ function ReviewRating() {
 
                         {/* Text Content */}
                         <h1 className="text-xl md:text-2xl font-black text-gray-900 leading-tight">
-                            Thank you <span className="text-pink-500 text-2xl md:text-3xl">!</span>
+                            {t('reviewRating.thankYou')} <span className="text-pink-500 text-2xl md:text-3xl">!</span>
                         </h1>
                         <p className="text-sm md:text-base text-gray-500 font-medium mt-2 md:mt-3 px-2 md:px-4">
-                            Your valuable review has been saved successfully. It helps others shop better!
+                            {t('reviewRating.reviewSaved')}
                         </p>
 
                         {/* Done/Close Button */}
@@ -263,7 +263,7 @@ function ReviewRating() {
                             }}
                             className="mt-6 md:mt-8 w-full py-3.5 md:py-4 bg-gray-900 text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-base hover:bg-black transition-all active:scale-95 shadow-xl shadow-gray-200 cursor-pointer"
                         >
-                            DONE
+                            {t('reviewRating.done')}
                         </button>
                     </div>
                 </div>

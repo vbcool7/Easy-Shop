@@ -3,9 +3,10 @@ import React from 'react';
 import { HiOutlineCube, HiOutlineExclamation, HiOutlineXCircle, HiOutlineTrendingUp } from 'react-icons/hi';
 import CountUp from 'react-countup';
 import { useVendorStockStats } from '../../hook/uesProducts';
+import { useTranslation } from 'react-i18next';
 
 function StockInventoryCards({ setCurrentPage }) {
-
+  const { t } = useTranslation();
   const { data: stockStats, isLoading, isError } = useVendorStockStats();
 
   // Default stats 
@@ -19,48 +20,48 @@ function StockInventoryCards({ setCurrentPage }) {
   const cardItems = [
     {
       id: 1,
-      title: "Total Inventory",
-      para: "Total stock on hand.",
+      title: t('stockInventory.totalInventoryTitle'),
+      para: t('stockInventory.totalInventoryPara'),
       icon: <HiOutlineCube />,
-      value: stats.totalInventory.toLocaleString(), // Number formatting (e.g. 4,250)
-      growth: "Items",
+      value: stats.totalInventory.toLocaleString(),
+      growth: t('stockInventory.totalInventoryBadge'),
       color: "bg-blue-600",
       badgeColor: "bg-green-50 text-green-600"
     },
     {
       id: 2,
-      title: "Low Stock Alert",
-      para: "Needs immediate restock.",
+      title: t('stockInventory.lowStockTitle'),
+      para: t('stockInventory.lowStockPara'),
       icon: <HiOutlineExclamation />,
       value: stats.lowStockAlert,
-      growth: "Immediate Action",
+      growth: t('stockInventory.lowStockBadge'),
       color: "bg-amber-500",
       badgeColor: "bg-orange-50 text-orange-600"
     },
     {
       id: 3,
-      title: "Out of Stock",
-      para: "Currently zero units.",
+      title: t('stockInventory.outOfStockTitle'),
+      para: t('stockInventory.outOfStockPara'),
       icon: <HiOutlineXCircle />,
       value: stats.outOfStock,
-      growth: "Restock Now",
+      growth: t('stockInventory.outOfStockBadge'),
       color: "bg-red-500",
       badgeColor: "bg-red-50 text-red-600"
     },
     {
       id: 4,
-      title: "Inventory Value",
-      para: "Total market worth.",
+      title: t('stockInventory.valueTitle'),
+      para: t('stockInventory.valuePara'),
       icon: <HiOutlineTrendingUp />,
       value: `₹${stats.inventoryValue.toLocaleString()}`,
-      growth: "Net Worth",
+      growth: t('stockInventory.valueBadge'),
       color: "bg-pink-500",
       badgeColor: "bg-blue-50 text-blue-600"
     },
   ];
 
-  if (isLoading) return <div className='p-4 text-gray-400'>Fetching stats information....</div>
-  if (isError) return <div className="p-4 text-red-500">Failed to load inventory stats.</div>;
+  if (isLoading) return <div className='p-4 text-gray-400'>{t('stockInventory.loading')}</div>;
+  if (isError) return <div className="p-4 text-red-500">{t('stockInventory.error')}</div>;
 
   return (
     <div>
@@ -69,14 +70,14 @@ function StockInventoryCards({ setCurrentPage }) {
 
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-            Inventory Overview
+            {t('stockInventory.heading')}
           </h1>
 
           <p className="text-[11px] md:text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center md:justify-start gap-1 md:gap-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             <span className="opacity-30">|</span>
-            Real-time updates
+            {t('stockInventory.realTimeUpdate')}
           </p>
         </div>
 
@@ -84,7 +85,7 @@ function StockInventoryCards({ setCurrentPage }) {
         <button
           onClick={() => setCurrentPage('Add Product')}
           className="w-full sm:w-auto bg-linear-to-br from-pink-500 to-pink-600 text-white px-2 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-pink-200 transition-all active:scale-95 shrink-0 cursor-pointer">
-          + Add New
+          {t('stockInventory.addNewBtn')}
         </button>
       </div>
 

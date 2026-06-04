@@ -13,9 +13,11 @@ import { useOrderInvoiceDownload, useOrderStats, useUpdateOrderStatus, useVendor
 import OrderDetailDrawer from './OrderDetailDrawer';
 import { useVendorUIStore } from '../../store/useAuthStore';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 function Orders() {
 
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [orderStatus, setOrderStatus] = useState('');
@@ -52,22 +54,22 @@ function Orders() {
 
     const paymentStatusStyles = {
         Pending: {
-            label: "Pending",
+            label: t('vendorOrders.payStatusPending'),
             container: "bg-amber-50 text-amber-600 border-amber-100",
             dot: "bg-amber-500"
         },
         Completed: {
-            label: "Completed",
+            label: t('vendorOrders.payStatusCompleted'),
             container: "bg-emerald-50 text-emerald-600 border-emerald-100",
             dot: "bg-emerald-500"
         },
         Failed: {
-            label: "Failed",
+            label: t('vendorOrders.payStatusFailed'),
             container: "bg-rose-50 text-rose-600 border-rose-100",
             dot: "bg-rose-500"
         },
         Refunded: {
-            label: "Refunded",
+            label: t('vendorOrders.payStatusRefunded'),
             container: "bg-indigo-50 text-indigo-600 border-indigo-100",
             dot: "bg-indigo-500"
         }
@@ -75,15 +77,15 @@ function Orders() {
 
     const paymentMethodStyles = {
         COD: {
-            label: "Cash on Delivery",
+            label: t('vendorOrders.methodCOD'),
             short: "COD",
             text: "text-amber-700",
             bg: "bg-amber-50",
             border: "border-amber-200"
         },
         Online: {
-            label: "Online Payment",
-            short: "Online",
+            label: t('vendorOrders.methodOnline'),
+            short: t('vendorOrders.methodOnlineShort'),
             text: "text-blue-700",
             bg: "bg-blue-50",
             border: "border-blue-200"
@@ -92,7 +94,7 @@ function Orders() {
 
     const stats = [
         {
-            label: "Pending",
+            label: t('vendorOrders.statPending'),
             count: getStats?.Pending || 0,
             color: "text-yellow-600",
             bg: "bg-yellow-50",
@@ -100,7 +102,7 @@ function Orders() {
             icon: <HiOutlineClock />
         },
         {
-            label: "Processing",
+            label: t('vendorOrders.statProcessing'),
             count: getStats?.Processing || 0,
             color: "text-blue-600",
             bg: "bg-blue-50",
@@ -108,7 +110,7 @@ function Orders() {
             icon: <HiOutlineRefresh />
         },
         {
-            label: "Shipped",
+            label: t('vendorOrders.statShipped'),
             count: getStats?.Shipped || 0,
             color: "text-purple-600",
             bg: "bg-purple-50",
@@ -116,7 +118,7 @@ function Orders() {
             icon: <HiOutlineTruck />
         },
         {
-            label: "Delivered",
+            label: t('vendorOrders.statDelivered'),
             count: getStats?.Delivered || 0,
             color: "text-green-600",
             bg: "bg-green-50",
@@ -124,7 +126,7 @@ function Orders() {
             icon: <HiOutlineBadgeCheck />
         },
         {
-            label: "Cancelled",
+            label: t('vendorOrders.statCancelled'),
             count: getStats?.Cancelled || 0,
             color: "text-red-600",
             bg: "bg-red-50",
@@ -138,8 +140,8 @@ function Orders() {
         updateOrderStatus({ order_id: orderId, status: newStatus });
     };
 
-    if (isLoading) return <p className="p-10 text-center animate-pulse">Fetching orders...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error loading orders.</p>;
+    if (isLoading) return <p className="p-10 text-center animate-pulse">{t('vendorOrders.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('vendorOrders.error')}</p>;
 
     return (
         <div>
@@ -147,14 +149,14 @@ function Orders() {
             <div className="md:bg-white/80 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between text-center md:text-start gap-4 mb-3 md:mb-8">
                 <div>
                     <h1 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-                        Live Orders Hub
+                        {t('vendorOrders.heading')}
                     </h1>
 
                     <p className="text-[11px] md:text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center md:justify-start gap-1 md:gap-2">
                         <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                         {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         <span className="opacity-30">|</span>
-                        Real-time updates
+                        {t('vendorOrders.realTimeUpdates')}
                     </p>
                 </div>
             </div>
@@ -193,11 +195,11 @@ function Orders() {
 
                     <div className="flex items-center gap-2.5">
                         <h3 className="text-[11px] md:text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
-                            Recent Orders
+                            {t('vendorOrders.recentOrdersTitle')}
                         </h3>
                         {count > 0 && (
                             <span className="bg-pink-100 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 px-2.5 py-0.5 rounded-full text-[11px] md:text-xs font-bold">
-                                Total : {count}
+                                {t('vendorOrders.totalCounter', { total: count })}
                             </span>
                         )}
                     </div>
@@ -211,7 +213,7 @@ function Orders() {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search customer, product, status..."
+                                placeholder={t('vendorOrders.searchPlaceholder')}
                                 className="w-full pl-11 pr-4 py-2 md:py-2.5 bg-slate-50 border border-pink-50 dark:bg-slate-800 dark:text-white focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                             />
                         </div>
@@ -222,12 +224,11 @@ function Orders() {
                             onChange={(e) => { setOrderStatus(e.target.value); setPage(1); }}
                             className="w-full sm:w-auto text-sm px-4 py-2 md:py-2.5 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                         >
-                            <option value="">All Status</option>
-                            <option value="Processing">Processing</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Cancelled">Cancelled</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="">{t('vendorOrders.filterAllStatus')}</option>
+                            <option value="Processing">{t('vendorOrders.optionProcessing')}</option>
+                            <option value="Shipped">{t('vendorOrders.optionShipped')} </option>
+                            <option value="Cancelled">{t('vendorOrders.optionCancelled')}</option>
+                            <option value="Delivered">{t('vendorOrders.optionDelivered')}</option>
                         </select>
                     </div>
                 </div>
@@ -237,15 +238,15 @@ function Orders() {
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4">Order ID</th>
-                                    <th className="px-6 py-4">Customer</th>
-                                    <th className="px-6 py-4">Product</th>
-                                    <th className="px-6 py-4">Quantity</th>
-                                    <th className="px-6 py-4">Amount</th>
-                                    <th className="px-6 py-4">Payment Method</th>
-                                    <th className="px-6 py-4">Payment Status</th>
-                                    <th className="px-6 py-4">Order Status</th>
-                                    <th className="px-6 py-4 text-right">Actions</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thOrderId')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thCustomer')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thProduct')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thQuantity')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thAmount')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thPaymentMethod')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thPaymentStatus')}</th>
+                                    <th className="px-6 py-4">{t('vendorOrders.thOrderStatus')}</th>
+                                    <th className="px-6 py-4 text-right">{t('vendorOrders.thActions')}</th>
                                 </tr>
                             </thead>
 
@@ -300,7 +301,7 @@ function Orders() {
                                                         )}
                                                         {order.items?.selectedSize && (
                                                             <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                                                Size: {order.items.selectedSize}
+                                                                {t('vendorOrders.sizeLabel', { size: order.items.selectedSize })}
                                                             </span>
                                                         )}
                                                     </div>
@@ -352,18 +353,22 @@ function Orders() {
                                         <td className="px-6 py-4 text-center">
                                             {!["Processing", "Shipped", "Cancelled"].includes(order.orderStatus) ? (
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${orderStatusStyles[order.orderStatus] || "bg-gray-50 text-gray-600 border-gray-100"}`}>
-                                                    {order.orderStatus}
+                                                    {order.orderStatus === 'Processing' && t('vendorOrders.optionProcessing')}
+                                                    {order.orderStatus === 'Shipped' && t('vendorOrders.optionShipped')}
+                                                    {order.orderStatus === 'Cancelled' && t('vendorOrders.optionCancelled')}
+                                                    {order.orderStatus === 'Delivered' && t('vendorOrders.optionDelivered')}
+                                                    {!["Processing", "Shipped", "Cancelled", "Delivered"].includes(order.orderStatus) && order.orderStatus}
                                                 </span>
                                             ) : (
                                                 <select
                                                     disabled={isUpdating}
                                                     value={order.orderStatus}
                                                     onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-bold border outline-none cursor-pointer transition-all ${orderStatusStyles[order.orderStatus]}`}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-bold border border-pink-100 dark:border-slate-800 dark:text-white/80 bg-slate-50 dark:bg-slate-800 outline-none cursor-pointer transition-all`}
                                                 >
-                                                    <option value="Processing">Processing</option>
-                                                    <option value="Shipped">Shipped</option>
-                                                    <option value="Cancelled">Cancelled</option>
+                                                    <option value="Processing">{t('vendorOrders.optionProcessing')}</option>
+                                                    <option value="Shipped">{t('vendorOrders.optionShipped')}</option>
+                                                    <option value="Cancelled">{t('vendorOrders.optionCancelled')}</option>
                                                 </select>
                                             )}
                                         </td>
@@ -382,7 +387,7 @@ function Orders() {
                                                     className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-500 shadow-sm border border-transparent hover:border-slate-100 transition-all disabled:opacity-50"
                                                 >
                                                     {isPending && variables === order._id ? (
-                                                        <span className="text-[10px] animate-pulse">Downloading...</span>
+                                                        <span className="text-[10px] animate-pulse">{t('vendorOrders.downloadingState')}</span>
                                                     ) : (
                                                         <HiOutlineDownload size={18} />
                                                     )}
@@ -397,7 +402,7 @@ function Orders() {
                 ) : (
                     <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700">
                         <p className="text-slate-400">
-                            {search || orderStatus ? 'No orders match your search or filter.' : 'No orders found yet.'}
+                            {search || orderStatus ? t('vendorOrders.noOrdersMatchFilter') : t('vendorOrders.noOrdersFound')}
                         </p>
                     </div>
                 )}
@@ -410,7 +415,7 @@ function Orders() {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                           {t('vendorOrders.paginationPrev')}
                         </button>
 
                         {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -420,7 +425,7 @@ function Orders() {
                                     key={num}
                                     onClick={() => setPage(num)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                            ${page === num
+                                        ${page === num
                                             ? 'bg-pink-500 text-white border-pink-500'
                                             : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
                                         }`}
@@ -434,7 +439,7 @@ function Orders() {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                            {t('vendorOrders.paginationNext')}
                         </button>
                     </div>
                 )}

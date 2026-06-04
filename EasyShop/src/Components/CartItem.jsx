@@ -5,11 +5,14 @@ import { FaMinus } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa";
 import { useCart } from './CartContext';
 import { HiOutlineHeart } from "react-icons/hi";
-import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
+
+import useAuthStore from '../store/useAuthStore';
+import { useTranslation } from 'react-i18next';
 
 function CartItem() {
 
+    const { t } = useTranslation();
     const { user } = useAuthStore();
     const navigate = useNavigate();
 
@@ -47,7 +50,7 @@ function CartItem() {
                 {/* heading */}
                 <div className="flex flex-col items-center mb-12">
                     <h1 className='text-2xl md:text-3xl text-pink-500 font-bold tracking-tight'>
-                        My Cart Items
+                       {t('cart.myCartItems')}
                     </h1>
                     <div className="h-1 w-15 md:w-20 bg-pink-500 rounded-full mt-2 opacity-30"></div>
                 </div>
@@ -63,7 +66,7 @@ function CartItem() {
                                 <button
                                     onClick={clearCart}
                                     className="text-[11px] font-black text-red-400 hover:text-red-500 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition-all cursor-pointer uppercase tracking-wider">
-                                    Clear Cart
+                                    {t('cart.clearCart')}
                                 </button>
                             </div>
 
@@ -93,7 +96,7 @@ function CartItem() {
                                                 )}
                                                 {item?.selectedSize && (
                                                     <span className="text-[10px] font-bold px-2 py-0.5 bg-gray-50 border border-gray-200 text-gray-500 rounded-full">
-                                                        Size: {item.selectedSize}
+                                                        {t('cart.size')}: {item.selectedSize}
                                                     </span>
                                                 )}
                                             </div>
@@ -140,7 +143,7 @@ function CartItem() {
                                                     removeFromCart(item._id, item.variantId);
                                                 }}
                                                 className="text-[11px] font-black text-gray-300 hover:text-red-400 uppercase tracking-wider transition-colors cursor-pointer">
-                                                Remove
+                                                {t('cart.remove')}
                                             </button>
                                         </div>
                                     </div>
@@ -160,34 +163,34 @@ function CartItem() {
                             <div className="bg-white p-5 md:p-8 rounded-[30px] shadow-lg shadow-pink-100/20 border border-pink-50 lg:sticky lg:top-24">
 
                                 <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-6">
-                                    Order Summary
+                                    {t('cart.orderSummary')}
                                 </h2>
 
                                 <div className="space-y-4 border-b border-gray-100 pb-6 text-sm text-gray-600">
 
                                     <div className="flex justify-between">
-                                        <span>Subtotal</span>
+                                        <span>{t('cart.subtotal')}</span>
                                         <span className="font-bold text-gray-800">
                                             ₹ {subtotal}
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between">
-                                        <span>Shipping</span>
+                                        <span>{t('cart.shipping')}</span>
                                         <span className="text-green-500 font-bold text-sm underline cursor-help">
-                                            FREE
+                                            {t('cart.free')}
                                         </span>
                                     </div>
 
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-500 font-medium">Total Quantity</span>
+                                        <span className="text-gray-500 font-medium">{t('cart.totalQuantity')}</span>
                                         <span className="text-gray-900">{quantity}</span>
                                     </div>
 
                                 </div>
 
                                 <div className="flex justify-between items-center py-6">
-                                    <span className="text-base md:text-lg font-bold text-gray-800">Total Price</span>
+                                    <span className="text-base md:text-lg font-bold text-gray-800">{t('cart.totalPrice')}</span>
                                     <span className="text-xl md:text-2xl font-black text-pink-500 tracking-tighter">₹ {total}</span>
                                 </div>
 
@@ -195,7 +198,7 @@ function CartItem() {
                                 <button
                                     onClick={handleCheckout}
                                     className="w-full text-sm md:text-base bg-pink-500 hover:bg-pink-600 text-white font-bold py-3.5 md:py-4 uppercase tracking-wider rounded-2xl shadow-lg shadow-pink-200 transition-all active:scale-[0.98] cursor-pointer">
-                                    Checkout Now
+                                    {t('cart.checkoutNow')}
                                 </button>
                             </div>
                         </div>
@@ -209,24 +212,24 @@ function CartItem() {
                         {user?.role !== 'user' ? (
                             <>
                                 <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
-                                    Cart not available 🌸
+                                    {t('cart.cartNotAvailable')}
                                 </h2>
                                 <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-auto leading-relaxed">
-                                    Cart is only available for customer accounts.
+                                    {t('cart.cartNotAvailableDesc')}
                                 </p>
                             </>
                         ) : (
                             <>
                                 <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">
-                                    Oh no! Your cart feels so light 🌸
+                                    {t('cart.emptyCart')}
                                 </h2>
                                 <p className="text-sm md:text-lg text-gray-500 mt-3 mb-10 max-w-70 md:max-w-md mx-alpha leading-relaxed">
-                                    Don't let the best deals slip away. Start adding now!
+                                    {t('cart.emptyCartDesc')}
                                 </p>
                                 <button
                                     onClick={() => navigate('/')}
                                     className="bg-pink-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all cursor-pointer">
-                                    Explore Products
+                                    {t('cart.exploreProducts')}
                                 </button>
                             </>
                         )}

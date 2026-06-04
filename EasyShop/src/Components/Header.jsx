@@ -9,8 +9,11 @@ import { RxCross2 } from "react-icons/rx";
 
 import { useMegaMenu } from '../hook/useCategories';
 
+import { useTranslation } from 'react-i18next';
+
 function Header() {
 
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const { data: menuData, isLoading, isError } = useMegaMenu();
@@ -20,22 +23,10 @@ function Header() {
     const [isMobMenuOpen, setIsMobMenuOpen] = useState(false);
 
     const menus = [
-        {
-            name: "Home",
-            path: "/"
-        },
-        {
-            name: "About",
-            path: "/about_us"
-        },
-        {
-            name: "Blog",
-            path: "/blog"
-        },
-        {
-            name: "Contact",
-            path: "/contact_us"
-        },
+        { name: t('nav.home'), path: "/" },
+        { name: t('nav.about'), path: "/about_us" },
+        { name: t('nav.blog'), path: "/blog" },
+        { name: t('nav.contact'), path: "/contact_us" },
     ];
 
     return (
@@ -54,7 +45,7 @@ function Header() {
                         <div className='flex items-center gap-3'>
                             <PiListHeartBold className='text-xl text-white' />
                             <span className='text-sm text-white font-bold tracking-wider uppercase'>
-                                All Departments
+                                {t('nav.allDepartments')}
                             </span>
                         </div>
                         {isOpen ? <IoIosArrowUp className='text-white' /> : <IoIosArrowDown className='text-white' />}
@@ -65,7 +56,7 @@ function Header() {
                         <div className='flex items-center gap-3'>
                             <PiHeadsetFill className='text-pink-500 text-2xl' />
                             <div className='text-[10px] font-bold leading-tight'>
-                                <p className='text-gray-400'>CALL US 24/7</p>
+                                <p className='text-gray-400'>{t('nav.callUs')}</p>
                                 <p className='text-pink-600 text-[12px]'>+11 222 333 444</p>
                             </div>
                         </div>
@@ -152,7 +143,7 @@ function Header() {
                                                                             }}
                                                                         >
                                                                             <span className="mr-2 text-[10px] text-pink-300">●</span>
-                                                                            Shop by {attr.name}
+                                                                            {t('nav.shopBy')} {attr.name}
                                                                         </p>
                                                                     ))}
 
@@ -164,7 +155,7 @@ function Header() {
                                                                             setIsOpen(false);
                                                                         }}
                                                                     >
-                                                                        Browse All products →
+                                                                        {t('nav.browseAll')}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -217,7 +208,7 @@ function Header() {
                     <div className='flex items-center gap-4 bg-pink-50 px-4 py-2 rounded-full border border-pink-100'>
                         <PiHeadsetFill className='text-pink-500 text-3xl' />
                         <div className='text-[11px] font-bold leading-tight'>
-                            <p className='text-gray-400'>CALL US 24/7</p>
+                            <p className='text-gray-400'>{t('nav.callUs')}</p>
                             <p className='text-pink-600 text-[13px]'>+11 222 333 444</p>
                         </div>
                     </div>

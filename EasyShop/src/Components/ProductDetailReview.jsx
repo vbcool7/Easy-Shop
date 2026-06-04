@@ -4,22 +4,23 @@ import { IoIosStar } from "react-icons/io";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 import { useProductReviews } from '../hook/useReview';
+import { useTranslation } from 'react-i18next';
 
-function ProductDetailReview({ prodId }) {
+function ProductDetailReview({ prodId, averageRating, totalReviews }) {
 
+    const { t } = useTranslation();
     const { data: productReviews = [], isLoading, isError } = useProductReviews(prodId);
     const [reviewOpen, setReviewOpen] = useState(false);
 
-    const totalReviews = productReviews.length;
-    const averageRating = totalReviews > 0 ? productReviews[0]?.productId?.averageRating : 0;
-
-    if (isLoading) return <div className="p-20 text-center">Loading reviews...</div>;
-    if (isError) return <div className="p-20 text-center">Reviews Not Found!</div>;
+    if (isLoading) return <div className="p-20 text-center">{t('reviews.loading')}</div>;
+    if (isError) return <div className="p-20 text-center">{t('reviews.notFound')}</div>;
 
     return (
         <div>
             <div className="max-w-6xl mx-auto p-4 mt-5 md:mt-10">
-                <h2 className="text-xl md:text-2xl font-bold mb-8">Customer Reviews</h2>
+                <h2 className="text-xl md:text-2xl font-bold mb-8">
+                    {t('reviews.customerReviews')}
+                </h2>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
@@ -38,7 +39,7 @@ function ProductDetailReview({ prodId }) {
                                     ))}
                                 </div>
                                 <p className="text-gray-500 text-sm font-semibold tracking-wide">
-                                    Based on {totalReviews} reviews
+                                    {t('reviews.basedOn', { count: totalReviews })}
                                 </p>
                             </div>
                         </div>
@@ -62,7 +63,7 @@ function ProductDetailReview({ prodId }) {
                                 ))
                             ) : (
                                 <div className="text-center py-4">
-                                    <p className="text-gray-400 text-sm italic font-medium">No approved reviews yet.</p>
+                                    <p className="text-gray-400 text-sm italic font-medium">{t('reviews.noReviews')}</p>
                                 </div>
                             )}
                         </div>
@@ -71,7 +72,7 @@ function ProductDetailReview({ prodId }) {
                     {/* Right Side: Reviews List */}
                     <div className="lg:col-span-2 space-y-8">
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            Customer Stories
+                            {t('reviews.customerStories')}
                         </h3>
 
                         {totalReviews > 0 ? (
@@ -112,7 +113,7 @@ function ProductDetailReview({ prodId }) {
                                             onClick={() => setReviewOpen(!reviewOpen)}
                                             className="px-6 py-2 border border-pink-500 text-pink-500 font-bold rounded-full hover:bg-pink-500 hover:text-white transition-all uppercase text-xs"
                                         >
-                                            {reviewOpen ? "View Less" : "View More"}
+                                            {reviewOpen ? t('reviews.viewLess') : t('reviews.viewMore')}
                                         </button>
                                     </div>
                                 )}
@@ -120,8 +121,8 @@ function ProductDetailReview({ prodId }) {
                         ) : (
                             /* Empty State Design */
                             <div className="p-10 border border-dashed border-gray-200 rounded-3xl flex items-center justify-center bg-gray-50/30">
-                                <p className="text-gray-400 font-medium">
-                                    Be the first to share your experience!
+                                <p className="text-gray-400 font-medium text-center text-sm">
+                                    {t('reviews.beFirst')}
                                 </p>
                             </div>
                         )}

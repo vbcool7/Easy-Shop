@@ -8,6 +8,7 @@ import { HiOutlineCash } from "react-icons/hi";
 
 import { useDownloadTransactionInvoice, useVendorTransactionList, useVendorTransactionStats } from '../../hook/useTransactions';
 import { getPaginationRange } from '../../utils/getPaginationRange';
+import { useTranslation } from 'react-i18next';
 
 const statusMenu = [
     { id: 1, status: "Completed" },
@@ -16,6 +17,7 @@ const statusMenu = [
 
 function Transactions() {
 
+    const { t } = useTranslation();
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [status, setStatus] = useState('');
@@ -60,37 +62,37 @@ function Transactions() {
 
     const cards = [
         {
-            label: "Total Revenue",
+            label: t('vendorTransactions.cardRevenue'),
             value: formatCurrency(summary?.totalRevenue),
             icon: <HiOutlineCurrencyRupee />,
             color: "text-blue-600",
             bg: "bg-blue-50"
         },
         {
-            label: "Platform Fees (10%)",
+            label: t('vendorTransactions.cardFees'),
             value: formatCurrency(summary?.totalFees),
             icon: <HiOutlineReceiptTax />,
             color: "text-pink-600",
             bg: "bg-pink-50"
         },
         {
-            label: "Wallet Credited",
+            label: t('vendorTransactions.cardWallet'),
             value: formatCurrency(summary?.settledAmount),
             icon: <HiOutlineCreditCard />,
             color: "text-emerald-600",
             bg: "bg-emerald-50"
         },
         {
-            label: "Pending Payout",
+            label: t('vendorTransactions.cardPending'),
             value: formatCurrency(summary?.pendingAmount),
             icon: <HiOutlineClock />,
             color: "text-amber-600",
             bg: "bg-amber-50"
         },
         {
-            label: "COD Collected",
+            label: t('vendorTransactions.cardCOD'),
             value: formatCurrency(summary?.codCollected),
-            icon: <HiOutlineCash />, // Cash icon use karein
+            icon: <HiOutlineCash />,
             color: "text-orange-600",
             bg: "bg-orange-50"
         },
@@ -102,8 +104,8 @@ function Transactions() {
         setIsStatusOpen(false);
     };
 
-    if (isLoading) return <p className="p-10 text-center">Loading transactions...</p>;
-    if (isError) return <p className="p-10 text-center text-red-500">Error fetching transactions!</p>;
+    if (isLoading) return <p className="p-10 text-center">{t('vendorTransactions.loading')}</p>;
+    if (isError) return <p className="p-10 text-center text-red-500">{t('vendorTransactions.error')}</p>;
 
     return (
         <div className="space-y-6">
@@ -142,14 +144,14 @@ function Transactions() {
                     <div>
                         <div className='flex gap-2 items-center'>
                             <h2 className="text-md md:text-lg font-bold text-slate-800 dark:text-white shrink-0">
-                                Transaction History
+                                {t('vendorTransactions.historyHeading')}
                             </h2>
                             <span className="hidden lg:flex bg-pink-100 text-pink-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                                Total: {count || 0}
+                                {t('vendorTransactions.totalCounter', { total: count || 0 })}
                             </span>
                         </div>
                         <p className="text-[11px] md:text-xs text-slate-500 mt-1">
-                            Manage and organize your transactions
+                            {t('vendorTransactions.historySubtitle')}
                         </p>
                     </div>
 
@@ -162,7 +164,7 @@ function Transactions() {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search Txn ID, Order ID..."
+                                placeholder={t('vendorTransactions.searchPlaceholder')}
                                 className="w-full pl-8 md:pl-11 pr-4 py-2 bg-slate-50 border border-pink-50 dark:bg-slate-800 dark:text-white focus:border-pink-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl text-sm outline-none transition-all shadow-sm placeholder:text-xs md:placeholder:text-[13px]"
                             />
                         </div>
@@ -173,10 +175,10 @@ function Transactions() {
                             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
                             className="w-full md:w-auto text-sm px-4 py-2 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                         >
-                            <option value="">All Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="">{t('vendorTransactions.filterAllStatus')}</option>
+                            <option value="Pending">{t('vendorTransactions.statusPending')}</option>
+                            <option value="Completed">{t('vendorTransactions.statusCompleted')}</option>
+                            <option value="Cancelled">{t('vendorTransactions.statusCancelled')}</option>
                         </select>
 
                         {/* Payment Method Filter */}
@@ -185,9 +187,9 @@ function Transactions() {
                             onChange={(e) => { setPaymentMethod(e.target.value); setPage(1); }}
                             className="w-full md:w-auto text-sm px-4 py-2 rounded-xl border border-pink-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
                         >
-                            <option value="">All Methods</option>
-                            <option value="COD">COD</option>
-                            <option value="Online">Online</option>
+                            <option value="">{t('vendorTransactions.filterAllMethods')}</option>
+                            <option value="COD">{t('vendorTransactions.methodCOD')}</option>
+                            <option value="Online">{t('vendorTransactions.methodOnline')}</option>
                         </select>
                     </div>
                 </div>
@@ -197,13 +199,13 @@ function Transactions() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-50 dark:border-slate-800 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
-                                <th className="px-6 py-4">Txn Details</th>
-                                <th className="px-6 py-4">Related Order</th>
-                                <th className="px-6 py-4">Total Amount</th>
-                                <th className="px-6 py-4">Platform Fee (10%)</th>
-                                <th className="px-6 py-4">Net Earning</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Invoice</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thTxnDetails')}</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thRelatedOrder')}</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thTotalAmount')}</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thPlatformFee')}</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thNetEarning')}</th>
+                                <th className="px-6 py-4">{t('vendorTransactions.thStatus')}</th>
+                                <th className="px-6 py-4 text-right">{t('vendorTransactions.thInvoice')}</th>
                             </tr>
                         </thead>
 
@@ -212,8 +214,8 @@ function Transactions() {
                                 <tr>
                                     <td colSpan={7} className="px-6 py-16 text-center text-slate-400">
                                         {search || status || paymentMethod
-                                            ? 'No transactions match your search or filter.'
-                                            : 'No transactions found.'
+                                            ? t('vendorTransactions.noResultsMatch')
+                                            : t('vendorTransactions.noResultsFound')
                                         }
                                     </td>
                                 </tr>
@@ -266,7 +268,7 @@ function Transactions() {
                                         {/* Status */}
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase
-                                    ${txn.status === 'Completed'
+                                            ${txn.status === 'Completed'
                                                     ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                     : txn.status === 'Cancelled'
                                                         ? 'bg-rose-50 text-rose-600 border border-rose-100'
@@ -281,9 +283,9 @@ function Transactions() {
                                             <button
                                                 onClick={() => downloadInvoice(txn._id)}
                                                 disabled={isPending && variables === txn._id}
-                                                className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                                                className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-pink-500 shadow-sm border border-transparent hover:border-slate-100 transition-all cursor-pointer">
                                                 {isPending && variables === txn._id ? (
-                                                    <span className="text-[10px] animate-pulse">Downloading...</span>
+                                                    <span className="text-[10px] animate-pulse">{t('vendorTransactions.downloading')}</span>
                                                 ) : (
                                                     <HiOutlineDownload size={18} />
                                                 )}
@@ -304,7 +306,7 @@ function Transactions() {
                             disabled={page === 1}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Prev
+                            {t('vendorTransactions.paginationPrev')}
                         </button>
 
                         {getPaginationRange(page, totalPages).map((num, idx) =>
@@ -314,7 +316,7 @@ function Transactions() {
                                     key={num}
                                     onClick={() => setPage(num)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
-                            ${page === num
+                                        ${page === num
                                             ? 'bg-pink-500 text-white border-pink-500'
                                             : 'border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800'
                                         }`}
@@ -328,7 +330,7 @@ function Transactions() {
                             disabled={page === totalPages}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-pink-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-pink-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                            Next
+                            {t('vendorTransactions.paginationNext')}
                         </button>
                     </div>
                 )}
