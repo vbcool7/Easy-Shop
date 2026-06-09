@@ -23,7 +23,29 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
     // input handler
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'businessContact') {
+            setFormData({ ...formData, businessContact: value.replace(/\D/g, '').slice(0, 10) });
+            return;
+        }
+
+        if (name === 'pincode') {
+            setFormData({ ...formData, pincode: value.replace(/\D/g, '').slice(0, 6) });
+            return;
+        }
+
+        if (name === 'businessPAN') {
+            setFormData({ ...formData, businessPAN: value.toUpperCase().slice(0, 10) });
+            return;
+        }
+
+        if (name === 'gstNumber') {
+            setFormData({ ...formData, gstNumber: value.toUpperCase().slice(0, 15) });
+            return;
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     //common for all uploads
@@ -52,42 +74,40 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
     // submit
     const countinueToAccountDetail = () => {
 
-        // 1. Basic Required Fields
-        const requiredFields = [
-            'storeName', 'aboutShop', 'businessEmail', 'businessContact',
-            'businessType', 'category', 'address',
-            'city', 'pincode', 'state', 'businessPAN'
-        ];
+        if (!formData.storeName?.trim()) return toast.error("Store name is required");
+        if (!formData.aboutShop?.trim()) return toast.error("About shop is required");
 
-        for (const field of requiredFields) {
-            if (!formData[field]) {
-                return toast.error(`${field.replace(/([A-Z])/g, ' $1')} is required`);
-            }
-        }
+        if (!formData.businessEmail?.trim()) return toast.error("Business email is required");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.businessEmail)) return toast.error("Enter a valid business email");
 
-        // 2. Logo Check
-        if (!formData.storeLogo) {
-            return toast.error("Please upload store logo");
-        }
+        if (!formData.businessContact?.trim()) return toast.error("Business contact is required");
+        if (!/^\d{10}$/.test(formData.businessContact)) return toast.error("Business contact must be exactly 10 digits");
 
-        // 3. Conditional License Check (Only if the category requires one)
+        if (!formData.businessType) return toast.error("Please select a business type");
+        if (!formData.category) return toast.error("Please select a category");
+
+        if (!formData.address?.trim()) return toast.error("Address is required");
+        if (!formData.city?.trim()) return toast.error("City is required");
+
+        if (!formData.pincode?.trim()) return toast.error("Pincode is required");
+        if (!/^\d{6}$/.test(formData.pincode)) return toast.error("Pincode must be exactly 6 digits");
+
+        if (!formData.state?.trim()) return toast.error("State is required");
+
+        if (!formData.businessPAN?.trim()) return toast.error("Business PAN is required");
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.businessPAN)) return toast.error("Enter a valid PAN (e.g. ABCDE1234F)");
+
+        if (!formData.storeLogo) return toast.error("Please upload store logo");
+
         if (selectedCat?.requiresCertificate && !formData.categoryLicenseUpload) {
             return toast.error(`Please upload ${selectedCat.certificateLabel}`);
         }
 
-        // 4. PAN Card File Check
-        if (!formData.panCardUpload) {
-            return toast.error("Please upload Business PAN Card");
-        }
+        if (!formData.panCardUpload) return toast.error("Please upload Business PAN Card");
 
-        // 5. Conditional GST Check (Only if GST number is provided)
-        if (formData.gstNumber && formData.gstNumber.length > 0) {
-            if (formData.gstNumber.length !== 15) {
-                return toast.error("GST Number must be 15 characters");
-            }
-            if (!formData.gstDocumentUpload) {
-                return toast.error("Please upload GST Certificate");
-            }
+        if (formData.gstNumber?.length > 0) {
+            if (formData.gstNumber.length !== 15) return toast.error("GST Number must be 15 characters");
+            if (!formData.gstDocumentUpload) return toast.error("Please upload GST Certificate");
         }
 
         // If all pass
@@ -200,6 +220,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <input
                         type="text"
                         name='businessContact'
+                        inputMode="numeric"
                         value={formData.businessContact || ""}
                         onChange={handleChange}
                         placeholder={t('vendorSignup.businessContact')}
@@ -357,7 +378,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                     <span className='text-[11px] text-gray-500 ml-1 tracking-wide'>
                         {t('vendorSignup.addressHint')}
-                        </span>
+                    </span>
                 </div>
 
                 {/* city */}
@@ -365,7 +386,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <label
                         htmlFor='city'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        {t('vendorSignup.city')} 
+                        {t('vendorSignup.city')}
                     </label>
                     <input
                         type="text"
@@ -402,6 +423,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                     <input
                         type="text"
                         name='pincode'
+                        inputMode="numeric"
                         value={formData.pincode || ""}
                         onChange={handleChange}
                         placeholder="123456"
@@ -414,13 +436,14 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                         htmlFor='businessPAN'
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
                         {t('vendorSignup.businessPAN')}
-                        </label>
+                    </label>
                     <input
                         type="text"
                         name='businessPAN'
                         value={formData.businessPAN || ""}
                         onChange={handleChange}
                         placeholder="ABCDE1234F"
+                        style={{ textTransform: 'uppercase' }}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -443,7 +466,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                         <div className="w-full p-3 text-sm md:text-base bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl flex gap-2 items-center outline-none transition-all peer-focus:border-pink-500">
                             <button className="text-sm md:text-base border border-pink-100 rounded-sm px-2 text-pink-600 bg-pink-50 pointer-events-none">
-                               {t('vendorSignup.upload')}
+                                {t('vendorSignup.upload')}
                             </button>
                             <span className='text-sm md:text-base text-gray-500 truncate'>
                                 {formData.panCardUpload ? formData.panCardUpload.name : t('vendorSignup.noFile')}
@@ -466,6 +489,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
                         onChange={handleChange}
                         maxLength={15}
                         placeholder="22AAAAA0000A1Z5"
+                        style={{ textTransform: 'uppercase' }}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -489,7 +513,7 @@ function VendorBusinessInfo({ prev, next, formData, setFormData, categories, isC
 
                             <div className="w-full p-3 text-sm md:text-base bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl flex gap-2 items-center outline-none transition-all peer-focus:border-pink-500">
                                 <button className="text-sm md:text-base border border-pink-100 rounded-sm px-2 text-pink-600 bg-pink-50 pointer-events-none">
-                                   {t('vendorSignup.upload')}
+                                    {t('vendorSignup.upload')}
                                 </button>
                                 <span className='text-sm md:text-base text-gray-500 truncate'>
                                     {formData.gstDocumentUpload ? formData.gstDocumentUpload.name : t('vendorSignup.noFile')}

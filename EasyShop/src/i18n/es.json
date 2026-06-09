@@ -1477,7 +1477,12 @@
         "fieldNewPassword": "Nueva Contraseña",
         "fieldConfirmPassword": "Confirmar Contraseña",
         "savePassword": "Guardar Contraseña",
-        "securityNote": "Seguridad añadida. Lee nuestra"
+        "securityNote": "Seguridad añadida. Lee nuestra",
+        "otpTitle": "Verificar nuevo correo electrónico",
+        "otpSubtitle": "Ingrese el OTP enviado a",
+        "otpCancel": "Cancelar",
+        "otpVerify": "Verificar",
+        "otpVerifying": "Verificando..."
     },
     "editBlog": {
         "title": "Editar Blog",
@@ -1509,17 +1514,17 @@
         "savingBtn": "Guardando Cambios..."
     },
     "customerDrawer": {
-  "contactDetails": "Datos de Contacto",
-  "emailAddress": "Correo Electrónico",
-  "phoneNumber": "Número de Teléfono",
-  "primaryLocation": "Ubicación Principal",
-  "customerSince": "Cliente Desde",
-  "financialSummary": "Resumen Financiero",
-  "recentActivity": "Actividad Reciente",
-  "noRecentOrders": "No se encontraron pedidos recientes.",
-  "statusActive": "Activo",
-  "statusInactive": "Inactivo",
-  "idLabel": "ID: {{id}}",
-  "orderAmount": "Monto: ₹{{amount}}"
-}
+        "contactDetails": "Datos de Contacto",
+        "emailAddress": "Correo Electrónico",
+        "phoneNumber": "Número de Teléfono",
+        "primaryLocation": "Ubicación Principal",
+        "customerSince": "Cliente Desde",
+        "financialSummary": "Resumen Financiero",
+        "recentActivity": "Actividad Reciente",
+        "noRecentOrders": "No se encontraron pedidos recientes.",
+        "statusActive": "Activo",
+        "statusInactive": "Inactivo",
+        "idLabel": "ID: {{id}}",
+        "orderAmount": "Monto: ₹{{amount}}"
+    }
 }

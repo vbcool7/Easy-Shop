@@ -27,7 +27,19 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
 
     // input handler
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'accNumber') {
+            setFormData({ ...formData, accNumber: value.replace(/\D/g, '').slice(0, 18) });
+            return;
+        }
+
+        if (name === 'ifsc') {
+            setFormData({ ...formData, ifsc: value.toUpperCase().slice(0, 11) });
+            return;
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     //common for all uploads
@@ -48,7 +60,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
         checkedTerms &&
         checkedAgreement;
 
-    // all input fields ko empty krna submit hone pr
+    // empty i/p fields on submit
     const initialVendorState = {
         name: "",
         email: "",
@@ -85,9 +97,19 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
     // submit
     const handleSubmit = () => {
 
-        if (!required) {
-            return toast.error("Please fill all bank details and accept terms");
-        }
+        if (!formData.accHolder?.trim()) return toast.error("Account holder name is required");
+        if (!formData.bank?.trim()) return toast.error("Bank name is required");
+
+        if (!formData.accNumber?.trim()) return toast.error("Account number is required");
+        if (!/^\d{9,18}$/.test(formData.accNumber)) return toast.error("Account number must be 9 to 18 digits");
+
+        if (!formData.ifsc?.trim()) return toast.error("IFSC code is required");
+        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifsc)) return toast.error("Enter a valid IFSC code (e.g. SBIN0001234)");
+
+        if (!formData.bankDocumentUpload) return toast.error("Please upload bank document");
+
+        if (!checkedTerms) return toast.error("Please accept the terms and conditions");
+        if (!checkedAgreement) return toast.error("Please accept the vendor agreement");
 
         const data = new FormData();
 
@@ -137,7 +159,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                     colors: ['#ec4899', '#f472b6', '#db2777']
                 });
 
-                // Zustand store mein user aur token bharo
+                // fill token in zustand store
                 login(res.vendor, res.token);
 
                 setFormData(initialVendorState);
@@ -205,7 +227,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                         name="accNumber"
                         value={formData.accNumber}
                         onChange={handleChange}
-                        placeholder="e.g. 12 or 16 digits"
+                        placeholder="e.g. 12 or 18 digits"
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 
@@ -220,6 +242,7 @@ function VendorAccountInfo({ prev, formData, setFormData }) {
                         value={formData.ifsc}
                         onChange={handleChange}
                         placeholder="e.g. 11 digits"
+                        style={{ textTransform: 'uppercase' }}
                         className="w-full p-3 text-sm md:text-base placeholder:text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-2xl focus:border-pink-500 focus:bg-white outline-none transition-all" />
                 </div>
 

@@ -92,7 +92,12 @@ function ProfileBusinessForm({ vendorData, onSubmit, isPending }) {
     if (logoFile) fd.append("storeLogo", logoFile);
     if (gstFile) fd.append("gstDocumentUpload", gstFile);
 
-    onSubmit(fd);
+    onSubmit(fd, {
+      onSuccess: () => {
+        setLogoFile(null); // ← reset so button disappears
+        setGstFile(null);
+      }
+    });
   };
 
   const RenderField = (label, fieldId, type = "text", isReadOnly = false) => {
@@ -180,6 +185,15 @@ function ProfileBusinessForm({ vendorData, onSubmit, isPending }) {
           <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
             {t('vendorProfile.logoHint')}
           </p>
+
+          {logoFile && (
+            <button
+              onClick={() => handleSave('storeLogo')}
+              disabled={isPending}
+              className="mt-3 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-pink-100">
+              {isPending ? t('vendorProfile.savingLabel') : t('vendorProfile.saveLabel')}
+            </button>
+          )}
         </div>
       </div>
 

@@ -25,8 +25,8 @@ function ProfileLayout() {
     const { data: vendorData, isLoading, isError } = useVendorProfile(vendorId);
     const { mutate: updateProfile, isPending } = useUpdateVendorProfile(vendorId);
 
-    const handleFormSubmit = (formData) => {
-        updateProfile(formData);
+    const handleFormSubmit = (formData, callbacks) => {
+        updateProfile(formData, callbacks);
     };
 
     // Sidebar Menu Items
@@ -155,10 +155,10 @@ function ProfileLayout() {
                         </div>
 
                         <h2 className="text-lg md:text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                             {t('vendorProfile.logoutTitle')}
+                            {t('vendorProfile.logoutTitle')}
                         </h2>
                         <p className="text-slate-400 text-[12px] md:text-xs font-medium uppercase mt-2 leading-relaxed">
-                             {t('vendorProfile.logoutDescStart')} <span className="text-pink-500">EasyShop</span> {t('vendorProfile.logoutDescEnd')}
+                            {t('vendorProfile.logoutDescStart')} <span className="text-pink-500">EasyShop</span> {t('vendorProfile.logoutDescEnd')}
                         </p>
 
                         <div className="flex gap-4 mt-10">

@@ -16,9 +16,9 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
     const [showOtpModal, setShowOtpModal] = useState(false);
 
     const [previewImage, setPreviewImage] = useState(
-        formData.profilePhoto 
-        ? URL.createObjectURL(formData.profilePhoto) 
-        : "https://i.pinimg.com/1200x/f9/1f/ba/f91fba046dd5208787a3ffa5c1f299e7.jpg"
+        formData.profilePhoto
+            ? URL.createObjectURL(formData.profilePhoto)
+            : "https://i.pinimg.com/1200x/f9/1f/ba/f91fba046dd5208787a3ffa5c1f299e7.jpg"
     );
 
     const { mutate: sendOTP, isPending: isSending } = useSendOTP();
@@ -26,20 +26,32 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
     // Input change handler
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'contact') {
+            setFormData({ ...formData, contact: value.replace(/\D/g, '').slice(0, 10) });
+            return;
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     // image upload
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setFormData({ ...formData, profilePhoto: file }); // FormData update
-            setPreviewImage(URL.createObjectURL(file)); // Preview update
+            setFormData({ ...formData, profilePhoto: file });
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
 
     // handle otp send
     const handleSendOTP = () => {
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            return toast.error("Enter a valid email address");
+        }
+
         sendOTP({ email: formData.email, role: 'vendor' }, {
             onSuccess: () => {
                 toast.success("OTP sent!");
@@ -53,7 +65,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
     const handleVerifyOTP = () => {
         verifyOtp({ email: formData.email, otp: formData.otp, role: 'vendor' }, {
             onSuccess: () => {
-                setIsEmailVerified(true); 
+                setIsEmailVerified(true);
                 setShowOtpModal(false);
                 toast.success("OTP Verified");
             },
@@ -69,22 +81,26 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
     // submit
     const countinueToBusinessDetail = () => {
+        const { name, email, contact, password, confirmPassword, profilePhoto } = formData;
 
-        if (!formData.name || !formData.email || !formData.contact || !formData.password) {
-            return toast.error("All fields are required");
-        }
+        if (!name.trim()) return toast.error("Name is required");
+        if (name.trim().length < 2) return toast.error("Name must be at least 2 characters");
 
-        if (!isEmailVerified) {
-            return toast.error("Please verify your email first");
-        }
+        if (!email.trim()) return toast.error("Email is required");
+        if (!isEmailVerified && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("Enter a valid email");
 
-        if (formData.password !== formData.confirmPassword) {
-            return toast.error("Passwords do not match");
-        }
+        if (!contact.trim()) return toast.error("Contact number is required");
+        if (!/^\d{10}$/.test(contact)) return toast.error("Contact must be exactly 10 digits");
 
-        if (!formData.profilePhoto) {
-            return toast.error("Please upload image");
-        }
+        if (!password) return toast.error("Password is required");
+        if (password.length < 6) return toast.error("Password must be at least 6 characters");
+
+        if (!confirmPassword) return toast.error("Please confirm your password");
+        if (password !== confirmPassword) return toast.error("Passwords do not match");
+
+        if (!isEmailVerified) return toast.error("Please verify your email first");
+
+        if (!profilePhoto) return toast.error("Please upload a profile photo");
 
         next();
     };
@@ -97,7 +113,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                 <h1 className='text-xl md:text-2xl font-bold text-gray-800 tracking-tight'>
                     {t('vendorSignup.personalInfo')}
                 </h1>
-    
+
                 <div className='w-12 h-1 bg-pink-500 rounded-full mt-1 mx-auto md:ml-0'></div>
 
                 <p className='text-gray-500 text-xs md:text-sm mt-2'>
@@ -151,7 +167,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="full name"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                        {t('userSignup.fullName')} 
+                        {t('userSignup.fullName')}
                     </label>
                     <div className='relative group'>
                         <HiOutlineUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -190,10 +206,10 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                             <button
                                 type="button"
                                 onClick={(e) => {
-                                    e.stopPropagation(); 
+                                    e.stopPropagation();
                                     handleSendOTP();
                                 }}
-                                
+
                                 disabled={isSending || !formData.email}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
                             >
@@ -229,6 +245,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                         <input
                             type="text"
                             name='contact'
+                            inputMode="numeric"
                             value={formData.contact}
                             onChange={handleChange}
                             placeholder={t('userSignup.mobileNumber')}
@@ -243,7 +260,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <label
                         htmlFor="password"
                         className="text-xs md:text-sm font-semibold text-gray-600 ml-1 tracking-wide">
-                       {t('userSignup.password')}
+                        {t('userSignup.password')}
                     </label>
                     <div className='relative group'>
                         <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg md:text-xl group-focus-within:text-pink-500 transition-colors" />
@@ -299,10 +316,10 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
                     <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center transform transition-all scale-100">
                         <h3 className="text-xl font-bold mb-2">
                             {t('userSignup.checkInbox')}
-                            </h3>
+                        </h3>
                         <p className="text-sm text-gray-500 mb-6">
                             {t('userSignup.otpSentTo')} {formData.email}
-                            </p>
+                        </p>
 
                         <input
                             type="text"
@@ -317,7 +334,7 @@ function VendorPersonalInfo({ next, formData, setFormData, isEmailVerified, setI
 
                         <button
                             onClick={handleVerifyOTP}
-                            disabled={isVerifying || formData.otp.length < 6} 
+                            disabled={isVerifying || formData.otp.length < 6}
                             className="w-full py-3 bg-pink-500 text-white font-bold rounded-2xl hover:bg-pink-600 transition-all shadow-lg cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             {isVerifying ? (

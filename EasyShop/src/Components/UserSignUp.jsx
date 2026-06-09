@@ -52,24 +52,38 @@ function UserSignUp() {
 
     // Input change handler
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'contact') {
+            setFormData({ ...formData, contact: value.replace(/\D/g, '').slice(0, 10) });
+            return;
+        }
+
+        if (name === 'pincode') {
+            setFormData({ ...formData, pincode: value.replace(/\D/g, '').slice(0, 6) });
+            return;
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     // image upload
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-
-            // Clean up the old URL to prevent memory leaks
             if (previewImage) URL.revokeObjectURL(previewImage);
 
             setSelectedFile(file);
-            setPreviewImage(URL.createObjectURL(file)); // Yeh turant dikhega
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
 
     // handle otp send
     const handleSendOTP = () => {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            return toast.error("Enter a valid email address");
+        }
+
         sendOTP({ email: formData.email, role: 'user' }, {
             onSuccess: () => {
                 toast.success("OTP sent!");
@@ -97,16 +111,39 @@ function UserSignUp() {
         });
     };
 
+    const validate = () => {
+        const { name, email, contact, password, confirmPassword, address, city, pincode, state } = formData;
+
+        if (!name.trim()) return "Name is required";
+        if (name.trim().length < 2) return "Name must be at least 2 characters";
+
+        if (!contact.trim()) return "Contact number is required";
+        if (!/^\d{10}$/.test(contact)) return "Contact must be exactly 10 digits";
+
+        if (!password) return "Password is required";
+        if (password.length < 6) return "Password must be at least 6 characters";
+
+        if (!confirmPassword) return "Please confirm your password";
+        if (password !== confirmPassword) return "Passwords do not match";
+
+        if (!address.trim()) return "Address is required";
+        if (!city.trim()) return "City is required";
+
+        if (!pincode.trim()) return "Pincode is required";
+        if (!/^\d{6}$/.test(pincode)) return "Pincode must be exactly 6 digits";
+
+        if (!state.trim()) return "State is required";
+
+        return null;
+    };
+
     // submit
     const handleCreateAccount = () => {
 
-        if (formData.password !== formData.confirmPassword) {
-            return toast.error("Passwords does not match");
-        }
+        const error = validate();
+        if (error) return toast.error(error);
 
-        if (!isEmailVerified) {
-            return toast.error("Please verify your email first");
-        }
+        if (!isEmailVerified) return toast.error("Please verify your email first");
 
         const data = new FormData();
         data.append("name", formData.name);
@@ -241,11 +278,10 @@ function UserSignUp() {
                                     <button
                                         type="button"
                                         onClick={(e) => {
-                                            e.stopPropagation(); // Click event ko upar jaane se roko
-                                            console.log("Verify Clicked!");
+                                            e.stopPropagation();
                                             handleSendOTP();
                                         }}
-                                        // Agar email nahi hai ya loading hai toh disable
+
                                         disabled={isSending || !formData.email}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1.5 text-xs md:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 rounded-md md:rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer z-20"
                                     >
@@ -277,6 +313,7 @@ function UserSignUp() {
                                 <input
                                     type="text"
                                     name="contact"
+                                    inputMode="numeric"
                                     value={formData.contact}
                                     onChange={handleChange}
                                     placeholder={t('userSignup.mobileNumber')}
@@ -367,6 +404,7 @@ function UserSignUp() {
                                 <input
                                     type="text"
                                     name="pincode"
+                                    inputMode="numeric"
                                     value={formData.pincode}
                                     onChange={handleChange}
                                     placeholder={t('userSignup.pinCode')}

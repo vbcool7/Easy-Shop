@@ -62,8 +62,6 @@ export const useVendorSignup = () => {
 export const useLogin = () => {
     return useMutation({
         mutationFn: async ({ email, password, role }) => {
-
-            // Role ke basis par sahi endpoint choose karein
             const endpoint = role === 'vendor' ? '/vendor/vendor-login' : '/user/user-login';
 
             const res = await API.post(endpoint, { email, password });
@@ -155,7 +153,7 @@ export const useUpdateVendorProfile = (vendorId) => {
         },
         onSuccess: (response) => {
             queryClient.invalidateQueries(["vendor", vendorId]);
-            toast.success(response.message || "Profile updated successfully!");
+            // toast.success(response.message || "Profile updated successfully!");
         },
         onError: (error) => {
             const message = error.response?.data?.message || "Failed to update profile";

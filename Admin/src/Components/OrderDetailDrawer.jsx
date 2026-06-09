@@ -17,11 +17,12 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
 
     // helper to get variant image
     const getVariantImage = (item) => {
-        const color = item.selectedColor;
-        const images = item.productInfo?.attributes?.Color?.images;
-        if (color && images?.[color]?.[0]) return images[color][0];
-        return item.productInfo?.prodImage;
-    };
+    const productInfo = item.productInfo || item.productId;
+    const color = item.selectedColor;
+    const images = productInfo?.attributes?.Color?.images;
+    if (color && images?.[color]?.[0]) return images[color][0];
+    return productInfo?.prodImage;
+};
 
     if (!isOpen || !order) return null;
 
@@ -71,7 +72,7 @@ function OrderDetailDrawer({ order, isOpen, onClose }) {
                                     {/* Product Image */}
                                     <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                                         <img
-                                            src={getVariantImage(item) || item.productInfo?.prodImage}
+                                            src={getVariantImage(item) || item.productInfo?.prodImage || item.productId?.prodImage}
                                             alt="product"
                                             className="w-full h-full object-cover"
                                         />

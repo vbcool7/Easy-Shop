@@ -1477,7 +1477,12 @@
         "fieldNewPassword": "New Password",
         "fieldConfirmPassword": "Confirm Password",
         "savePassword": "Save Password",
-        "securityNote": "Security added. Read our"
+        "securityNote": "Security added. Read our",
+        "otpTitle": "Verify New Email",
+        "otpSubtitle": "Enter the OTP sent to",
+        "otpCancel": "Cancel",
+        "otpVerify": "Verify",
+        "otpVerifying": "Verifying..."
     },
     "editBlog": {
         "title": "Edit Blog",
@@ -1509,17 +1514,17 @@
         "savingBtn": "Saving Changes..."
     },
     "customerDrawer": {
-  "contactDetails": "Contact Details",
-  "emailAddress": "Email Address",
-  "phoneNumber": "Phone Number",
-  "primaryLocation": "Primary Location",
-  "customerSince": "Customer Since",
-  "financialSummary": "Financial Summary",
-  "recentActivity": "Recent Activity",
-  "noRecentOrders": "No recent orders found.",
-  "statusActive": "Active",
-  "statusInactive": "Inactive",
-  "idLabel": "ID: {{id}}",
-  "orderAmount": "Amount: ₹{{amount}}"
-}
+        "contactDetails": "Contact Details",
+        "emailAddress": "Email Address",
+        "phoneNumber": "Phone Number",
+        "primaryLocation": "Primary Location",
+        "customerSince": "Customer Since",
+        "financialSummary": "Financial Summary",
+        "recentActivity": "Recent Activity",
+        "noRecentOrders": "No recent orders found.",
+        "statusActive": "Active",
+        "statusInactive": "Inactive",
+        "idLabel": "ID: {{id}}",
+        "orderAmount": "Amount: ₹{{amount}}"
+    }
 }

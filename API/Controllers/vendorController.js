@@ -476,23 +476,44 @@ export const updateVendorDetail = async (req, res) => {
         const currentVendor = await Vendor.findById(vendor_id);
 
         if (!currentVendor) {
-            return res.status(404).json({
-                success: false,
-                message: "Vendor not found"
-            });
+            return res.status(404).json({ success: false, message: "Vendor not found" });
         }
 
-        let updateData = { ...req.body };   //name, contact etc.
+        const updates = {};
+        const fields = ['name', 'contact', 'storeName', 'aboutShop', 'businessEmail', 'businessContact', 'businessType', 'category', 'address', 'city', 'pincode', 'state', 'gstNumber', 'accHolder', 'bank', 'accNumber', 'ifsc'];
 
-        // --- Image Update & Delete Logic ---
+        fields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        });
+
+        // --- EMAIL UPDATE LOGIC ---
+        let emailUpdatePending = false;
+        const newEmail = req.body.email;
+
+        if (newEmail && newEmail !== currentVendor.email) {
+            const emailExists = await Vendor.findOne({ email: newEmail });
+            if (emailExists) {
+                return res.status(400).json({ success: false, message: "Email already registered" });
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            await OTP.findOneAndUpdate(
+                { email: newEmail, role: 'vendor' },
+                { otp, role: 'vendor' },
+                { upsert: true, new: true }
+            );
+
+            await sendEmail(newEmail, "Verify Your New Email", `Your OTP is: ${otp}`);
+            emailUpdatePending = true;
+        }
+
+        // --- FILE UPDATE LOGIC ---
         if (req.files) {
             const fileFields = [
-                'profilePhoto',
-                'storeLogo',
-                'categoryLicenseUpload',
-                'panCardUpload',
-                'gstDocumentUpload',
-                'bankDocumentUpload'
+                'profilePhoto', 'storeLogo', 'categoryLicenseUpload',
+                'panCardUpload', 'gstDocumentUpload', 'bankDocumentUpload'
             ];
 
             for (const field of fileFields) {
@@ -500,16 +521,27 @@ export const updateVendorDetail = async (req, res) => {
                     if (currentVendor[field]) {
                         await deleteOldFileFromCloudinary(currentVendor[field]);
                     }
-                    updateData[field] = req.files[field][0].path;
+                    updates[field] = req.files[field][0].path;
                 }
             }
         }
 
+        // --- FINAL UPDATE ---
         const updatedVendor = await Vendor.findByIdAndUpdate(
             vendor_id,
-            { $set: updateData },
-            { new: true, returnDocument: 'after' }
+            { $set: updates },
+            { new: true }
         ).select("-password");
+
+        if (emailUpdatePending) {
+            return res.status(200).json({
+                success: true,
+                isEmailUpdatePending: true,
+                newEmail: newEmail,
+                data: updatedVendor,
+                message: "Basic details updated. Please verify OTP for new email."
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -520,10 +552,7 @@ export const updateVendorDetail = async (req, res) => {
     } catch (err) {
         if (req.files) await deleteCloudinaryFiles(req.files);
         console.log("Error :", err);
-        res.status(500).json({
-            success: false,
-            message: "Error"
-        });
+        res.status(500).json({ success: false, message: "Error" });
     }
 };
 

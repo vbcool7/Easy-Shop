@@ -3,10 +3,23 @@ import React, { useEffect, useState } from 'react';
 import { HiOutlineCamera } from "react-icons/hi2";
 import { HiOutlineShieldCheck } from "react-icons/hi";
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import useAuthStore from '../../store/useAuthStore';
+import { useUpdatedEmailVerifyOtp } from '../../hook/useAuth';
+import toast from 'react-hot-toast';
 
 function ProfilePersonalForm({ vendorData, onSubmit, isPending }) {
 
     const { t } = useTranslation();
+    const { user } = useAuthStore();
+    const queryClient = useQueryClient();
+    const vendorId = user?._id || user?.id;
+
+    const { mutate: verifyOtp, isPending: isVerifying } = useUpdatedEmailVerifyOtp();
+
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [tempEmail, setTempEmail] = useState("");
+    const [otp, setOtp] = useState("");
 
     const [formData, setformData] = useState({
         name: vendorData?.name || "",
@@ -55,19 +68,43 @@ function ProfilePersonalForm({ vendorData, onSubmit, isPending }) {
         }));
     };
 
+    const handleVerifyOtp = () => {
+        if (!otp || otp.length !== 6) return toast.error("Please enter 6-digit OTP");
+
+        verifyOtp({ email: tempEmail, otp, role: 'vendor' }, {
+            onSuccess: () => {
+                toast.success("Email updated and verified!");
+                setShowOtpModal(false);
+                setOtp("");
+                toggleEdit("email");
+                queryClient.invalidateQueries(["vendor", vendorId]);
+            },
+            onError: (err) => toast.error(err.response?.data?.message || "Invalid OTP")
+        });
+    };
+
     // after clicking save, naye data ko finalize karna
     const handleSave = (fieldId) => {
-        toggleEdit(fieldId);
 
         const fd = new FormData();
         fd.append("name", formData.name);
         fd.append("email", formData.email);
         fd.append("contact", formData.phone);
-        if (profileFile) {
-            fd.append("profilePhoto", profileFile);
-        }
 
-        onSubmit(fd);
+        onSubmit(fd, {
+            onSuccess: (res) => {
+                if (res.isEmailUpdatePending) {
+                    setTempEmail(res.newEmail);
+                    setShowOtpModal(true);
+                    toast.success("Please verify OTP sent to your new email");
+                } else {
+                    toggleEdit(fieldId);
+                }
+            },
+            onError: (err) => {
+                toast.error(err.response?.data?.message || "Update failed");
+            }
+        });
     };
 
     // Reusable Component for Each Field
@@ -197,6 +234,47 @@ function ProfilePersonalForm({ vendorData, onSubmit, isPending }) {
                     {t('vendorProfile.privacyNote')} <span className="text-pink-500 cursor-pointer hover:underline">{t('vendorProfile.privacyLink')}</span>.
                 </p>
             </div>
+
+            {/* otp modal */}
+            {showOtpModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-sm md:max-w-md flex flex-col items-center gap-6 my-auto">
+
+                        <div className="text-center w-full">
+                            <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
+                                {t('vendorProfile.otpTitle')}
+                            </h2>
+                            <p className="text-xs md:text-sm text-slate-500 mt-2 wrap-break-word">
+                                {t('vendorProfile.otpSubtitle')} <br />
+                                <b className="text-slate-700 dark:text-slate-300">{tempEmail}</b>
+                            </p>
+                        </div>
+
+                        <input
+                            type="text"
+                            maxLength="6"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
+                            placeholder="000000"
+                            className="w-full max-w-70 text-center text-2xl md:text-3xl tracking-[10px] md:tracking-[15px] font-bold p-3 border-2 border-slate-200 rounded-2xl focus:border-pink-500 outline-none transition-all"
+                        />
+
+                        <div className="flex gap-3 md:gap-4 w-full">
+                            <button
+                                onClick={() => setShowOtpModal(false)}
+                                className="flex-1 py-3 font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-sm md:text-base">
+                                {t('vendorProfile.otpCancel')}
+                            </button>
+                            <button
+                                onClick={handleVerifyOtp}
+                                disabled={isVerifying}
+                                className="flex-1 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-lg shadow-pink-200 disabled:opacity-50 text-sm md:text-base transition-all">
+                                {isVerifying ? t('vendorProfile.otpVerifying') : t('vendorProfile.otpVerify')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
 
     )
