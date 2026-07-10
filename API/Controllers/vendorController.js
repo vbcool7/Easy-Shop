@@ -191,7 +191,6 @@ export const vendorSignUp = async (req, res) => {
         if (req.files) {
             await deleteCloudinaryFiles(req.files);
         }
-
         console.error("Signup Error:", err);
         return res.status(500).json({
             success: false,

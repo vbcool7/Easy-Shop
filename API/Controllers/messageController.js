@@ -14,7 +14,7 @@ export const accessChat = async (req, res) => {
             });
         }
 
-       // Check if they already have a room/conversation
+        // Check if they already have a room/conversation
         let chat = await Conversation.findOne({
             participants: {
                 $all: [
@@ -122,3 +122,67 @@ export const resetUnreadCount = async (req, res) => {
         });
     }
 }
+
+// 5. user side
+export const getUserChats = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const chats = await Conversation.find({
+            participants: {
+                $elemMatch: {
+                    participantId: userId,
+                    participantModel: 'User',
+                },
+            },
+            lastMessage: { $exists: true, $ne: null },
+        }).sort({ updatedAt: -1 });
+
+        const populatedChats = await Promise.all(
+            chats.map(async chat => {
+                const chatObj = chat.toObject();
+
+                chatObj.unreadCount = Object.fromEntries(chat.unreadCount);
+
+                const participants = await Promise.all(
+                    chatObj.participants.map(async p => {
+                        const Model = (
+                            await import(
+                                `../Models/${p.participantModel === 'User'
+                                    ? 'userModelSchema'
+                                    : 'vendorModelSchema'
+                                }.js`
+                            )
+                        ).default;
+
+                        const details = await Model.findById(p.participantId).select(
+                            'name profilePhoto storeName storeLogo',
+                        );
+
+                        return {
+                            ...p,
+                            details,
+                        };
+                    }),
+                );
+
+                return {
+                    ...chatObj,
+                    participants,
+                };
+            }),
+        );
+
+        res.status(200).json({
+            success: true,
+            data: populatedChats,
+        });
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: 'Server Error',
+        });
+    }
+};
