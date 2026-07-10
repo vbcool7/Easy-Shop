@@ -14,6 +14,6 @@ router.post('/access', accessChat);
 router.get('/fetch-messages/:conversationId', fetchMessages);
 router.get('/vendor-messages/:vendorId', getVendorChats);
 router.post('/reset-unread', resetUnreadCount);
-router. Get('/user-messages/:userId', getUserChats);
+router.get('/user-messages/:userId', getUserChats);
 
 export default router;
