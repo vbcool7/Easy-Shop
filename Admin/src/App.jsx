@@ -59,7 +59,7 @@ function App() {
                 style: {
                     fontFamily: 'sans-serif',
                     fontSize: '14px',
-                    zIndex: 9999, // Z-index safe side ke liye
+                    zIndex: 9999,
                 },
             }}
         />

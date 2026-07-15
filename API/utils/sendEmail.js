@@ -10,7 +10,7 @@ const sendEmail = async (to, subject, html) => {
     try {
         const { data, error } = await resend.emails.send({
             from: 'EasyShop Support <onboarding@resend.dev>',
-            to: [process.env.EMAIL_USER],
+            to: [to],
             subject: subject,
             html: html,
         });

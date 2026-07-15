@@ -214,7 +214,8 @@ function Sidebar({ collapsed, onToggle, currentPage, onPageChange, mobileOpen, o
                                 </div>
 
                                 {!collapsed && item.submenu && (
-                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 
+                                        ${isExpanded ? 'rotate-180' : ''}`} />
                                 )}
                             </button>
 
